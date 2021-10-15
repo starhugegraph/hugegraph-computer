@@ -94,6 +94,14 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph"
             );
 
+    public static final ConfigOption<Integer> INPUT_SPLIT_FETCH_TIMEOUT =
+            new ConfigOption<>(
+                    "input.split_fetch_timeout",
+                    "The timeout seconds of fetch split",
+                    positiveInt(),
+                    300
+            );
+
     public static final ConfigOption<Long> INPUT_SPLITS_SIZE =
             new ConfigOption<>(
                     "input.split_size",
@@ -262,15 +270,6 @@ public class ComputerOptions extends OptionHolder {
             new ConfigOption<>(
                     "output.retry_interval",
                     "The retry interval when output failed",
-                    positiveInt(),
-                    10
-            );
-
-    public static final ConfigOption<Integer> VERTEX_AVERAGE_DEGREE =
-            new ConfigOption<>(
-                    "computer.vertex_average_degree",
-                    "The average degree of a vertex, it represents the " +
-                    "average number of adjacent edges per vertex",
                     positiveInt(),
                     10
             );
