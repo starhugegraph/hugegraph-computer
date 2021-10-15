@@ -21,8 +21,6 @@ package com.baidu.hugegraph.computer.algorithm.community.cc;
 
 import java.util.Map;
 
-import javax.ws.rs.NotSupportedException;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -101,9 +99,9 @@ public class ClusteringCoefficientTest extends AlgorithmTestBase {
     public void testClusteringCoefficientValue() {
         TriangleCountValue value = new TriangleCountValue();
         value.count(10L);
-        Assert.assertThrows(NotSupportedException.class,
+        Assert.assertThrows(UnsupportedOperationException.class,
                             () -> value.assign(null));
-        Assert.assertThrows(NotSupportedException.class,
+        Assert.assertThrows(UnsupportedOperationException.class,
                             () -> value.compareTo(new TriangleCountValue()));
 
         TriangleCountValue copy = (TriangleCountValue) value.copy();
