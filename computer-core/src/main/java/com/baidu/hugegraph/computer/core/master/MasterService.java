@@ -34,6 +34,7 @@ import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.ContainerInfo;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
+import com.baidu.hugegraph.computer.core.compute.MasterComputeManager;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.SuperstepStat;
@@ -60,16 +61,17 @@ public class MasterService implements Closeable {
     private final ComputerContext context;
     private final Managers managers;
 
+    private int maxSuperStep;
     private volatile boolean inited;
     private volatile boolean closed;
-    private Config config;
     private volatile Bsp4Master bsp4Master;
+    private Config config;
     private ContainerInfo masterInfo;
     private List<ContainerInfo> workers;
-    private int maxSuperStep;
-    private MasterComputation masterComputation;
+    private MasterComputation computation;
+    private MasterComputeManager computeManager;
 
-    private volatile ShutdownHook shutdownHook;
+    private final ShutdownHook shutdownHook;
     private volatile Thread serviceThread;
 
     public MasterService() {
@@ -105,10 +107,14 @@ public class MasterService implements Closeable {
         this.bsp4Master = new Bsp4Master(this.config);
         this.bsp4Master.clean();
 
-        this.masterComputation = this.config.createObject(
+        this.computation = this.config.createObject(
                                  ComputerOptions.MASTER_COMPUTATION_CLASS);
-        this.masterComputation.init(new DefaultMasterContext());
+        this.computation.init(new DefaultMasterContext());
         this.managers.initedAll(config);
+
+        this.computeManager = new MasterComputeManager<>(this.context,
+                                                         this.managers,
+                                                         this.computation);
 
         LOG.info("{} register MasterService", this);
         this.bsp4Master.masterInitDone(this.masterInfo);
@@ -143,6 +149,7 @@ public class MasterService implements Closeable {
      * Stop the the master service. Stop the managers created in
      * {@link #init(Config)}.
      */
+    @Override
     public void close() {
         this.checkInited();
         if (this.closed) {
@@ -150,7 +157,7 @@ public class MasterService implements Closeable {
             return;
         }
 
-        this.masterComputation.close(new DefaultMasterContext());
+        this.computation.close(new DefaultMasterContext());
 
         this.bsp4Master.waitWorkersCloseDone();
 
@@ -244,7 +251,7 @@ public class MasterService implements Closeable {
             SuperstepContext context = new SuperstepContext(superstep,
                                                             superstepStat);
             // Call master compute(), note the worker afterSuperstep() is done
-            boolean masterContinue = this.masterComputation.compute(context);
+            boolean masterContinue = this.computation.compute(context);
             if (this.finishedIteration(masterContinue, context)) {
                 superstepStat.inactivate();
             }
@@ -347,9 +354,12 @@ public class MasterService implements Closeable {
     /**
      * Wait the workers write result back. After this, the job is finished
      * successfully.
+     * Shall we add code here to support the output by master?
      */
     private void outputstep() {
         LOG.info("{} MasterService outputstep started", this);
+        this.computeManager.output();
+
         this.bsp4Master.waitWorkersOutputDone();
         LOG.info("{} MasterService outputstep finished", this);
     }
