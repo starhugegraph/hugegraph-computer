@@ -21,8 +21,6 @@ package com.baidu.hugegraph.computer.algorithm.community.trianglecount;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.value.LongValue;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
