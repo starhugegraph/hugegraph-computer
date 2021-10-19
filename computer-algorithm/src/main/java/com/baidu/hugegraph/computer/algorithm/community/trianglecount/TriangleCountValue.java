@@ -89,10 +89,7 @@ public class TriangleCountValue implements Value<TriangleCountValue> {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-                   .append("idList", this.idList)
-                   .append("count", this.count)
-                   .toString();
+        return String.valueOf(this.count);
     }
 
     @Override
