@@ -32,9 +32,6 @@ import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.master.MasterComputation;
 import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.rpc.AggregateRpcService;
-import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
-import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
-import com.baidu.hugegraph.computer.core.worker.WorkerStat;
 import com.baidu.hugegraph.util.Log;
 
 /**
@@ -43,92 +40,35 @@ import com.baidu.hugegraph.util.Log;
  * TODO: Better to unify later (rename ComputerManager to WorkerComputerManager
  * and extends new abstract class ComputerManager)
  */
-public class MasterComputeManager<M extends Value<M>> {
+public class MasterComputeManager {
 
     private static final Logger LOG = Log.logger(MasterComputeManager.class);
-    private static boolean OUTPUT_AGGR = true;
 
     // Shall we use MasterComputerContext? (need refactor)
-    private final ComputerContext context;
     private final Managers managers;
 
     // Shall we need to support get data from partitions? (or only by workers)
-    private final Map<Integer, FileGraphPartition<M>> partitions;
     private final MasterComputation computation;
-    private final MessageRecvManager recvManager;
-    private MasterAggrManager aggrManager;
+    //private final MessageRecvManager recvManager;
+    private final MasterAggrManager aggrManager;
 
     public MasterComputeManager(ComputerContext context, Managers managers,
                                 MasterComputation computation) {
-        this.context = context;
         this.managers = managers;
         this.computation = computation;
-        this.partitions = new HashMap<>();
-        this.recvManager = this.managers.get(MessageRecvManager.NAME);
+        //this.recvManager = this.managers.get(MessageRecvManager.NAME);
         this.aggrManager = this.managers.get(MasterAggrManager.NAME);
     }
 
-    // Support normal worker info (if need)
-    public WorkerStat input() {
-        WorkerStat workerStat = new WorkerStat();
-        this.recvManager.waitReceivedAllMessages();
-
-        Map<Integer, PeekableIterator<KvEntry>> vertices =
-                     this.recvManager.vertexPartitions();
-        Map<Integer, PeekableIterator<KvEntry>> edges =
-                     this.recvManager.edgePartitions();
-        // TODO: parallel input process
-        for (Map.Entry<Integer, PeekableIterator<KvEntry>> entry :
-             vertices.entrySet()) {
-            int partition = entry.getKey();
-            FileGraphPartition<M> part = new FileGraphPartition<>(this.context,
-                                                                  this.managers,
-                                                                  partition);
-            PartitionStat partitionStat = part.input(entry.getValue(),
-                                                     edges.get(partition));
-            workerStat.add(partitionStat);
-            this.partitions.put(partition, part);
-        }
-        return workerStat;
-    }
-
-    /**
-     * Get compute-messages from MessageRecvManager, then put message to
-     * corresponding partition. Be called before
-     * {@link MessageRecvManager#beforeSuperstep} is called.
-     */
-    public void takeRecvedMessages() {
-        Map<Integer, PeekableIterator<KvEntry>> messages =
-                     this.recvManager.messagePartitions();
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
-            partition.messages(messages.get(partition.partition()));
-        }
-    }
-
-    /* Used only for master output, consider support:
-     * - aggregate value (for each worker)
-     * - partition info (Todo)
-     * - worker context / info (Todo)
-     * - master context / info (Todo)
-     * */
     public void output() {
         LOG.info("##### Master output start here #####");
         // We need get aggregate value from worker first, then combine them
         AggregateRpcService handler = this.aggrManager.handler();
         // Output if need
-        if (OUTPUT_AGGR) {
-            handler.listAggregators().entrySet().forEach(aggr -> {
-                LOG.info("Current aggregator name is {}, value is {}",
-                         aggr.getKey(), aggr.getValue());
-            });
-        }
-
-        // If we need get info from each partition, we need get msg below
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
-            PartitionStat stat = partition.output();
-            LOG.info("Output partition {} complete, stat='{}'",
-                     partition.partition(), stat);
-        }
+        handler.listAggregators().entrySet().forEach(aggr -> {
+            LOG.info("Current aggregator name is {}, value is {}",
+                     aggr.getKey(), aggr.getValue());
+        });
         LOG.info("##### Master output end here #####");
     }
 }

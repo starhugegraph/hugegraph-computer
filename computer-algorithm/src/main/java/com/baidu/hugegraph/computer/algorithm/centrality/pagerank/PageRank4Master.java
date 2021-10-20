@@ -101,4 +101,20 @@ public class PageRank4Master implements MasterComputation {
             return true;
         }
     }
+
+    @Override
+    public boolean output(MasterComputationContext context) {
+        LOG.info("# master output for :" + this.getClass().getSimpleName());
+        LongValue danglingVerticesNum = context.aggregatedValue(
+                                        AGGR_DANGLING_VERTICES_NUM);
+        DoubleValue danglingProbability = context.aggregatedValue(
+                                          AGGR_COMULATIVE_DANGLING_PROBABILITY);
+        DoubleValue cumulativeProbability = context.aggregatedValue(
+                                            AGGR_COMULATIVE_PROBABILITY);
+        DoubleValue l1NormDifference = context.aggregatedValue(
+                                       AGGR_L1_NORM_DIFFERENCE_KEY);
+        LOG.info("{}, {}, {}, {}", danglingVerticesNum, danglingProbability,
+                 cumulativeProbability, l1NormDifference);
+        return false;
+    }
 }

@@ -52,4 +52,13 @@ public interface MasterComputation {
      * @return true if want to continue the next iteration.
      */
     boolean compute(MasterComputationContext context);
+
+    /**
+     * This method can output aggregators to log / file at the end (after all
+     * supersteps finished)
+     */
+    default boolean output(MasterComputationContext context) {
+        //Value<?> aggrValue = context.aggregatedValue("");
+        return true;
+    }
 }

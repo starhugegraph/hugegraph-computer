@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.core.master;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -112,9 +113,9 @@ public class MasterService implements Closeable {
         this.computation.init(new DefaultMasterContext());
         this.managers.initedAll(config);
 
-        this.computeManager = new MasterComputeManager<>(this.context,
-                                                         this.managers,
-                                                         this.computation);
+        this.computeManager = new MasterComputeManager(this.context,
+                                                       this.managers,
+                                                       this.computation);
 
         LOG.info("{} register MasterService", this);
         this.bsp4Master.masterInitDone(this.masterInfo);
@@ -219,6 +220,8 @@ public class MasterService implements Closeable {
                      "The superstep {} can't be > maxSuperStep {}",
                      superstep, this.maxSuperStep);
         // Step 3: Iteration computation of all supersteps.
+        // TODO: test context in outside
+        List<SuperstepContext> contexts = new ArrayList<>();
         for (; superstepStat.active(); superstep++) {
             LOG.info("{} MasterService superstep {} started",
                      this, superstep);
@@ -250,6 +253,7 @@ public class MasterService implements Closeable {
             superstepStat = SuperstepStat.from(workerStats);
             SuperstepContext context = new SuperstepContext(superstep,
                                                             superstepStat);
+            contexts.add(context);
             // Call master compute(), note the worker afterSuperstep() is done
             boolean masterContinue = this.computation.compute(context);
             if (this.finishedIteration(masterContinue, context)) {
@@ -263,7 +267,7 @@ public class MasterService implements Closeable {
         }
 
         // Step 4: Output superstep for outputting results.
-        this.outputstep();
+        this.outputstep(contexts);
     }
 
     @Override
@@ -356,12 +360,27 @@ public class MasterService implements Closeable {
      * successfully.
      * Shall we add code here to support the output by master?
      */
-    private void outputstep() {
-        LOG.info("{} MasterService outputstep started", this);
-        this.computeManager.output();
+    private void outputstep(List<SuperstepContext> contexts) {
+        // what param shall give?
+        boolean flag = this.computation.output(contexts.get(contexts.size() - 1));
+        if (!flag) {
+            LOG.info("## {} MasterService outputstep started", this);
+            contexts.forEach(context -> {
+                LOG.info("Master context message count is {}, bytes is {}",
+                         context.messageCount(), context.messageBytes());
+            });
+            this.computeManager.output();
+        }
+        //MasterAggrManager manager =this.managers.get(MasterAggrManager.NAME);
+        //AggregateRpcService handler = manager.handler();
+        //handler.listAggregators().entrySet().forEach(aggr -> {
+        //    LOG.info("Current aggregator name is {}, value is {}",
+        //             aggr.getKey(), aggr.getValue());
+        //});
+
 
         this.bsp4Master.waitWorkersOutputDone();
-        LOG.info("{} MasterService outputstep finished", this);
+        LOG.info("## {} MasterService outputstep finished", this);
     }
 
     private class DefaultMasterContext implements MasterContext {
