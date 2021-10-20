@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.aggregator.Aggregator;
@@ -44,11 +45,13 @@ import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.input.MasterInputManager;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.TransportUtil;
+import com.baidu.hugegraph.computer.core.output.ComputerOutput;
 import com.baidu.hugegraph.computer.core.rpc.MasterRpcManager;
 import com.baidu.hugegraph.computer.core.util.ShutdownHook;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
+import com.baidu.hugegraph.util.TimeUtil;
 
 /**
  * Master service is job's controller. It controls the superstep iteration of
@@ -186,6 +189,7 @@ public class MasterService implements Closeable {
      * After the superstep iteration, output the result.
      */
     public void execute() {
+        StopWatch watcher = new StopWatch();
         this.checkInited();
 
         LOG.info("{} MasterService execute", this);
@@ -209,6 +213,7 @@ public class MasterService implements Closeable {
          * Constants.INPUT_SUPERSTEP.
          */
         SuperstepStat superstepStat;
+        watcher.start();
         if (superstep == Constants.INPUT_SUPERSTEP) {
             superstepStat = this.inputstep();
             superstep++;
@@ -216,9 +221,15 @@ public class MasterService implements Closeable {
             // TODO: Get superstepStat from bsp service.
             superstepStat = null;
         }
+        watcher.stop();
+        LOG.info("{} MasterService input step cost: {}",
+                 this, TimeUtil.readableTime(watcher.getTime()));
         E.checkState(superstep <= this.maxSuperStep,
                      "The superstep {} can't be > maxSuperStep {}",
                      superstep, this.maxSuperStep);
+
+        watcher.reset();
+        watcher.start();
         // Step 3: Iteration computation of all supersteps.
         // TODO: test context in outside
         List<SuperstepContext> contexts = new ArrayList<>();
@@ -265,9 +276,17 @@ public class MasterService implements Closeable {
             LOG.info("{} MasterService superstep {} finished",
                      this, superstep);
         }
+        watcher.stop();
+        LOG.info("{} MasterService compute step cost: {}",
+                 this, TimeUtil.readableTime(watcher.getTime()));
 
+        watcher.reset();
+        watcher.start();
         // Step 4: Output superstep for outputting results.
-        this.outputstep(contexts);
+        this.outputstep();
+        watcher.stop();
+        LOG.info("{} MasterService output step cost: {}",
+                 this, TimeUtil.readableTime(watcher.getTime()));
     }
 
     @Override
@@ -380,7 +399,11 @@ public class MasterService implements Closeable {
 
 
         this.bsp4Master.waitWorkersOutputDone();
-        LOG.info("## {} MasterService outputstep finished", this);
+        // Merge output files of multiple partitions
+        ComputerOutput output = this.config.createObject(
+                                ComputerOptions.OUTPUT_CLASS);
+        output.mergePartitions(this.config);
+        LOG.info("{} MasterService outputstep finished", this);
     }
 
     private class DefaultMasterContext implements MasterContext {
