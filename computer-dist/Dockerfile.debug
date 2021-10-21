@@ -4,5 +4,5 @@ ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
 COPY . /etc/local/hugegraph-computer
 WORKDIR /etc/local/hugegraph-computer
 RUN apt-get update && apt-get -y install gettext-base && apt-get -y install wget
-RUN wget https://github.91chifun.workers.dev/https://github.com//alibaba/arthas/releases/download/arthas-all-3.5.4/arthas-bin.zip
+RUN wget https://github.com//alibaba/arthas/releases/download/arthas-all-3.5.4/arthas-bin.zip
 RUN unzip arthas-bin.zip
