@@ -46,6 +46,7 @@ import com.baidu.hugegraph.computer.core.input.MasterInputManager;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.TransportUtil;
 import com.baidu.hugegraph.computer.core.output.ComputerOutput;
+import com.baidu.hugegraph.computer.core.rpc.AggregateRpcService;
 import com.baidu.hugegraph.computer.core.rpc.MasterRpcManager;
 import com.baidu.hugegraph.computer.core.util.ShutdownHook;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
@@ -116,9 +117,7 @@ public class MasterService implements Closeable {
         this.computation.init(new DefaultMasterContext());
         this.managers.initedAll(config);
 
-        this.computeManager = new MasterComputeManager(this.context,
-                                                       this.managers,
-                                                       this.computation);
+        this.computeManager = new MasterComputeManager(this.managers);
 
         LOG.info("{} register MasterService", this);
         this.bsp4Master.masterInitDone(this.masterInfo);
@@ -283,7 +282,7 @@ public class MasterService implements Closeable {
         watcher.reset();
         watcher.start();
         // Step 4: Output superstep for outputting results.
-        this.outputstep();
+        this.outputstep(contexts);
         watcher.stop();
         LOG.info("{} MasterService output step cost: {}",
                  this, TimeUtil.readableTime(watcher.getTime()));
@@ -381,7 +380,8 @@ public class MasterService implements Closeable {
      */
     private void outputstep(List<SuperstepContext> contexts) {
         // what param shall give?
-        boolean flag = this.computation.output(contexts.get(contexts.size() - 1));
+        int finalStep = contexts.size() - 1;
+        boolean flag = this.computation.output(contexts.get(finalStep));
         if (!flag) {
             LOG.info("## {} MasterService outputstep started", this);
             contexts.forEach(context -> {
@@ -390,12 +390,12 @@ public class MasterService implements Closeable {
             });
             this.computeManager.output();
         }
-        //MasterAggrManager manager =this.managers.get(MasterAggrManager.NAME);
-        //AggregateRpcService handler = manager.handler();
-        //handler.listAggregators().entrySet().forEach(aggr -> {
-        //    LOG.info("Current aggregator name is {}, value is {}",
-        //             aggr.getKey(), aggr.getValue());
-        //});
+        MasterAggrManager manager =this.managers.get(MasterAggrManager.NAME);
+        AggregateRpcService handler = manager.handler();
+        handler.listAggregators().entrySet().forEach(aggr -> {
+            LOG.info("Current aggregator name is {}, value is {}",
+                     aggr.getKey(), aggr.getValue());
+        });
 
 
         this.bsp4Master.waitWorkersOutputDone();

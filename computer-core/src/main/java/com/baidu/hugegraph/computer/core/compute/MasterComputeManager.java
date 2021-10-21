@@ -19,18 +19,10 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.aggregator.MasterAggrManager;
-import com.baidu.hugegraph.computer.core.common.ComputerContext;
-import com.baidu.hugegraph.computer.core.graph.partition.PartitionStat;
-import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.manager.Managers;
-import com.baidu.hugegraph.computer.core.master.MasterComputation;
-import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.rpc.AggregateRpcService;
 import com.baidu.hugegraph.util.Log;
 
@@ -44,20 +36,12 @@ public class MasterComputeManager {
 
     private static final Logger LOG = Log.logger(MasterComputeManager.class);
 
-    // Shall we use MasterComputerContext? (need refactor)
-    private final Managers managers;
-
     // Shall we need to support get data from partitions? (or only by workers)
-    private final MasterComputation computation;
-    //private final MessageRecvManager recvManager;
     private final MasterAggrManager aggrManager;
 
-    public MasterComputeManager(ComputerContext context, Managers managers,
-                                MasterComputation computation) {
-        this.managers = managers;
-        this.computation = computation;
-        //this.recvManager = this.managers.get(MessageRecvManager.NAME);
-        this.aggrManager = this.managers.get(MasterAggrManager.NAME);
+    public MasterComputeManager(Managers managers) {
+        // Shall we use MasterComputerContext? (need refactor)
+        this.aggrManager = managers.get(MasterAggrManager.NAME);
     }
 
     public void output() {
