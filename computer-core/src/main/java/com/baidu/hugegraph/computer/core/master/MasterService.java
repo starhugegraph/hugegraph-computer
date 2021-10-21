@@ -390,7 +390,7 @@ public class MasterService implements Closeable {
             });
             this.computeManager.output();
         }
-        MasterAggrManager manager =this.managers.get(MasterAggrManager.NAME);
+        MasterAggrManager manager = this.managers.get(MasterAggrManager.NAME);
         AggregateRpcService handler = manager.handler();
         handler.listAggregators().entrySet().forEach(aggr -> {
             LOG.info("Current aggregator name is {}, value is {}",
