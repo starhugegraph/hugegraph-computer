@@ -19,6 +19,8 @@
 
 package com.baidu.hugegraph.computer.core.master;
 
+import com.baidu.hugegraph.computer.core.worker.WorkerContext;
+
 /**
  * Master-computation is computation that can determine whether to continue
  * next superstep. It runs on master. It can perform centralized computation
@@ -54,11 +56,28 @@ public interface MasterComputation {
     boolean compute(MasterComputationContext context);
 
     /**
+     * This method is called before every superstep, override this method if
+     * want to get aggregate value in master at previous superstep.
+     */
+    default void beforeSuperstep(MasterComputationContext context) {
+        // pass
+    }
+
+    /**
+     * This method is called after every superstep, override this method if
+     * want to get aggregate value in master
+     */
+    default void afterSuperstep(MasterComputationContext context) {
+        // pass
+    }
+
+    /**
      * This method can output aggregators to log / file at the end (after all
      * supersteps finished)
      */
-    default boolean output(MasterComputationContext context) {
-        //Value<?> aggrValue = context.aggregatedValue("");
-        return true;
+    default void output() {
+        // pass
     }
+
+
 }

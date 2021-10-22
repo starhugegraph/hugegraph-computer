@@ -21,7 +21,6 @@ package com.baidu.hugegraph.computer.core.master;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.time.StopWatch;
@@ -36,7 +35,6 @@ import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.ContainerInfo;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import com.baidu.hugegraph.computer.core.compute.MasterComputeManager;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.SuperstepStat;
@@ -46,7 +44,6 @@ import com.baidu.hugegraph.computer.core.input.MasterInputManager;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.TransportUtil;
 import com.baidu.hugegraph.computer.core.output.ComputerOutput;
-import com.baidu.hugegraph.computer.core.rpc.AggregateRpcService;
 import com.baidu.hugegraph.computer.core.rpc.MasterRpcManager;
 import com.baidu.hugegraph.computer.core.util.ShutdownHook;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
@@ -74,7 +71,6 @@ public class MasterService implements Closeable {
     private ContainerInfo masterInfo;
     private List<ContainerInfo> workers;
     private MasterComputation computation;
-    private MasterComputeManager computeManager;
 
     private final ShutdownHook shutdownHook;
     private volatile Thread serviceThread;
@@ -116,8 +112,6 @@ public class MasterService implements Closeable {
                                  ComputerOptions.MASTER_COMPUTATION_CLASS);
         this.computation.init(new DefaultMasterContext());
         this.managers.initedAll(config);
-
-        this.computeManager = new MasterComputeManager(this.managers);
 
         LOG.info("{} register MasterService", this);
         this.bsp4Master.masterInitDone(this.masterInfo);
@@ -230,8 +224,6 @@ public class MasterService implements Closeable {
         watcher.reset();
         watcher.start();
         // Step 3: Iteration computation of all supersteps.
-        // TODO: test context in outside
-        List<SuperstepContext> contexts = new ArrayList<>();
         for (; superstepStat.active(); superstep++) {
             LOG.info("{} MasterService superstep {} started",
                      this, superstep);
@@ -263,13 +255,16 @@ public class MasterService implements Closeable {
             superstepStat = SuperstepStat.from(workerStats);
             SuperstepContext context = new SuperstepContext(superstep,
                                                             superstepStat);
-            contexts.add(context);
+            this.computation.beforeSuperstep(context);
             // Call master compute(), note the worker afterSuperstep() is done
             boolean masterContinue = this.computation.compute(context);
             if (this.finishedIteration(masterContinue, context)) {
                 superstepStat.inactivate();
             }
+
             this.managers.afterSuperstep(this.config, superstep);
+            // We should get final aggregate value here
+            this.computation.afterSuperstep(context);
             this.bsp4Master.masterStepDone(superstep, superstepStat);
 
             LOG.info("{} MasterService superstep {} finished",
@@ -282,7 +277,7 @@ public class MasterService implements Closeable {
         watcher.reset();
         watcher.start();
         // Step 4: Output superstep for outputting results.
-        this.outputstep(contexts);
+        this.outputstep();
         watcher.stop();
         LOG.info("{} MasterService output step cost: {}",
                  this, TimeUtil.readableTime(watcher.getTime()));
@@ -378,26 +373,8 @@ public class MasterService implements Closeable {
      * successfully.
      * Shall we add code here to support the output by master?
      */
-    private void outputstep(List<SuperstepContext> contexts) {
-        // what param shall give?
-        int finalStep = contexts.size() - 1;
-        boolean flag = this.computation.output(contexts.get(finalStep));
-        if (!flag) {
-            LOG.info("## {} MasterService outputstep started", this);
-            contexts.forEach(context -> {
-                LOG.info("Master context message count is {}, bytes is {}",
-                         context.messageCount(), context.messageBytes());
-            });
-            this.computeManager.output();
-        }
-        MasterAggrManager manager = this.managers.get(MasterAggrManager.NAME);
-        AggregateRpcService handler = manager.handler();
-        handler.listAggregators().entrySet().forEach(aggr -> {
-            LOG.info("Current aggregator name is {}, value is {}",
-                     aggr.getKey(), aggr.getValue());
-        });
-
-
+    private void outputstep() {
+        this.computation.output();
         this.bsp4Master.waitWorkersOutputDone();
         // Merge output files of multiple partitions
         ComputerOutput output = this.config.createObject(
