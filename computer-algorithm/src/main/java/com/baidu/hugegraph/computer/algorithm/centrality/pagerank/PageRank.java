@@ -30,8 +30,13 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 public class PageRank implements Computation<DoubleValue> {
+
+    private static final Logger LOG = Log.logger(
+                                      PageRank.class.getName());
 
     public static final String OPTION_ALPHA = "page_rank.alpha";
 
@@ -104,6 +109,7 @@ public class PageRank implements Computation<DoubleValue> {
     @Override
     public void init(Config config) {
         this.alpha = config.getDouble(OPTION_ALPHA, ALPHA_DEFAULT_VALUE);
+        LOG.info("alpha value:{}", this.alpha);
         this.contribValue = new DoubleValue();
     }
 

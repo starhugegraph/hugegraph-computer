@@ -55,6 +55,7 @@ public class PageRank4Master implements MasterComputation {
         this.l1DiffThreshold = context.config().getDouble(
                                CONF_L1_NORM_DIFFERENCE_THRESHOLD_KEY,
                                CONF_L1_DIFF_THRESHOLD_DEFAULT);
+        LOG.info("l1DiffThreshold value:{}", this.l1DiffThreshold);
         context.registerAggregator(AGGR_DANGLING_VERTICES_NUM,
                                    ValueType.LONG,
                                    LongValueSumCombiner.class);
