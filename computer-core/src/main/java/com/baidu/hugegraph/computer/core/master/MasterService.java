@@ -339,7 +339,9 @@ public class MasterService implements Closeable {
         }
         long notFinishedVertexCount = context.totalVertexCount() -
                                       context.finishedVertexCount();
-        return context.messageCount() == 0L && notFinishedVertexCount == 0L;
+        // TODO context.messageCount always return 0L
+        return context.messageCount() == 0L && notFinishedVertexCount == 0L &&
+               context.messageBytes() == 0L;
     }
 
     /**
