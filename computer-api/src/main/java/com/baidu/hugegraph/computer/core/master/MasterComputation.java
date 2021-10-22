@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.master;
 
-import com.baidu.hugegraph.computer.core.worker.WorkerContext;
-
 /**
  * Master-computation is computation that can determine whether to continue
  * next superstep. It runs on master. It can perform centralized computation

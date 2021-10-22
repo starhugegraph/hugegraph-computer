@@ -70,7 +70,7 @@ public class MasterService implements Closeable {
     private Config config;
     private ContainerInfo masterInfo;
     private List<ContainerInfo> workers;
-    private MasterComputation computation;
+    private MasterComputation masterComputation;
 
     private final ShutdownHook shutdownHook;
     private volatile Thread serviceThread;
@@ -108,9 +108,9 @@ public class MasterService implements Closeable {
         this.bsp4Master = new Bsp4Master(this.config);
         this.bsp4Master.clean();
 
-        this.computation = this.config.createObject(
+        this.masterComputation = this.config.createObject(
                                  ComputerOptions.MASTER_COMPUTATION_CLASS);
-        this.computation.init(new DefaultMasterContext());
+        this.masterComputation.init(new DefaultMasterContext());
         this.managers.initedAll(config);
 
         LOG.info("{} register MasterService", this);
@@ -154,7 +154,7 @@ public class MasterService implements Closeable {
             return;
         }
 
-        this.computation.close(new DefaultMasterContext());
+        this.masterComputation.close(new DefaultMasterContext());
 
         this.bsp4Master.waitWorkersCloseDone();
 
@@ -255,16 +255,16 @@ public class MasterService implements Closeable {
             superstepStat = SuperstepStat.from(workerStats);
             SuperstepContext context = new SuperstepContext(superstep,
                                                             superstepStat);
-            this.computation.beforeSuperstep(context);
+            this.masterComputation.beforeSuperstep(context);
             // Call master compute(), note the worker afterSuperstep() is done
-            boolean masterContinue = this.computation.compute(context);
+            boolean masterContinue = this.masterComputation.compute(context);
             if (this.finishedIteration(masterContinue, context)) {
                 superstepStat.inactivate();
             }
 
             this.managers.afterSuperstep(this.config, superstep);
             // We should get final aggregate value here
-            this.computation.afterSuperstep(context);
+            this.masterComputation.afterSuperstep(context);
             this.bsp4Master.masterStepDone(superstep, superstepStat);
 
             LOG.info("{} MasterService superstep {} finished",
@@ -374,7 +374,8 @@ public class MasterService implements Closeable {
      * Shall we add code here to support the output by master?
      */
     private void outputstep() {
-        this.computation.output();
+        LOG.info("{} MasterService outputstep started", this);
+        this.masterComputation.output();
         this.bsp4Master.waitWorkersOutputDone();
         // Merge output files of multiple partitions
         ComputerOutput output = this.config.createObject(
