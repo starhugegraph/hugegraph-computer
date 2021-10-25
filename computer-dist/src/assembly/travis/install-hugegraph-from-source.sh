@@ -10,9 +10,9 @@ fi
 COMMIT_ID=$1
 HUGEGRAPH_GIT_URL="https://github.com/starhugegraph/hugegraph.git"
 
-git clone --depth 100 ${HUGEGRAPH_GIT_URL}
+git clone --depth 100 ${HUGEGRAPH_GIT_URL} -b "${BRANCH}"
 cd hugegraph
-git checkout -b "${BRANCH}"
+#git checkout -b "${BRANCH}"
 git checkout "${COMMIT_ID}"
 mvn package -DskipTests
 mv hugegraph-*.tar.gz ../
