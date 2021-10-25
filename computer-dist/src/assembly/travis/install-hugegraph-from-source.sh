@@ -12,6 +12,7 @@ HUGEGRAPH_GIT_URL="https://github.com/starhugegraph/hugegraph.git"
 
 git clone --depth 100 ${HUGEGRAPH_GIT_URL}
 cd hugegraph
+git checkout -b "${BRANCH}"
 git checkout "${COMMIT_ID}"
 mvn package -DskipTests
 mv hugegraph-*.tar.gz ../
