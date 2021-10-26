@@ -22,6 +22,7 @@ tar -zxf hugegraph-*.tar.gz
 
 cd "$(find hugegraph-* | head -1)"
 sed -i "s/rpc.server_port=.*/rpc.server_port=8390/g" conf/rest-server.properties
+sed -i "s/rpc.remote_url=.*/rpc.remote_url=127.0.0.1:8390/g" conf/rest-server.properties
 bin/init-store.sh || exit 1
 bin/start-hugegraph.sh || exit 1
 cd ../
