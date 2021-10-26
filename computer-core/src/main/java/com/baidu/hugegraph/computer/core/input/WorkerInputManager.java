@@ -20,6 +20,10 @@
 package com.baidu.hugegraph.computer.core.input;
 
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.config.Config;
@@ -36,10 +40,13 @@ import com.baidu.hugegraph.computer.core.rpc.InputSplitRpcService;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.worker.load.LoadService;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
+import com.baidu.hugegraph.util.Log;
+import com.baidu.hugegraph.util.TimeUtil;
 
 public class WorkerInputManager implements Manager {
 
     public static final String NAME = "worker_input";
+    private static final Logger LOG = Log.logger(WorkerInputManager.class);
 
     /*
      * Fetch vertices and edges from the data source and convert them
@@ -88,18 +95,35 @@ public class WorkerInputManager implements Manager {
      * but there is no guarantee that all of them has been received.
      */
     public void loadGraph() {
+        StopWatch watcher = new StopWatch();
+        watcher.start();
         this.sendManager.startSend(MessageType.VERTEX);
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
+        long time = 0;
         while (iterator.hasNext()) {
+            StopWatch watcher2 = new StopWatch();
+            watcher2.start();
             Vertex vertex = iterator.next();
+            watcher2.stop();
+            time += watcher2.getTime(TimeUnit.MILLISECONDS);
             this.sendManager.sendVertex(vertex);
         }
+        LOG.info("load vertx cost:{}", time);
         this.sendManager.finishSend(MessageType.VERTEX);
-
+        watcher.stop();
+        LOG.info("input vertex cost:{}",
+                 TimeUtil.readableTime(watcher.getTime()));
+        watcher.reset();
+        watcher.start();
         this.sendManager.startSend(MessageType.EDGE);
+        time = 0;
         iterator = this.loadService.createIteratorFromEdge();
         while (iterator.hasNext()) {
+            StopWatch watcher3 = new StopWatch();
+            watcher3.stop();
             Vertex vertex = iterator.next();
+            watcher3.stop();
+            time += watcher3.getTime(TimeUnit.MILLISECONDS);
             this.sendManager.sendEdge(vertex);
             //inverse edge here
             if (!this.config.get(
@@ -122,6 +146,10 @@ public class WorkerInputManager implements Manager {
                 this.sendManager.sendEdge(vertexInv);
            }
         }
+        LOG.info("load edge cost:{}", time);
         this.sendManager.finishSend(MessageType.EDGE);
+        watcher.stop();
+        LOG.info("input edge cost:{}",
+                 TimeUtil.readableTime(watcher.getTime()));
     }
 }

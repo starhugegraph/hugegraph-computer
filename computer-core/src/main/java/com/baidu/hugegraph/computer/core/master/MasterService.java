@@ -356,8 +356,13 @@ public class MasterService implements Closeable {
      */
     private SuperstepStat inputstep() {
         LOG.info("{} MasterService inputstep started", this);
+        StopWatch watch = new StopWatch();
+        watch.start();
         this.bsp4Master.waitWorkersInputDone();
         this.bsp4Master.masterInputDone();
+        watch.stop();
+        LOG.info("worker input cost:{}",
+                 TimeUtil.readableTime(watch.getTime()));
         List<WorkerStat> workerStats = this.bsp4Master.waitWorkersStepDone(
                                        Constants.INPUT_SUPERSTEP);
         SuperstepStat superstepStat = SuperstepStat.from(workerStats);
