@@ -120,7 +120,7 @@ public class WorkerInputManager implements Manager {
         iterator = this.loadService.createIteratorFromEdge();
         while (iterator.hasNext()) {
             StopWatch watcher3 = new StopWatch();
-            watcher3.stop();
+            watcher3.start();
             Vertex vertex = iterator.next();
             watcher3.stop();
             time += watcher3.getTime(TimeUnit.MILLISECONDS);
