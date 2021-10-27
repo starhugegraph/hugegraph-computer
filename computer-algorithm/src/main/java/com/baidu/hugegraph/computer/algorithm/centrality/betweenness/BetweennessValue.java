@@ -89,6 +89,6 @@ public class BetweennessValue implements Value<BetweennessValue> {
 
     @Override
     public String string() {
-        return String.valueOf(this.betweenness.value());
+        return this.betweenness.toString();
     }
 }
