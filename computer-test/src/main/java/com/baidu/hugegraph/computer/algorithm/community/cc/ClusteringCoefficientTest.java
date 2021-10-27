@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
+import com.baidu.hugegraph.computer.algorithm.community.trianglecount.TriangleCountValue;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.driver.GraphManager;
 import com.baidu.hugegraph.driver.SchemaManager;
@@ -96,15 +97,15 @@ public class ClusteringCoefficientTest extends AlgorithmTestBase {
 
     @Test
     public void testClusteringCoefficientValue() {
-        ClusteringCoefficientValue value = new ClusteringCoefficientValue();
+        TriangleCountValue value = new TriangleCountValue();
         value.count(10L);
         Assert.assertThrows(UnsupportedOperationException.class,
                () -> value.assign(null));
         Assert.assertThrows(UnsupportedOperationException.class,
-               () -> value.compareTo(new ClusteringCoefficientValue()));
+               () -> value.compareTo(new TriangleCountValue()));
 
-        ClusteringCoefficientValue copy;
-        copy = (ClusteringCoefficientValue) value.copy();
+        TriangleCountValue copy;
+        copy = (TriangleCountValue) value.copy();
         Assert.assertEquals(10L, copy.count());
         Assert.assertNotSame(value.idList(), copy.idList());
 
