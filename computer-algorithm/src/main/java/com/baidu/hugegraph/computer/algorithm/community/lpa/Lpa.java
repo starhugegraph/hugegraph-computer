@@ -25,7 +25,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Comparator;
 
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -95,8 +97,12 @@ public class Lpa implements Computation<Id> {
             }
         }
 
-        // Random choice
-        int selected = this.random.nextInt(maxLabels.size());
-        return maxLabels.get(selected);
+        // Choose min label
+        return maxLabels.stream()
+                        .min((Comparator.naturalOrder()))
+                        .orElseThrow(() -> {
+                            return new ComputerException(
+                                       "Can't find min label in maxLabels");
+                        });
     }
 }
