@@ -92,7 +92,8 @@ public class ClusteringCoefficient implements Computation<IdList> {
 
     private Long triangleCount(ComputationContext context, Vertex vertex,
                                Iterator<IdList> messages) {
-        IdList neighbors = ((TriangleCountValue) vertex.value()).idList();
+        IdList neighbors = ((ClusteringCoefficientValue) vertex
+                                                         .value()).idList();
 
         if (context.superstep() == 1) {
             // Collect outgoing neighbors
@@ -109,6 +110,8 @@ public class ClusteringCoefficient implements Computation<IdList> {
                 }
             }
             // Save degree to vertex value here (optional)
+            ((ClusteringCoefficientValue) vertex.value())
+                                          .setDegree(neighbors.size());
 
             // Send all neighbors to neighbors
             for (Id targetId : neighbors.values()) {
