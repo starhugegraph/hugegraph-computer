@@ -15,7 +15,7 @@ on:
       - /^v[0-9]\..*$/
   workflow_dispatch:
     branches:
-      - /^*$/
+      - /^.*$/
 
 jobs:
   computer-ci:
