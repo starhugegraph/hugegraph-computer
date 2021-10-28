@@ -98,10 +98,6 @@ public class ClusteringCoefficientTest extends AlgorithmTestBase {
     public void testClusteringCoefficientValue() {
         ClusteringCoefficientValue value = new ClusteringCoefficientValue();
         value.count(10L);
-        Assert.assertThrows(UnsupportedOperationException.class,
-               () -> value.assign(null));
-        Assert.assertThrows(UnsupportedOperationException.class,
-               () -> value.compareTo(new ClusteringCoefficientValue()));
 
         ClusteringCoefficientValue copy;
         copy = (ClusteringCoefficientValue) value.copy();
