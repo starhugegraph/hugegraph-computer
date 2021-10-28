@@ -15,10 +15,7 @@ on:
       - /^v[0-9]\..*$/
   workflow_dispatch:
     branches:
-      - master
-      - /^release-.*$/
-      - /^test-.*$/
-      - /^v[0-9]\..*$/
+      - /^*$/
 
 jobs:
   computer-ci:
