@@ -41,7 +41,6 @@ import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.worker.load.LoadService;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 import com.baidu.hugegraph.util.Log;
-import com.baidu.hugegraph.util.TimeUtil;
 
 public class WorkerInputManager implements Manager {
 
@@ -100,9 +99,16 @@ public class WorkerInputManager implements Manager {
         this.sendManager.startSend(MessageType.VERTEX);
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
         long time = 0;
-        while (iterator.hasNext()) {
-            StopWatch watcher2 = new StopWatch();
+        StopWatch watcher2 = new StopWatch();
+        while (true) {
+            watcher2.reset();
             watcher2.start();
+            boolean b = iterator.hasNext();
+            if (!b) {
+                watcher2.stop();
+                time += watcher2.getTime(TimeUnit.MILLISECONDS);
+                break;
+            }
             Vertex vertex = iterator.next();
             watcher2.stop();
             time += watcher2.getTime(TimeUnit.MILLISECONDS);
@@ -111,16 +117,22 @@ public class WorkerInputManager implements Manager {
         LOG.info("load vertx cost:{}", time);
         this.sendManager.finishSend(MessageType.VERTEX);
         watcher.stop();
-        LOG.info("input vertex cost:{}",
-                 TimeUtil.readableTime(watcher.getTime()));
+        LOG.info("input vertex cost:{}", watcher.getTime(TimeUnit.MILLISECONDS));
         watcher.reset();
         watcher.start();
         this.sendManager.startSend(MessageType.EDGE);
         time = 0;
         iterator = this.loadService.createIteratorFromEdge();
-        while (iterator.hasNext()) {
-            StopWatch watcher3 = new StopWatch();
+        StopWatch watcher3 = new StopWatch();
+        while (true) {
+            watcher3.reset();
             watcher3.start();
+            boolean b = iterator.hasNext();
+            if (!b) {
+                watcher3.stop();
+                time += watcher3.getTime(TimeUnit.MILLISECONDS);
+                break;
+            }
             Vertex vertex = iterator.next();
             watcher3.stop();
             time += watcher3.getTime(TimeUnit.MILLISECONDS);
@@ -149,7 +161,6 @@ public class WorkerInputManager implements Manager {
         LOG.info("load edge cost:{}", time);
         this.sendManager.finishSend(MessageType.EDGE);
         watcher.stop();
-        LOG.info("input edge cost:{}",
-                 TimeUtil.readableTime(watcher.getTime()));
+        LOG.info("input edge cost:{}", watcher.getTime(TimeUnit.MILLISECONDS));
     }
 }
