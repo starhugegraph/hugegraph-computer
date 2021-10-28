@@ -117,7 +117,8 @@ public class WorkerInputManager implements Manager {
         LOG.info("load vertx cost:{}", time);
         this.sendManager.finishSend(MessageType.VERTEX);
         watcher.stop();
-        LOG.info("input vertex cost:{}", watcher.getTime(TimeUnit.MILLISECONDS));
+        LOG.info("input vertex cost:{}",
+                 watcher.getTime(TimeUnit.MILLISECONDS));
         watcher.reset();
         watcher.start();
         this.sendManager.startSend(MessageType.EDGE);
