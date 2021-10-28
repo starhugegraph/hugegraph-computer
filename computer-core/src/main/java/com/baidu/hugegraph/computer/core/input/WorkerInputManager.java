@@ -90,8 +90,28 @@ public class WorkerInputManager implements Manager {
         while (iterator.hasNext()) {
             Vertex vertex = iterator.next();
             this.sendManager.sendEdge(vertex);
+            //inverse edge here
+            if (!this.config.get(
+                     ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION)) {
+                continue;
+            }
+            System.out.println("\n\n\n\n\n sending inverse_edge \n\n\n\n\n");
+            for (Edge edge:vertex.edges()) {
+                Id targetId = edge.targetId();
+                Id sourceId = vertex.id();
+
+                Vertex vertexInv = new DefaultVertex(graphFactory,
+                                                  targetId, null);
+                Edge edgeInv = graphFactory.
+                               createEdge(edge.label(), edge.name(), sourceId
+                );
+                Properties properties = edge.properties();
+                properties.put("inv", new BooleanValue(true));
+                edgeInv.properties(properties);
+                vertexInv.addEdge(edgeInv);
+                this.sendManager.sendEdge(vertexInv);
+           }
         }
         this.sendManager.finishSend(MessageType.EDGE);
-        //inverse edges here
     }
 }
