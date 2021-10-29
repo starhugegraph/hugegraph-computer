@@ -49,7 +49,7 @@ public class EdgesInput {
     private final File edgeFile;
     private final int flushThreshold;
     private final int edgeLimitNum;
-    private final int UNLIMITED_NUM = -1;
+    private static final int UNLIMITED_NUM = -1;
 
     public EdgesInput(ComputerContext context, File edgeFile) {
         this.graphFactory = context.graphFactory();
