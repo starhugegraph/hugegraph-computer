@@ -83,6 +83,7 @@ public class ClusteringCoefficientValue implements
         ClusteringCoefficientValue ccValue = new ClusteringCoefficientValue();
         ccValue.idList = this.idList.copy();
         ccValue.count = this.count.copy();
+        ccValue.degree = this.degree.copy();
         return ccValue;
     }
 
