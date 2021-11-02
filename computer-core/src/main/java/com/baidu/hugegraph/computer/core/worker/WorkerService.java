@@ -24,7 +24,9 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.aggregator.Aggregator;
@@ -368,8 +370,11 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.workerInputDone();
         this.bsp4Worker.waitMasterInputDone();
 
+        StopWatch watcher = new StopWatch();
+        watcher.start();
         WorkerStat workerStat = this.computeManager.input();
-
+        watcher.stop();
+        LOG.info("merge files cost:{}", watcher.getTime(TimeUnit.MILLISECONDS));
         this.bsp4Worker.workerStepDone(Constants.INPUT_SUPERSTEP,
                                        workerStat);
         SuperstepStat superstepStat = this.bsp4Worker.waitMasterStepDone(
