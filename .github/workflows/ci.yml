@@ -78,8 +78,8 @@ jobs:
           $TRAVIS_DIR/install-hugegraph-from-source.sh $COMMIT_ID | grep -v "Download" | grep -v "Progress" | grep -v "Warn"
           $TRAVIS_DIR/load-data-into-hugegraph.sh | grep -v "Download" | grep -v "Progress"
 
-      - name: Integrate test
-        run: mvn test -P integrate-test
+#      - name: Integrate test
+#        run: mvn test -P integrate-test
 
       - name: Unit test
         run: mvn test -P unit-test

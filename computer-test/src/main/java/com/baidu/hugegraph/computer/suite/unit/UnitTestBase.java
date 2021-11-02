@@ -80,8 +80,12 @@ public class UnitTestBase {
 
     protected static void clearAll() {
         // TODO: Test CI and comment now
+        try {
+            CLIENT.graphs().createGraph("aaa", "bbb");
+        } catch (Exception e) {
+            e.getMessage();
+        }
         CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
-        CLIENT.graphs().createGraph("aaa", "bbb");
     }
 
     public static void assertIdEqualAfterWriteAndRead(Id oldId)
