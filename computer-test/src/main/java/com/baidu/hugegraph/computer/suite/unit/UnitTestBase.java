@@ -83,7 +83,7 @@ public class UnitTestBase {
         try {
             CLIENT.graphs().createGraph("aaa", "bbb");
         } catch (Exception e) {
-            e.getMessage();
+            e.printStackTrace();
         }
         CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
     }
