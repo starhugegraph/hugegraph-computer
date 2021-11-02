@@ -79,12 +79,6 @@ public class UnitTestBase {
                       .build();
 
     protected static void clearAll() {
-        // TODO: Test CI and comment now
-        try {
-            CLIENT.graphs().createGraph("aaa", "bbb");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
     }
 
