@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.suite.unit;
 
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.ALGORITHM_PARAMS_CLASS;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.AUTH_PASSWD;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.AUTH_TOKEN;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.AUTH_USRNAME;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.HUGEGRAPH_GRAPH_NAME;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.HUGEGRAPH_URL;
@@ -72,13 +73,14 @@ public class UnitTestBase {
     private static final String GRAPH = HUGEGRAPH_GRAPH_NAME.defaultValue();
     private static final HugeClient CLIENT =
             HugeClient.builder(URL, GRAPH)
+                      .configToken(AUTH_TOKEN.defaultValue())
                       .configUser(AUTH_USRNAME.defaultValue(),
                                   AUTH_PASSWD.defaultValue())
                       .build();
 
     protected static void clearAll() {
         // TODO: Test CI and comment now
-        //CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
+        CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
     }
 
     public static void assertIdEqualAfterWriteAndRead(Id oldId)

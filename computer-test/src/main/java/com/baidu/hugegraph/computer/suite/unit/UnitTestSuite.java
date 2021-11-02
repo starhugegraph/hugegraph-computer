@@ -25,8 +25,6 @@ import org.junit.runners.Suite;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestSuite;
-import com.baidu.hugegraph.computer.core.allocator.AllocatorTestSuite;
-import com.baidu.hugegraph.computer.core.common.CommonTestSuite;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.LongValue;
@@ -36,8 +34,8 @@ import com.baidu.hugegraph.util.Log;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    AllocatorTestSuite.class,
-    CommonTestSuite.class,
+    //AllocatorTestSuite.class,
+    //CommonTestSuite.class,
     //ConfigTestSuite.class,
     //UtilTestSuite.class,
     //BspTestSuite.class,
