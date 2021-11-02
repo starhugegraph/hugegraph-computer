@@ -22,6 +22,7 @@ package com.baidu.hugegraph.computer.core.compute;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
@@ -66,10 +67,21 @@ public class ComputeManager<M extends Value<M>> {
         WorkerStat workerStat = new WorkerStat();
         this.recvManager.waitReceivedAllMessages();
 
+        StopWatch watcher = new StopWatch();
+
+        watcher.start();
         Map<Integer, PeekableIterator<KvEntry>> vertices =
                      this.recvManager.vertexPartitions();
+        watcher.stop();
+        LOG.info("Merge vertex partitions cost: {}", watcher.getTime());
+
+        watcher.reset();
+        watcher.start();
         Map<Integer, PeekableIterator<KvEntry>> edges =
                      this.recvManager.edgePartitions();
+        watcher.stop();
+        LOG.info("Merge edge partitions cost: {}", watcher.getTime());
+
         // TODO: parallel input process
         for (Map.Entry<Integer, PeekableIterator<KvEntry>> entry :
              vertices.entrySet()) {
@@ -86,7 +98,11 @@ public class ComputeManager<M extends Value<M>> {
             PartitionStat partitionStat = null;
             ComputerException inputException = null;
             try {
+                watcher.reset();
+                watcher.start();
                 partitionStat = part.input(vertexIter, edgesIter);
+                watcher.stop();
+                LOG.info("Partition input cost: {}", watcher.getTime());
             } catch (ComputerException e) {
                 inputException = e;
             } finally {

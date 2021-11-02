@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.aggregator.Aggregator;
@@ -218,10 +219,11 @@ public class WorkerService implements Closeable {
         this.checkInited();
 
         LOG.info("{} WorkerService execute", this);
-
+        StopWatch watcher = new StopWatch();
         // TODO: determine superstep if fail over is enabled.
         int superstep = this.bsp4Worker.waitMasterResumeDone();
         SuperstepStat superstepStat;
+        watcher.start();
         if (superstep == Constants.INPUT_SUPERSTEP) {
             superstepStat = this.inputstep();
             superstep++;
@@ -229,12 +231,17 @@ public class WorkerService implements Closeable {
             // TODO: Get superstepStat from bsp service.
             superstepStat = null;
         }
+        watcher.stop();
+        LOG.info("{} WorkerService inputstep cost: {}",
+                 this, watcher.getTime());
 
         /*
          * The master determine whether to execute the next superstep. The
          * superstepStat is active while master decides to execute the next
          * superstep.
          */
+        watcher.reset();
+        watcher.start();
         while (superstepStat.active()) {
             WorkerContext context = new SuperstepContext(superstep,
                                                          superstepStat);
@@ -280,7 +287,16 @@ public class WorkerService implements Closeable {
             superstepStat = this.bsp4Worker.waitMasterStepDone(superstep);
             superstep++;
         }
+        watcher.stop();
+        LOG.info("{} WorkerService compute cost: {}",
+                this, watcher.getTime());
+
+        watcher.reset();
+        watcher.start();
         this.outputstep();
+        watcher.stop();
+        LOG.info("{} WorkerService output cost: {}",
+                this, watcher.getTime());
     }
 
     @Override
@@ -362,13 +378,23 @@ public class WorkerService implements Closeable {
      */
     private SuperstepStat inputstep() {
         LOG.info("{} WorkerService inputstep started", this);
+        StopWatch watcher = new StopWatch();
+        watcher.start();
         WorkerInputManager manager = this.managers.get(WorkerInputManager.NAME);
         manager.loadGraph();
+        watcher.stop();
+        LOG.info("{} WorkerService loadGraph cost: {}",
+                 this, watcher.getTime());
 
         this.bsp4Worker.workerInputDone();
         this.bsp4Worker.waitMasterInputDone();
 
+        watcher.reset();
+        watcher.start();
         WorkerStat workerStat = this.computeManager.input();
+        watcher.stop();
+        LOG.info("{} WorkerService computerManager input cost: {}",
+                this, watcher.getTime());
 
         this.bsp4Worker.workerStepDone(Constants.INPUT_SUPERSTEP,
                                        workerStat);

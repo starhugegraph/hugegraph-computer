@@ -49,10 +49,13 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDirReade
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.DisperseEvenlySelector;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.InputFilesSelector;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.SelectedFiles;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 public class SorterImpl implements Sorter {
 
     private final Config config;
+    private static final Logger LOG = Log.logger(SorterImpl.class);
 
     public SorterImpl(Config config) {
         this.config = config;

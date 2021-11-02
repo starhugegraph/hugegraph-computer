@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
@@ -103,8 +104,13 @@ public abstract class MessageRecvPartition {
          * TODO: create iterator directly from buffers if there is no
          *       outputFiles.
          */
+        StopWatch watcher = new StopWatch();
+        watcher.start();
         this.flushAllBuffersAndWaitSorted();
         this.mergeOutputFilesIfNeeded();
+        watcher.stop();
+        LOG.info("Partition merge files cost: {}, outputFiles size:{}",
+                 watcher.getTime(), this.outputFiles.size());
         if (this.outputFiles.size() == 0) {
             return PeekableIterator.emptyIterator();
         }

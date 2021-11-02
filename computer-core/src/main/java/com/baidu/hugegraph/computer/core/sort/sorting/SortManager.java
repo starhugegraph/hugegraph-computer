@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
@@ -116,8 +117,12 @@ public abstract class SortManager implements Manager {
                                        type, output,
                                        this.flushThreshold);
             try {
+                StopWatch watch = new StopWatch();
+                watch.start();
                 this.sorter.sortBuffer(bufferForRead, flusher,
                                        type == MessageType.EDGE);
+                watch.stop();
+                LOG.info("Sort buffer cost:{}", watch.getTime());
             } catch (Exception e) {
                 throw new ComputerException("Failed to sort buffers of %s " +
                                             "message", e, type.name());
@@ -136,7 +141,11 @@ public abstract class SortManager implements Manager {
                 flusher.sources(inputs.size());
             }
             try {
+                StopWatch watch = new StopWatch();
+                watch.start();
                 this.sorter.mergeBuffers(inputs, flusher, path, withSubKv);
+                watch.stop();
+                LOG.info("Merge buffers cost: {}", watch.getTime());
             } catch (Exception e) {
                 throw new ComputerException(
                           "Failed to merge %s buffers to file '%s'",
@@ -151,7 +160,11 @@ public abstract class SortManager implements Manager {
             flusher.sources(inputs.size());
         }
         try {
+            StopWatch watch = new StopWatch();
+            watch.start();
             this.sorter.mergeInputs(inputs, flusher, outputs, withSubKv);
+            watch.stop();
+            LOG.info("Merge inputs cost: {}", watch.getTime());
         } catch (Exception e) {
             throw new ComputerException(
                       "Failed to merge %s files into %s files",
