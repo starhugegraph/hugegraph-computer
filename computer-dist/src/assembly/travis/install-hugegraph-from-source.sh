@@ -18,7 +18,7 @@ mvn package -DskipTests
 mv hugegraph-*.tar.gz ../
 cd ../
 rm -rf hugegraph
-tar -zxf hugegraph-*.tar.gz
+tar xzf hugegraph-*.tar.gz
 
 cd "$(find hugegraph-* | head -1)"
 # modify port for hg-server to avoid conflicts

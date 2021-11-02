@@ -19,6 +19,12 @@
 
 package com.baidu.hugegraph.computer.suite.unit;
 
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.ALGORITHM_PARAMS_CLASS;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.AUTH_PASSWD;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.AUTH_USRNAME;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.HUGEGRAPH_GRAPH_NAME;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.HUGEGRAPH_URL;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +35,6 @@ import org.slf4j.Logger;
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -63,15 +68,17 @@ public class UnitTestBase {
                                         "0123456789" +
                                         "abcdefghijklmnopqrstuvxyz";
 
-    private static final String URL = ComputerOptions.HUGEGRAPH_URL
-                                                     .defaultValue();
-    private static final String GRAPH = ComputerOptions.HUGEGRAPH_GRAPH_NAME
-                                                       .defaultValue();
-    private static final HugeClient CLIENT = HugeClient.builder(URL, GRAPH)
-                                                       .build();
+    private static final String URL = HUGEGRAPH_URL.defaultValue();
+    private static final String GRAPH = HUGEGRAPH_GRAPH_NAME.defaultValue();
+    private static final HugeClient CLIENT =
+            HugeClient.builder(URL, GRAPH)
+                      .configUser(AUTH_USRNAME.defaultValue(),
+                                  AUTH_PASSWD.defaultValue())
+                      .build();
 
     protected static void clearAll() {
-        CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
+        // TODO: Test CI and comment now
+        //CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
     }
 
     public static void assertIdEqualAfterWriteAndRead(Id oldId)
@@ -127,9 +134,8 @@ public class UnitTestBase {
                             "The option value must be String class");
             map.put(((TypedOption<?, ?>) key).name(), (String) value);
         }
-        if (!map.keySet().contains(
-                          ComputerOptions.ALGORITHM_PARAMS_CLASS.name())) {
-            map.put(ComputerOptions.ALGORITHM_PARAMS_CLASS.name(),
+        if (!map.keySet().contains(ALGORITHM_PARAMS_CLASS.name())) {
+            map.put(ALGORITHM_PARAMS_CLASS.name(),
                     MockComputationParams.class.getName());
         }
         ComputerContextUtil.initContext(map);
