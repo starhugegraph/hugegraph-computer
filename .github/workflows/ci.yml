@@ -61,8 +61,8 @@ jobs:
         env:
           TRAVIS_DIR: computer-dist/src/assembly/travis
         run: |
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-1.9.7.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=1.9.7 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
           md5sum $TRAVIS_DIR/lib/hugegraph-client-1.9.7.jar
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-1.9.7.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=1.9.7 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.9.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.9 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/common-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-loader-0.12.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-loader -Dversion=0.12.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/loader-pom.xml
           mvn clean compile -Dmaven.javadoc.skip=true | grep -v "Downloading\|Downloaded"
