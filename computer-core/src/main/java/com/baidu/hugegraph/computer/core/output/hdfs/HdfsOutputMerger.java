@@ -52,7 +52,8 @@ public class HdfsOutputMerger {
             String dir = config.get(ComputerOptions.OUTPUT_HDFS_DIR);
             String jobId = config.get(ComputerOptions.JOB_ID);
             int partitions = config.get(ComputerOptions.JOB_PARTITIONS_COUNT);
-            this.sourcePaths = this.paths(dir, jobId, partitions);
+            this.sourcePaths = this.existsPartitionPaths(dir, jobId, partitions)
+                                   .toArray(new Path[0]);
             this.mergedPath = new Path(new Path(dir, jobId), MERGED_FILE_NAME);
         } catch (Exception e) {
             throw new ComputerException("Failed to init hdfs output merger", e);
@@ -68,8 +69,8 @@ public class HdfsOutputMerger {
         }
     }
 
-    private Path[] paths(String dir, String jobId, int partitions) throws
-                                                                   IOException {
+    private List<Path> existsPartitionPaths(String dir, String jobId,
+                                            int partitions) throws IOException {
         List<Path> pathList = new ArrayList<>();
         for (int i = 0; i < partitions; i++) {
             Path path = HdfsOutput.buildPath(dir, jobId, i);
@@ -77,7 +78,7 @@ public class HdfsOutputMerger {
                 pathList.add(path);
             }
         }
-        return pathList.toArray(new Path[0]);
+        return pathList;
     }
 
     protected void close() {
