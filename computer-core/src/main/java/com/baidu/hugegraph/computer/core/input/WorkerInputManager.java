@@ -93,11 +93,18 @@ public class WorkerInputManager implements Manager {
      */
     public void loadGraph() {
         StopWatch watcher = new StopWatch();
-        watcher.start();
+        long time = 0L;
         this.sendManager.startSend(MessageType.VERTEX);
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
-        while (iterator.hasNext()) {
+        while (true) {
+            watcher.start();
+            if (!iterator.hasNext()) {
+                break;
+            }
             Vertex vertex = iterator.next();
+            watcher.stop();
+            time += watcher.getTime();
+
             this.sendManager.sendVertex(vertex);
         }
         this.sendManager.finishSend(MessageType.VERTEX);

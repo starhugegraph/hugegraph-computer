@@ -25,7 +25,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.EntryIterator;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesInput;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesWithFirstSubKvInput;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.file.HgkvDir;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.file.HgkvDirImpl;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
@@ -122,7 +128,7 @@ public abstract class SortManager implements Manager {
                 this.sorter.sortBuffer(bufferForRead, flusher,
                                        type == MessageType.EDGE);
                 watch.stop();
-                LOG.info("Sort buffer cost:{}", watch.getTime());
+                this.logBuffer(bufferForRead, type, watch.getNanoTime());
             } catch (Exception e) {
                 throw new ComputerException("Failed to sort buffers of %s " +
                                             "message", e, type.name());
@@ -130,6 +136,38 @@ public abstract class SortManager implements Manager {
 
             return ByteBuffer.wrap(output.buffer(), 0, (int) output.position());
         }, this.sortExecutor);
+    }
+
+    private void logBuffer(RandomAccessInput input, MessageType type,
+                           long time) {
+        long numEntries = 0L;
+        long subKvEntries = 0L;
+        try {
+            input.seek(0L);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        EntryIterator entries;
+        if (type == MessageType.EDGE) {
+            entries = new KvEntriesWithFirstSubKvInput(input);
+        } else {
+            entries = new KvEntriesInput(input);
+        }
+        while (entries.hasNext()) {
+            KvEntry next = entries.next();
+            numEntries++;
+            subKvEntries += next.numSubEntries();
+        }
+
+        if (type == MessageType.EDGE) {
+            LOG.info("Sort edge buffer cost: {} ns, numEntries: {} ," +
+                            " edgeTotal: {} ",
+                    time, numEntries, subKvEntries);
+        } else {
+            LOG.info("Sort vertex buffer cost: {} ns, numEntries: {} ," +
+                            " edgeTotal: {} ",
+                    time, numEntries, subKvEntries);
+        }
     }
 
     public CompletableFuture<Void> mergeBuffers(List<RandomAccessInput> inputs,
@@ -145,7 +183,7 @@ public abstract class SortManager implements Manager {
                 watch.start();
                 this.sorter.mergeBuffers(inputs, flusher, path, withSubKv);
                 watch.stop();
-                LOG.info("Merge buffers cost: {}", watch.getTime());
+                this.logBuffers(inputs, withSubKv, watch.getTime());
             } catch (Exception e) {
                 throw new ComputerException(
                           "Failed to merge %s buffers to file '%s'",
@@ -154,22 +192,82 @@ public abstract class SortManager implements Manager {
         }, this.sortExecutor);
     }
 
+    private void logBuffers(List<RandomAccessInput> inputs,
+                            boolean withSubKv, long time) {
+        for (RandomAccessInput input : inputs) {
+            try {
+                input.seek(0L);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        long numEntries = 0L;
+        long subKvEntries = 0L;
+        List<EntryIterator> entries;
+        if (withSubKv) {
+            entries = inputs.stream()
+                    .map(KvEntriesWithFirstSubKvInput::new)
+                    .collect(Collectors.toList());
+        } else {
+            entries = inputs.stream()
+                    .map(KvEntriesInput::new)
+                    .collect(Collectors.toList());
+        }
+        for (EntryIterator iter : entries) {
+            while (iter.hasNext()) {
+                KvEntry next = iter.next();
+                numEntries++;
+                subKvEntries += next.numSubEntries();
+            }
+        }
+
+        if (withSubKv) {
+            LOG.info("Merge edge buffers cost: {} ms, numEntries: {} ," +
+                            " edgeTotal: {} ",
+                     time, numEntries, subKvEntries);
+        } else {
+            LOG.info("Merge vertex buffers cost: {} ms, numEntries: {} ," +
+                            " edgeTotal: {} ",
+                    time, numEntries, subKvEntries);
+        }
+    }
+
     public void mergeInputs(List<String> inputs, List<String> outputs,
                             boolean withSubKv, OuterSortFlusher flusher) {
         if (withSubKv) {
             flusher.sources(inputs.size());
         }
         try {
+            int inputsSize = inputs.size();
             StopWatch watch = new StopWatch();
             watch.start();
             this.sorter.mergeInputs(inputs, flusher, outputs, withSubKv);
             watch.stop();
-            LOG.info("Merge inputs cost: {}", watch.getTime());
+            this.logMergeInputs(inputs, watch.getTime(), inputsSize);
         } catch (Exception e) {
             throw new ComputerException(
                       "Failed to merge %s files into %s files",
                       e, inputs.size(), outputs.size());
         }
+    }
+
+    public void logMergeInputs(List<String> inputs, long time, int inputSize) {
+        long numEntries = 0L;
+        long subKvEntries = 0L;
+        for (String input : inputs) {
+            try {
+                HgkvDir dir = HgkvDirImpl.open(input);
+                numEntries += dir.numEntries();
+                subKvEntries += dir.numSubEntries();
+                dir.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        LOG.info("Merge inputs cost: {} ms, numEntries: {} , edgeTotal: {} ," +
+                        "inputsSize: {}",
+                 time, numEntries, subKvEntries, inputSize);
     }
 
     public PeekableIterator<KvEntry> iterator(List<String> outputs,
