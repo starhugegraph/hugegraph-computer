@@ -135,8 +135,9 @@ public class EdgesOutput {
                         this.writeFixLengthId(this.output, edge.targetId());
                     }
                     //write edge id
-                    edge.id().write(this.output);
-
+                    if (!this.useFixLength) {
+                        edge.id().write(this.output);
+                    }
                     //write label
                     byte[] blabel = CoderUtil.encode(edge.label());
                     this.output.writeByte(blabel.length);
@@ -191,8 +192,9 @@ public class EdgesOutput {
                     }
 
                     //write edge id
-                    edge.id().write(this.output);
-
+                    if (!this.useFixLength) {
+                        edge.id().write(this.output);
+                    }
                     //write properties
                     Map<String, Value<?>> keyValues = edge.properties().get();
                     this.output.writeByte(keyValues.size());
@@ -248,7 +250,9 @@ public class EdgesOutput {
                     }
 
                     //write edge id
-                    edge.id().write(this.output);
+                    if (!this.useFixLength) {
+                        edge.id().write(this.output);
+                    }
 
                     //write properties
                     Map<String, Value<?>> keyValues = edge.properties().get();

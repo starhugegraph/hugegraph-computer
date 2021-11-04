@@ -280,8 +280,9 @@ public class EdgesInput {
                                       graphFactory().createId(lId)); 
                     }
                     // Read subValue
-                    edge.id(StreamGraphInput.readId(in));
-
+                    if (!this.useFixLength) {
+                        edge.id(StreamGraphInput.readId(in));
+                    }
                     edge.label(StreamGraphInput.readLabel(in));
                     
                     Properties props = this.graphFactory.createProperties();
@@ -318,7 +319,9 @@ public class EdgesInput {
                                       graphFactory().createId(lId));
                     }
                     // Read subValue
-                    edge.id(StreamGraphInput.readId(in));
+                    if (!this.useFixLength) {
+                        edge.id(StreamGraphInput.readId(in));
+                    }
                     Properties props = this.graphFactory.createProperties();
                     props.read(in);
                     edge.properties(props);
@@ -359,20 +362,8 @@ public class EdgesInput {
                                       graphFactory().createId(lId));
                     }
                     // Read subValue
-                    Long pos = in.position();
-                    byte[] btest = in.readBytes(1);
-                    int type = (int)btest[0];
-                    if (type >= 0 && type < 3) {
-                        in.seek(pos);
+                    if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
-                    }
-                    else {
-                        LOG.info("edge {} {} {}",
-                                 edge.label(), edge.name(), edge.targetId());
-                        LOG.info("btest {}", btest);
-                        int len = input.readFixedInt();
-                        byte[] dummy = new byte[len];
-                        in.readFully(dummy, 0, len);
                     }
                     // Read properties
                     Properties props = this.graphFactory.createProperties();
