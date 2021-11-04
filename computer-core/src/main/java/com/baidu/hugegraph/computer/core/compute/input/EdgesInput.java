@@ -361,7 +361,8 @@ public class EdgesInput {
                     // Read subValue
                     //System.out.printf("\n\n\n %s %s %s \n", 
                     //           edge.label(), edge.name(), edge.targetId());
-                    LOG.info("edge {} {} {}", edge.label(), edge.name(), edge.targetId());
+                    LOG.info("edge {} {} {}",
+                        edge.label(), edge.name(), edge.targetId());
                     Long pos = in.position();
                     byte[] btest = in.readBytes(2);
                     LOG.info("btest {}", btest);
