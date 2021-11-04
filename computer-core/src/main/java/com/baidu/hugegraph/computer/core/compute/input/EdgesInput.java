@@ -342,6 +342,7 @@ public class EdgesInput {
                     edge.name(StreamGraphInput.readLabel(in));
 
                     if (!this.useFixLength) {
+                        LOG.info("aaaa");
                         edge.targetId(StreamGraphInput.readId(in));
                     }
                     else {
@@ -374,7 +375,7 @@ public class EdgesInput {
                         byte[] dummy = new byte[len];
                         in.readFully(dummy, 0, len);
                     }
-
+LO                  LOG.info("bbbb");
                     // Read properties
                     Properties props = this.graphFactory.createProperties();
                     props.read(in);
