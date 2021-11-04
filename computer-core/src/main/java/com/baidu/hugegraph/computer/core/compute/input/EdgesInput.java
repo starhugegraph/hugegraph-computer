@@ -40,8 +40,12 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.StreamGraphInput;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 import java.nio.ByteBuffer;
+import org.slf4j.Logger;
+import com.baidu.hugegraph.util.Log;
 
 public class EdgesInput {
+
+    private static final Logger LOG = Log.logger("ei");
 
     private RandomAccessInput input;
     private ReusablePointer idPointer;
@@ -357,13 +361,15 @@ public class EdgesInput {
                     // Read subValue
                     //System.out.printf("\n\n\n %s %s %s \n", 
                     //           edge.label(), edge.name(), edge.targetId());
-                    //Long pos = in.position();
-                    //byte[] btest = in.readBytes(2);
+                    LOG.info("edge {} {} {}", edge.label(), edge.name(), edge.targetId());
+                    Long pos = in.position();
+                    byte[] btest = in.readBytes(2);
+                    LOG.info("btest {}", btest);
                     //for (int l = 0; l < 2; l++) {
                     //    System.out.printf("%02X ", btest[l]);
                     //}
                     //System.out.printf("\n\n");
-                    //in.seek(pos);
+                    in.seek(pos);
                     edge.id(StreamGraphInput.readId(in));
                    
                     // Read properties
