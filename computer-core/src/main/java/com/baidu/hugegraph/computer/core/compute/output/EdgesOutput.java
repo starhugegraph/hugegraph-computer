@@ -89,9 +89,6 @@ public class EdgesOutput {
 
     // TODO: use one reused Edges instance to read batches for each vertex.
     public void writeEdges(Vertex vertex, Edges edges) {
-        for (Edge edge:edges) {
-            LOG.info("a {}", edge.targetId());
-        }
         int count = edges.size();
         int goodcount = 0;
         try {
