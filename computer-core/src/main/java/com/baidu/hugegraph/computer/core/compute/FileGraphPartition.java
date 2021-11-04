@@ -263,6 +263,9 @@ public class FileGraphPartition<M extends Value<M>> {
             vertex.id(id);
             vertexOutput.writeVertex(vertex);
             if (edges.size() > 0) {
+                for (Edge edge:edges) {
+                    LOG.info("a {}", edge.targetId());
+                }
                 edgesOutput.writeEdges(vertex, edges);
             }
             selfIncreaseID++;
