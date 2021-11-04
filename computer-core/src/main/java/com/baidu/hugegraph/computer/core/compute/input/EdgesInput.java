@@ -77,11 +77,10 @@ public class EdgesInput {
                 long startPosition = this.input.position();
                 this.idPointer.read(this.input);
                 int status = vidPointer.compareTo(this.idPointer);
-                // No edges
                 if (status < 0) {
                     /*
-                     * The current batch belong to vertex that vertex id is
-                     * bigger than specified id.
+                     * No edges, the current batch belong to vertex that
+                     * vertex id is bigger than specified id.
                      */
                     this.input.seek(startPosition);
                     return EmptyEdges.instance();
@@ -214,15 +213,16 @@ public class EdgesInput {
     }
 
     /**
-     * Read edges & attach it by input stream, also limit the edges here
-     * TODO: use one reused Edges instance to read batches for each vertex.
+     * Read edges & attach it by input stream, also could limit the edges here
+     * TODO: use one reused Edges instance to read batches for each vertex &
+     *       limit edges in early step (like input/send stage)
      */
     private Edges readEdges(RandomAccessInput in) {
         try {
-            // Limit edges to read here (unlimited by default)
+            // Could limit edges to read here (unlimited by default)
             int count = in.readFixedInt();
             // update count when "-1 < limitNum < count"
-            if (this.edgeLimitNum > UNLIMITED_NUM &&
+            if (this.edgeLimitNum != UNLIMITED_NUM &&
                 this.edgeLimitNum < count) {
                 count = this.edgeLimitNum;
             }
@@ -232,7 +232,7 @@ public class EdgesInput {
                 for (int i = 0; i < count; i++) {
                     Edge edge = this.graphFactory.createEdge();
                     // Only use targetId as subKey, use props as subValue
-                    boolean inv = (in.readByte() == 1) ? true : false;
+                    boolean inv = (in.readByte() == 1);
                     edge.targetId(StreamGraphInput.readId(in));
                     // Read subValue
                     edge.id(StreamGraphInput.readId(in));
@@ -246,7 +246,7 @@ public class EdgesInput {
                 for (int i = 0; i < count; i++) {
                     Edge edge = this.graphFactory.createEdge();
                     // Use label + targetId as subKey, use props as subValue
-                    boolean inv = (in.readByte() == 1) ? true : false;
+                    boolean inv = (in.readByte() == 1);
                     edge.label(StreamGraphInput.readLabel(in));
                     edge.targetId(StreamGraphInput.readId(in));
                     // Read subValue
@@ -264,7 +264,7 @@ public class EdgesInput {
                      * Use label + sortValues + targetId as subKey,
                      * use properties as subValue
                      */
-                    boolean inv = (in.readByte() == 1) ? true : false;
+                    boolean inv = (in.readByte() == 1);
                     edge.label(StreamGraphInput.readLabel(in));
                     edge.name(StreamGraphInput.readLabel(in));
                     edge.targetId(StreamGraphInput.readId(in));
