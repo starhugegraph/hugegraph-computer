@@ -37,6 +37,7 @@ import com.baidu.hugegraph.computer.core.util.CoderUtil;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import java.util.Map;
 import java.nio.ByteBuffer;
+import com.baidu.hugegraph.computer.core.graph.id.Id;
 
 public class EdgesOutput {
 
@@ -133,14 +134,7 @@ public class EdgesOutput {
                         edge.targetId().write(this.output);
                     }
                     else {
-                        long lid = (long)(edge.targetId().asObject());
-                        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                        buffer.putLong(0, lid);
-                        byte[] bid = buffer.array();
-                        for (int j = 0; j < this.idBytes; j++) {
-                            int j_ = j + Long.BYTES - this.idBytes;
-                            this.output.writeByte(bid[j_]);
-                        }
+                        this.writeFixLengthId(this.output, edge.targetId());
                     }
                     //write edge id
                     edge.id().write(this.output);
@@ -195,14 +189,7 @@ public class EdgesOutput {
                         edge.targetId().write(this.output);
                     }
                     else {
-                        long lid = (long)(edge.targetId().asObject());
-                        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                        buffer.putLong(0, lid);
-                        byte[] bid = buffer.array();
-                        for (int j = 0; j < this.idBytes; j++) {
-                            int j_ = j + Long.BYTES - this.idBytes;
-                            this.output.writeByte(bid[j_]);
-                        }
+                        this.writeFixLengthId(this.output, edge.targetId());
                     }
 
                     //write edge id
@@ -259,14 +246,7 @@ public class EdgesOutput {
                         edge.targetId().write(this.output);
                     }
                     else {
-                        long lid = (long)(edge.targetId().asObject());
-                        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                        buffer.putLong(0, lid);
-                        byte[] bid = buffer.array();
-                        for (int j = 0; j < this.idBytes; j++) {
-                            int j_ = j + Long.BYTES - this.idBytes;
-                            this.output.writeByte(bid[j_]);
-                        }
+                        this.writeFixLengthId(this.output, edge.targetId());
                     }
 
                     //write edge id
@@ -299,6 +279,21 @@ public class EdgesOutput {
         } catch (IOException e) {
             throw new ComputerException("Failed to read edges from input '%s'",
                                         e, this.edgeFile.getAbsoluteFile());
+        }
+    }
+
+    private void writeFixLengthId(RandomAccessOutput output, Id id)
+                                throws IOException {
+        System.out.println("write fix Id");
+        System.out.println(id.idType());
+
+        long lid = (long)(id.asObject());
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(0, lid);
+        byte[] bid = buffer.array();
+        for (int j = 0; j < this.idBytes; j++) {
+            int j_ = j + Long.BYTES - this.idBytes;
+            this.output.writeByte(bid[j_]);
         }
     }
 
