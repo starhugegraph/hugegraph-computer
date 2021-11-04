@@ -143,7 +143,7 @@ public class QueuedMessageSender implements MessageSender {
                      * until any queue is available
                      */
                     if (emptyQueueCount >= channelCount) {
-                        LOG.info("The send executor was blocked " +
+                        LOG.debug("The send executor was blocked " +
                                  "to wait any queue not empty");
                         QueuedMessageSender.this.waitAnyQueueNotEmpty();
                     }
@@ -152,7 +152,7 @@ public class QueuedMessageSender implements MessageSender {
                      * until any client is available
                      */
                     if (busyClientCount >= channelCount) {
-                        LOG.info("The send executor was blocked " +
+                        LOG.debug("The send executor was blocked " +
                                  "to wait any client not busy");
                         QueuedMessageSender.this.waitAnyClientNotBusy();
                     }
