@@ -254,7 +254,7 @@ public class FileGraphPartition<M extends Value<M>> {
                     newId = this.context.graphFactory().createId(lId);
                     edge.targetId(newId);
                 }
-                LOG.info("{} write fix id", edge.targetId.idType());
+                LOG.info("{} write fix id", edge.targetId().idType());
             }
 
             Id id = this.context.graphFactory().createId(selfIncreaseID);
