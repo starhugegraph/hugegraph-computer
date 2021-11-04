@@ -222,7 +222,7 @@ public class FileGraphPartition<M extends Value<M>> {
                       e, 0);
         }
 
-        int selfIncreaseID = 0;
+        long selfIncreaseID = 0;
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
             Iterator<M> messageIter = this.messageInput.iterator(
@@ -247,6 +247,7 @@ public class FileGraphPartition<M extends Value<M>> {
                 else {
                     long lId = Long.parseLong((String)originId.asObject());
                     newId = this.context.graphFactory().createId(lId);
+                    edge.targetId(newId);
                 }
             }
 
