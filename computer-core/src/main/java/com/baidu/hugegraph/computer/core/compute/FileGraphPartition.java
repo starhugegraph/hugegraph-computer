@@ -56,11 +56,8 @@ import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import java.util.HashMap;
-import com.baidu.hugegraph.util.Log;
-import org.slf4j.Logger;
 
 public class FileGraphPartition<M extends Value<M>> {
-    private static final Logger LOG = Log.logger("test bleble");
 
     private static final String VERTEX = "vertex";
     private static final String EDGE = "edge";
@@ -255,10 +252,6 @@ public class FileGraphPartition<M extends Value<M>> {
                     edge.targetId(newId);
                 }
                 newedges.add(edge);
-                LOG.info("{} {}", originId, edge.targetId());
-            }
-            for (Edge edge:newedges) {
-                LOG.info("a {}", edge.targetId());
             }
 
             Id id = this.context.graphFactory().createId(selfIncreaseID);

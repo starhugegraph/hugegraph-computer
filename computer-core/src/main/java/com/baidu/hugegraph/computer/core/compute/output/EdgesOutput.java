@@ -38,11 +38,7 @@ import com.baidu.hugegraph.computer.core.graph.value.Value;
 import java.util.Map;
 import java.nio.ByteBuffer;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
-import com.baidu.hugegraph.util.Log;
-import org.slf4j.Logger;
 public class EdgesOutput {
-    private static final Logger LOG = Log.logger("test blabla");
-
     private RandomAccessOutput output;
     //private final ReusablePointer idPointer;
     //private final ReusablePointer valuePointer;
@@ -286,7 +282,6 @@ public class EdgesOutput {
 
     private void writeFixLengthId(RandomAccessOutput output, Id id)
                                 throws IOException {
-        LOG.info("        {}", id);
         long lid = (long)(id.asObject());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(0, lid);
