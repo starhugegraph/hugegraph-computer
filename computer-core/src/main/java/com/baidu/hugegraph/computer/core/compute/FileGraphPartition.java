@@ -244,6 +244,10 @@ public class FileGraphPartition<M extends Value<M>> {
                 if (newId != null) {
                     edge.targetId(newId);
                 }
+                else {
+                    long lId = Long.parseLong((String)originId.asObject());
+                    newId = this.context.graphFactory().createId(lId);
+                }
             }
 
             Id id = this.context.graphFactory().createId(selfIncreaseID);
