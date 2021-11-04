@@ -286,8 +286,7 @@ public class EdgesOutput {
 
     private void writeFixLengthId(RandomAccessOutput output, Id id)
                                 throws IOException {
-        LOG.info("{} write fix id", id);
-
+        LOG.info("        {}", id);
         long lid = (long)(id.asObject());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(0, lid);

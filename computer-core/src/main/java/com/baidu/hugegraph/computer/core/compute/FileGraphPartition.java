@@ -239,22 +239,24 @@ public class FileGraphPartition<M extends Value<M>> {
                 idHash.put(originId, newId);
             }
 
+            //System.out.printf(" \n\n\n %s \n", vertex.id());
             Edges edges = this.edgesInput.edges(
                               this.vertexInput.idPointer());
             for (Edge edge:edges) {
                 Id originId = edge.targetId();
                 Id newId = idHash.get(originId);
                 if (newId != null) {
-                    LOG.info("a");
+                    //LOG.info("a");
                     edge.targetId(newId);
                 }
                 else {
-                    LOG.info("b");
+                    //LOG.info("b");
                     long lId = Long.parseLong((String)originId.asObject());
                     newId = this.context.graphFactory().createId(lId);
                     edge.targetId(newId);
                 }
-                LOG.info("{} write fix id", edge.targetId());
+                LOG.info("{} {}", originId, edge.targetId());
+                //System.out.println(edge.targetId());
             }
 
             Id id = this.context.graphFactory().createId(selfIncreaseID);
