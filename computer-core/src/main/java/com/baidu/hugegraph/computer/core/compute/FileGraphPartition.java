@@ -57,7 +57,12 @@ import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
 public class FileGraphPartition<M extends Value<M>> {
+
+    private static final Logger LOG = Log.logger("partition");
 
     private static final String VERTEX = "vertex";
     private static final String EDGE = "edge";
@@ -228,6 +233,7 @@ public class FileGraphPartition<M extends Value<M>> {
                       e, 0);
         }
 
+        LOG.info("{} begin hash and write id", this);
         long selfIncreaseID = 0;
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
@@ -243,18 +249,25 @@ public class FileGraphPartition<M extends Value<M>> {
             Iterator<Edge> it = edges.iterator();
             edgesOutput.startWriteEdge(vertex);
             while (messageIter.hasNext()) {
-                Edge edge = it.next();
+                if (it.hasNext()) {
+                    Edge edge = it.next();
 
-                IdList idList = (IdList)(messageIter.next());
-                Id originId = idList.get(0);
-                Id newId = idList.get(1);
+                    IdList idList = (IdList)(messageIter.next());
+                    Id originId = idList.get(0);
+                    Id newId = idList.get(1);
              
-                edge.targetId(newId);
-                edgesOutput.writeEdge(edge);
+                    edge.targetId(newId);
+                    edgesOutput.writeEdge(edge);
+                }
+                else {
+                    LOG.info("{} no hash id, may drop edge", this);
+                }
             }
             edgesOutput.finishWriteEdge();
             selfIncreaseID++;
         }
+        LOG.info("{} end hash and write id", this);
+
         try {
             vertexOutput.close();
             edgesOutput.close();
