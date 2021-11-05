@@ -57,6 +57,9 @@ public class EdgesInput {
     private final ComputerContext context;
     private boolean useFixLength;
     private int idBytes;
+    private final int edgeLimitNum;
+    private static final int UNLIMITED_NUM = -1;
+
 
     public EdgesInput(ComputerContext context, File edgeFile) {
         this.graphFactory = context.graphFactory();
@@ -69,6 +72,8 @@ public class EdgesInput {
         this.context = context;
         this.useFixLength = false;
         this.idBytes = 8;
+        this.edgeLimitNum = context
+            .config().get(ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX);
     }
 
     public void init() throws IOException {
@@ -115,15 +120,15 @@ public class EdgesInput {
                     this.idPointer = new ReusablePointer(blId, Long.BYTES);
                     status = vidPointer.compareTo(this.idPointer);
                 }
-
-                if (status < 0) { // No edges
+                if (status < 0) {
                     /*
-                     * The current batch belong to vertex that vertex id is
-                     * bigger than specified id.
+                     * No edges, the current batch belong to vertex that
+                     * vertex id is bigger than specified id.
                      */
                     this.input.seek(startPosition);
                     return EmptyEdges.instance();
-                } else if (status == 0) { // Has edges
+                } else if (status == 0) {
+                    // Has edges
                     this.valuePointer.read(this.input);
                     Edges edges = this.readEdges(this.valuePointer.input());
                     if (edges.size() < this.flushThreshold) {
@@ -250,10 +255,21 @@ public class EdgesInput {
         }
     }
 
-    // TODO: use one reused Edges instance to read batches for each vertex.
+    /**
+     * Read edges & attach it by input stream, also could limit the edges here
+     * TODO: use one reused Edges instance to read batches for each vertex &
+     *       limit edges in early step (like input/send stage)
+     */
     private Edges readEdges(RandomAccessInput in) {
         try {
+            // Could limit edges to read here (unlimited by default)
             int count = in.readFixedInt();
+          
+            // update count when "-1 < limitNum < count"
+            if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+                count = this.edgeLimitNum;
+            }
 
             Edges edges = this.graphFactory.createEdges(count);
             if (this.frequency == EdgeFrequency.SINGLE) {
