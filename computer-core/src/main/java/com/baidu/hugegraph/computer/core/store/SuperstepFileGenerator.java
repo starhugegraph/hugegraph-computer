@@ -41,7 +41,11 @@ public class SuperstepFileGenerator {
         return this.fileGenerator.nextDirectory(paths);
     }
 
-    // Get all directory of assign superstep files
+    /*
+        Get all directory of assign superstep files.
+        It will used for delete old files and file must be use nextPath function
+        to generate otherwise will can't delete old files.
+    */
     public List<String> superstepDirs(int superstep, String type) {
         List<String> superstepDirs = new ArrayList<>();
         String[] paths = {type, Integer.toString(superstep)};
