@@ -75,6 +75,8 @@ public class FileGraphPartition<M extends Value<M>> {
 
     private final File vertexFile;
     private final File edgeFile;
+    private final File vertexInputFile;
+    private final File edgeInputFile;
 
     private File preStatusFile;
     private File curStatusFile;
@@ -104,6 +106,9 @@ public class FileGraphPartition<M extends Value<M>> {
         this.partition = partition;
         this.vertexFile = new File(this.fileGenerator.randomDirectory(VERTEX));
         this.edgeFile = new File(this.fileGenerator.randomDirectory(EDGE));
+        this.vertexInputFile = 
+                           new File(this.fileGenerator.randomDirectory(VERTEX));
+        this.edgeInputFile = new File(this.fileGenerator.randomDirectory(EDGE));
         this.vertexCount = 0L;
         this.edgeCount = 0L;
         this.sendManager = managers.get(MessageSendManager.NAME);
@@ -112,12 +117,14 @@ public class FileGraphPartition<M extends Value<M>> {
     protected PartitionStat input(PeekableIterator<KvEntry> vertices,
                                   PeekableIterator<KvEntry> edges) {
         try {
+            createFile(this.vertexInputFile);
+            createFile(this.edgeInputFile);
             createFile(this.vertexFile);
             createFile(this.edgeFile);
             BufferedFileOutput vertexOut = new BufferedFileOutput(
-                                           this.vertexFile);
+                                           this.vertexInputFile);
             BufferedFileOutput edgeOut = new BufferedFileOutput(
-                                         this.edgeFile);
+                                         this.edgeInputFile);
             while (vertices.hasNext()) {
                 KvEntry entry = vertices.next();
                 Pointer key = entry.key();
@@ -470,18 +477,25 @@ public class FileGraphPartition<M extends Value<M>> {
     }
 
     private void beforeCompute(int superstep) throws IOException {
-        this.vertexInput = new VertexInput(this.context, this.vertexFile,
+        if (superstep < 0) {
+            this.vertexInput = new VertexInput(this.context,
+                                       this.vertexInputFile, this.vertexCount);
+            this.edgesInput = new EdgesInput(this.context, this.edgeInputFile);
+            this.vertexInput.init();
+            this.edgesInput.init();
+        }
+        else {
+            this.vertexInput = new VertexInput(this.context, this.vertexFile,
                                            this.vertexCount);
-        this.edgesInput = new EdgesInput(this.context, this.edgeFile);
-        // Inputs of vertex, edges, status, and value.
-        this.vertexInput.init();
-        this.edgesInput.init();
-        if (superstep >= 0) {
+            this.edgesInput = new EdgesInput(this.context, this.edgeFile);
+            this.vertexInput.init();
+            this.edgesInput.init();
             this.vertexInput.switchToFixLength();
             this.edgesInput.switchToFixLength();
             this.vertexInput.readIdBytes();
             this.edgesInput.readIdBytes();
         }
+
         if (superstep > 0) {
             this.preStatusFile = this.curStatusFile;
             this.preValueFile = this.curValueFile;
@@ -553,6 +567,9 @@ public class FileGraphPartition<M extends Value<M>> {
 
         this.vertexFile.delete();
         this.edgeFile.delete();
+
+        this.vertexInputFile.delete();
+        this.edgeInputFile.delete();
     }
 
     private static void createFile(File file) throws IOException {
