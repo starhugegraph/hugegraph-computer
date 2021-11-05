@@ -55,7 +55,7 @@ import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
-import java.util.HashMap;
+import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 
 public class FileGraphPartition<M extends Value<M>> {
 
@@ -180,6 +180,12 @@ public class FileGraphPartition<M extends Value<M>> {
             Vertex vertex = this.vertexInput.next();
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
             for (Edge edge : edges) {
+                BooleanValue inv = edge.properties().get("inv");
+                boolean inv_ = (inv == null) ? false : inv.value();
+                if (!inv_) {
+                    continue;
+                }
+
                 Id targetId = edge.targetId();
                 long nid = (((long)partitionID) << 32) | 
                             (selfIncreaseID & 0xffffffffL);
@@ -225,41 +231,28 @@ public class FileGraphPartition<M extends Value<M>> {
         long selfIncreaseID = 0;
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
-            Iterator<M> messageIter = this.messageInput.iterator(
-                                      this.vertexInput.idPointer());
- 
-            HashMap<Id, Id> idHash = new HashMap<Id, Id>();
-            while (messageIter.hasNext()) {
-                IdList idList = (IdList)(messageIter.next());
-                Id originId = idList.get(0);
-                Id newId = idList.get(1);
-                idHash.put(originId, newId);
-            }
-
-            //System.out.printf(" \n\n\n %s \n", vertex.id());
-            Edges edges = this.edgesInput.edges(
-                              this.vertexInput.idPointer());
-            Edges newedges = this.context.graphFactory().createEdges();
-            for (Edge edge:edges) {
-                Id originId = edge.targetId();
-                Id newId = idHash.get(originId);
-                if (newId != null) {
-                    edge.targetId(newId);
-                }
-                else {
-                    long lId = Long.parseLong((String)originId.asObject());
-                    newId = this.context.graphFactory().createId(lId);
-                    edge.targetId(newId);
-                }
-                newedges.add(edge);
-            }
-
             Id id = this.context.graphFactory().createId(selfIncreaseID);
             vertex.id(id);
             vertexOutput.writeVertex(vertex);
-            if (edges.size() > 0) {
-                edgesOutput.writeEdges(vertex, newedges);
+
+            Iterator<M> messageIter = this.messageInput.iterator(
+                                      this.vertexInput.idPointer());
+ 
+            Edges edges = this.edgesInput.edges(
+                              this.vertexInput.idPointer());
+            Iterator<Edge> it = edges.iterator();
+            edgesOutput.startWriteEdge(vertex);
+            while (messageIter.hasNext()) {
+                Edge edge = it.next();
+
+                IdList idList = (IdList)(messageIter.next());
+                Id originId = idList.get(0);
+                Id newId = idList.get(1);
+             
+                edge.targetId(newId);
+                edgesOutput.writeEdge(edge);
             }
+            edgesOutput.finishWriteEdge();
             selfIncreaseID++;
         }
         try {

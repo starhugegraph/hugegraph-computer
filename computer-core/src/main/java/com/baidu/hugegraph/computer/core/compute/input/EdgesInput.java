@@ -300,7 +300,7 @@ public class EdgesInput {
                     Edge edge = this.graphFactory.createEdge();
                     // Use label + targetId as subKey, use props as subValue
                     boolean inv = (in.readByte() == 1) ? true : false;
-                    edge.label(StreamGraphInput.readLabel(in));
+                    //edge.label(StreamGraphInput.readLabel(in));
                     if (!this.useFixLength) {
                         edge.targetId(StreamGraphInput.readId(in));
                     }
@@ -318,6 +318,7 @@ public class EdgesInput {
                        edge.targetId(this.context.
                                       graphFactory().createId(lId));
                     }
+                    edge.label(StreamGraphInput.readLabel(in));
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
@@ -341,8 +342,8 @@ public class EdgesInput {
                      * use properties as subValue
                      */
                     boolean inv = (in.readByte() == 1) ? true : false;
-                    edge.label(StreamGraphInput.readLabel(in));
-                    edge.name(StreamGraphInput.readLabel(in));
+                    //edge.label(StreamGraphInput.readLabel(in));
+                    //edge.name(StreamGraphInput.readLabel(in));
 
                     if (!this.useFixLength) {
                         edge.targetId(StreamGraphInput.readId(in));
@@ -361,6 +362,9 @@ public class EdgesInput {
                        edge.targetId(this.context.
                                       graphFactory().createId(lId));
                     }
+
+                    edge.label(StreamGraphInput.readLabel(in));
+                    edge.name(StreamGraphInput.readLabel(in));
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));

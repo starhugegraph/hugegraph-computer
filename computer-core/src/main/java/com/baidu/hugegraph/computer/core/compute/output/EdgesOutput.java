@@ -20,24 +20,24 @@
 package com.baidu.hugegraph.computer.core.compute.output;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.EdgeFrequency;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.edge.Edges;
+import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
+import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.io.BufferedFileOutput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import com.baidu.hugegraph.computer.core.util.CoderUtil;
 import java.io.File;
 import java.io.IOException;
-import com.baidu.hugegraph.computer.core.common.Constants;
-import com.baidu.hugegraph.computer.core.util.CoderUtil;
-import com.baidu.hugegraph.computer.core.graph.value.Value;
-import java.util.Map;
 import java.nio.ByteBuffer;
-import com.baidu.hugegraph.computer.core.graph.id.Id;
+import java.util.Map;
 public class EdgesOutput {
     private RandomAccessOutput output;
     //private final ReusablePointer idPointer;
@@ -48,7 +48,10 @@ public class EdgesOutput {
     private final EdgeFrequency frequency;
     private boolean useFixLength;
     private boolean useInvEdge;
-    private int idBytes ;
+    private int idBytes;
+    private long edgesValuePosition;
+    private long edgesCountPosition;
+    private long edgesGoodCount;
 
     public EdgesOutput(ComputerContext context, File edgeFile) {
         this.graphFactory = context.graphFactory();
@@ -78,6 +81,211 @@ public class EdgesOutput {
         try {
            this.output.writeFixedInt(this.idBytes);
         }  catch (IOException e) {
+            throw new ComputerException("Failed to read edges from input '%s'",
+                                        e, this.edgeFile.getAbsoluteFile());
+        }
+    }
+
+    public void startWriteEdge(Vertex vertex) {
+        try {
+           if (!this.useFixLength) {
+                long keyPosition = this.output.position();
+                this.output.writeFixedInt(0);
+                vertex.id().write(this.output);
+                long keyLength = this.output.position() - keyPosition -
+                                 Constants.INT_LEN;
+                this.output.writeFixedInt(keyPosition, (int) keyLength);
+            }
+            else {
+                long lid = (long)(vertex.id().asObject());
+                ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+                buffer.putLong(0, lid);
+                byte[] bid = buffer.array();
+                for (int j = 0; j < this.idBytes; j++) {
+                    int j_ = j + Long.BYTES - this.idBytes;
+                    this.output.writeByte(bid[j_]);
+                }
+            }
+
+            this.edgesValuePosition = this.output.position();
+            this.output.writeFixedInt(0);
+        
+            this.edgesCountPosition = this.output.position();
+            this.output.writeFixedInt(0);
+
+        } catch (IOException e) {
+            throw new ComputerException("Failed to read edges from input '%s'",
+                                        e, this.edgeFile.getAbsoluteFile());
+        }
+        this.edgesGoodCount = 0;
+    }
+
+    public void writeEdge(Edge edge) {
+        try {
+            if (this.frequency == EdgeFrequency.SINGLE) {
+                BooleanValue inv = edge.properties().get("inv");
+                boolean inv_ = (inv == null) ? false : inv.value();
+                if (inv_ && !useInvEdge) {
+                    return;
+                }
+                this.edgesGoodCount++;
+                byte binv = (byte)(inv_ ? 0x01 : 0x00);
+                this.output.writeByte(binv);
+
+                //write target id
+                if (!this.useFixLength) {                  
+                    edge.targetId().write(this.output);
+                }
+                else {
+                    this.writeFixLengthId(this.output, edge.targetId());
+                }
+                //write edge id
+                if (!this.useFixLength) {
+                    edge.id().write(this.output);
+                }
+                //write label
+                byte[] blabel = CoderUtil.encode(edge.label());
+                this.output.writeByte(blabel.length);
+                for (int i = 0; i < blabel.length; i++) {
+                    this.output.writeByte((int)blabel[i]);
+                }
+
+                //write properties
+                Map<String, Value<?>> keyValues = edge.properties().get();
+                this.output.writeByte(keyValues.size());
+                for (Map.Entry<String, Value<?>> 
+                        entry : keyValues.entrySet()) {
+
+                    String key = entry.getKey();
+                    byte[] bkey = CoderUtil.encode(key);
+                    this.output.writeByte(bkey.length);
+                    for (int i = 0; i < bkey.length; i++) {
+                        this.output.writeByte((int)bkey[i]);
+                    }
+
+                    Value<?> value = entry.getValue();
+                    this.output.writeByte(value.valueType().code());
+                    value.write(this.output);
+                }
+            }
+            else if (this.frequency == EdgeFrequency.SINGLE_PER_LABEL) {
+                BooleanValue inv = edge.properties().get("inv");
+                boolean inv_ = (inv == null) ? false : inv.value();
+                if (inv_ && !useInvEdge) {
+                    return;
+                }
+                this.edgesGoodCount++;
+                byte binv = (byte)(inv_ ? 0x01 : 0x00);
+                this.output.writeByte(binv);
+
+                //write targetid
+                if (!this.useFixLength) {
+                    edge.targetId().write(this.output);
+                }
+                else {
+                    this.writeFixLengthId(this.output, edge.targetId());
+                }
+                //write label
+                byte[] blabel = CoderUtil.encode(edge.label());
+                this.output.writeByte(blabel.length);
+                for (int i = 0; i < blabel.length; i++) {
+                    this.output.writeByte((int)blabel[i]);
+                }
+
+                //write edge id
+                if (!this.useFixLength) {
+                    edge.id().write(this.output);
+                }
+                //write properties
+                Map<String, Value<?>> keyValues = edge.properties().get();
+                this.output.writeByte(keyValues.size());
+                for (Map.Entry<String, Value<?>>
+                        entry : keyValues.entrySet()) {
+
+                    String key = entry.getKey();
+                    byte[] bkey = CoderUtil.encode(key);
+                    this.output.writeByte(bkey.length);
+                    for (int i = 0; i < bkey.length; i++) {
+                        this.output.writeByte((int)bkey[i]);
+                    }
+
+                    Value<?> value = entry.getValue();
+                    this.output.writeByte(value.valueType().code());
+                    value.write(this.output);
+                } 
+            }
+            else {
+                assert this.frequency == EdgeFrequency.MULTIPLE;
+                BooleanValue inv = edge.properties().get("inv");
+                boolean inv_ = (inv == null) ? false : inv.value();
+                if (inv_ && !useInvEdge) {
+                    return;
+                }
+                this.edgesGoodCount++;
+                byte binv = (byte)(inv_ ? 0x01 : 0x00);
+                this.output.writeByte(binv);
+
+                //write targetid
+                if (!this.useFixLength) {
+                    edge.targetId().write(this.output);
+                }
+                else {
+                    this.writeFixLengthId(this.output, edge.targetId());
+                }
+
+                //write label
+                byte[] blabel = CoderUtil.encode(edge.label());
+                this.output.writeByte(blabel.length);
+                for (int i = 0; i < blabel.length; i++) {
+                    this.output.writeByte((int)blabel[i]);
+                }
+
+                //write name
+                byte[] bname = CoderUtil.encode(edge.name());
+                this.output.writeByte(bname.length);
+                for (int i = 0; i < bname.length; i++) {
+                    this.output.writeByte((int)bname[i]);
+                }
+
+                //write edge id
+                if (!this.useFixLength) {
+                    edge.id().write(this.output);
+                }
+
+                //write properties
+                Map<String, Value<?>> keyValues = edge.properties().get();
+                this.output.writeByte(keyValues.size());
+                for (Map.Entry<String, Value<?>>
+                        entry : keyValues.entrySet()) {
+
+                    String key = entry.getKey();
+                    byte[] bkey = CoderUtil.encode(key);
+                    this.output.writeByte(bkey.length);
+                    for (int i = 0; i < bkey.length; i++) {
+                        this.output.writeByte((int)bkey[i]);
+                    }
+
+                    Value<?> value = entry.getValue();
+                    this.output.writeByte(value.valueType().code());
+                    value.write(this.output);
+                }
+            }
+        }
+        catch (IOException e) {
+            throw new ComputerException("Failed to read edges from input '%s'",
+                                        e, this.edgeFile.getAbsoluteFile());
+        }
+    }
+
+    public void finishWriteEdge() {
+        try {
+            long valueLength = this.output.position() - 
+                               this.edgesValuePosition - Constants.INT_LEN;
+            this.output.writeFixedInt(this.edgesValuePosition, 
+                                          (int)valueLength);
+            this.output.writeFixedInt(this.edgesCountPosition, 
+                                          (int)this.edgesGoodCount); 
+        } catch (IOException e) {
             throw new ComputerException("Failed to read edges from input '%s'",
                                         e, this.edgeFile.getAbsoluteFile());
         }
@@ -177,11 +385,11 @@ public class EdgesOutput {
                     this.output.writeByte(binv);
          
                     //write label 
-                    byte[] blabel = CoderUtil.encode(edge.label());
-                    this.output.writeByte(blabel.length);
-                    for (int i = 0; i < blabel.length; i++) {
-                        this.output.writeByte((int)blabel[i]);
-                    }
+                    //byte[] blabel = CoderUtil.encode(edge.label());
+                    //this.output.writeByte(blabel.length);
+                    //for (int i = 0; i < blabel.length; i++) {
+                    //    this.output.writeByte((int)blabel[i]);
+                    //}
 
                     //write targetid
                     if (!this.useFixLength) {
@@ -189,6 +397,12 @@ public class EdgesOutput {
                     }
                     else {
                         this.writeFixLengthId(this.output, edge.targetId());
+                    }
+                    //write label
+                    byte[] blabel = CoderUtil.encode(edge.label());
+                    this.output.writeByte(blabel.length);
+                    for (int i = 0; i < blabel.length; i++) {
+                        this.output.writeByte((int)blabel[i]);
                     }
 
                     //write edge id
@@ -228,18 +442,18 @@ public class EdgesOutput {
                     this.output.writeByte(binv);
 
                     //write label
-                    byte[] blabel = CoderUtil.encode(edge.label());
-                    this.output.writeByte(blabel.length);
-                    for (int i = 0; i < blabel.length; i++) {
-                        this.output.writeByte((int)blabel[i]);
-                    }
+                    //byte[] blabel = CoderUtil.encode(edge.label());
+                    //this.output.writeByte(blabel.length);
+                    //for (int i = 0; i < blabel.length; i++) {
+                    //    this.output.writeByte((int)blabel[i]);
+                    //}
 
                     //write name 
-                    byte[] bname = CoderUtil.encode(edge.name());
-                    this.output.writeByte(bname.length);
-                    for (int i = 0; i < bname.length; i++) {
-                        this.output.writeByte((int)bname[i]);
-                    }
+                    //byte[] bname = CoderUtil.encode(edge.name());
+                    //this.output.writeByte(bname.length);
+                    //for (int i = 0; i < bname.length; i++) {
+                    //    this.output.writeByte((int)bname[i]);
+                    //}
 
                     //write targetid
                     if (!this.useFixLength) {
@@ -247,6 +461,20 @@ public class EdgesOutput {
                     }
                     else {
                         this.writeFixLengthId(this.output, edge.targetId());
+                    }
+
+                    //write label
+                    byte[] blabel = CoderUtil.encode(edge.label());
+                    this.output.writeByte(blabel.length);
+                    for (int i = 0; i < blabel.length; i++) {
+                        this.output.writeByte((int)blabel[i]);
+                    }
+
+                    //write name
+                    byte[] bname = CoderUtil.encode(edge.name());
+                    this.output.writeByte(bname.length);
+                    for (int i = 0; i < bname.length; i++) {
+                        this.output.writeByte((int)bname[i]);
                     }
 
                     //write edge id
