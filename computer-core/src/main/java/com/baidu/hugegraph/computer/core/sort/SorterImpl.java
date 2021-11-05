@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
+import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.sort.flusher.InnerSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.OuterSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
@@ -49,9 +50,13 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDirReade
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.DisperseEvenlySelector;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.InputFilesSelector;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.SelectedFiles;
+import com.baidu.hugegraph.util.Log;
+import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
 
 public class SorterImpl implements Sorter {
 
+    private static final Logger LOG = Log.logger(SorterImpl.class);
     private final Config config;
 
     public SorterImpl(Config config) {
@@ -63,7 +68,37 @@ public class SorterImpl implements Sorter {
                            boolean withSubKv) throws Exception {
         try (EntryIterator entries = new KvEntriesInput(input, withSubKv)) {
             InputSorter sorter = new JavaInputSorter();
+            StopWatch watch = new StopWatch();
+            watch.start();
             flusher.flush(sorter.sort(entries));
+            watch.stop();
+            logBuffer(input, watch.getNanoTime(), withSubKv);
+        }
+    }
+
+    private void logBuffer(RandomAccessInput input, long time,
+                           boolean withSubKv) throws IOException {
+        long numEntries = 0L;
+        long subKvEntries = 0L;
+        input.seek(0L);
+        EntryIterator entries;
+        if (withSubKv) {
+            entries = new KvEntriesWithFirstSubKvInput(input);
+        } else {
+            entries = new KvEntriesInput(input);
+        }
+        while (entries.hasNext()) {
+            KvEntry next = entries.next();
+            numEntries++;
+            subKvEntries += next.numSubEntries();
+        }
+
+        if (withSubKv) {
+            LOG.info("SorterImpl sort edge buffer cost: {} ,num: {} ,sub: {}",
+                      time, numEntries, subKvEntries);
+        } else {
+            LOG.info("SorterImpl sort vertex buffer cost: {} ,num: {} ,sub: {}",
+                      time, numEntries, subKvEntries);
         }
     }
 
@@ -82,7 +117,7 @@ public class SorterImpl implements Sorter {
                             .collect(Collectors.toList());
         }
 
-        this.sortBuffers(entries, flusher, output);
+        this.sortBuffers(entries, flusher, output, withSubKv);
     }
 
     @Override
@@ -113,13 +148,23 @@ public class SorterImpl implements Sorter {
     }
 
     private void sortBuffers(List<EntryIterator> entries,
-                             OuterSortFlusher flusher, String output)
+                             OuterSortFlusher flusher, String output,
+                             boolean withSubKv)
                              throws IOException {
         InputsSorter sorter = new InputsSorterImpl();
         try (HgkvDirBuilder builder = new HgkvDirBuilderImpl(this.config,
                                                              output)) {
+            StopWatch watch = new StopWatch();
+            watch.start();
             EntryIterator result = sorter.sort(entries);
             flusher.flush(result, builder);
+            watch.stop();
+            long time = watch.getTime();
+            if (withSubKv) {
+                LOG.info("SorterImpl merge edge buffers cost:{}", time);
+            } else {
+                LOG.info("SorterImpl merge vertex buffers cost:{}", time);
+            }
         }
     }
 
