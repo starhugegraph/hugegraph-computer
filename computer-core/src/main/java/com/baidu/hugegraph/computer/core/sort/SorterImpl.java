@@ -117,7 +117,8 @@ public class SorterImpl implements Sorter {
                             .collect(Collectors.toList());
         }
 
-        this.sortBuffers(entries, flusher, output, withSubKv);
+        long time = this.sortBuffers(entries, flusher, output);
+        this.logBuffers(inputs, withSubKv, time);
     }
 
     @Override
@@ -147,24 +148,54 @@ public class SorterImpl implements Sorter {
         return PeekableIteratorAdaptor.of(sorter.sort(entries));
     }
 
-    private void sortBuffers(List<EntryIterator> entries,
-                             OuterSortFlusher flusher, String output,
-                             boolean withSubKv)
+    private long sortBuffers(List<EntryIterator> entries,
+                             OuterSortFlusher flusher, String output)
                              throws IOException {
+        StopWatch watch = new StopWatch();
         InputsSorter sorter = new InputsSorterImpl();
         try (HgkvDirBuilder builder = new HgkvDirBuilderImpl(this.config,
                                                              output)) {
-            StopWatch watch = new StopWatch();
             watch.start();
             EntryIterator result = sorter.sort(entries);
             flusher.flush(result, builder);
             watch.stop();
-            long time = watch.getTime();
-            if (withSubKv) {
-                LOG.info("SorterImpl merge edge buffers cost:{}", time);
-            } else {
-                LOG.info("SorterImpl merge vertex buffers cost:{}", time);
+        }
+        return watch.getTime();
+    }
+
+    private void logBuffers(List<RandomAccessInput> inputs,
+                            boolean withSubKv, long time)
+                            throws IOException {
+        for (RandomAccessInput input : inputs) {
+                input.seek(0L);
+        }
+
+        long numEntries = 0L;
+        long subKvEntries = 0L;
+        List<EntryIterator> entries;
+        if (withSubKv) {
+            entries = inputs.stream()
+                    .map(KvEntriesWithFirstSubKvInput::new)
+                    .collect(Collectors.toList());
+        } else {
+            entries = inputs.stream()
+                    .map(KvEntriesInput::new)
+                    .collect(Collectors.toList());
+        }
+        for (EntryIterator iter : entries) {
+            while (iter.hasNext()) {
+                KvEntry next = iter.next();
+                numEntries++;
+                subKvEntries += next.numSubEntries();
             }
+        }
+
+        if (withSubKv) {
+            LOG.info("SortImpl merge edge buffers cost: {} ,numEntries: {} " +
+                     ",edgeTotal: {} ", time, numEntries, subKvEntries);
+        } else {
+            LOG.info("SortImpl merge vertex buffers cost: {} ,numEntries: {} " +
+                     ",edgeTotal: {} ", time, numEntries, subKvEntries);
         }
     }
 
