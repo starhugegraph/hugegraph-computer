@@ -41,6 +41,7 @@ public class SuperstepFileGenerator {
         return this.fileGenerator.nextDirectory(paths);
     }
 
+    // Get all directory of assign superstep files
     public List<String> superstepDirs(int superstep, String type) {
         List<String> superstepDirs = new ArrayList<>();
         String[] paths = {type, Integer.toString(superstep)};

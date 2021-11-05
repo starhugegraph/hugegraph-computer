@@ -95,6 +95,7 @@ public abstract class MessageRecvPartitions<P extends MessageRecvPartition> {
         return entries;
     }
 
+    // Clear all directory of assign superstep files
     public void clearOldFiles(int superstep) {
         P partition = this.partitions.values().stream()
                                      .findFirst().orElse(null);
