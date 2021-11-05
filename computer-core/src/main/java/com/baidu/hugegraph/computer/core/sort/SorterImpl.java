@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
-import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.sort.flusher.InnerSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.OuterSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
@@ -42,6 +41,8 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesInput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesWithFirstSubKvInput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.InputToEntries;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.file.HgkvDir;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.file.HgkvDirImpl;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.builder.HgkvDirBuilder;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.builder.HgkvDirBuilderImpl;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDir4SubKvReaderImpl;
@@ -125,13 +126,29 @@ public class SorterImpl implements Sorter {
     public void mergeInputs(List<String> inputs, OuterSortFlusher flusher,
                             List<String> outputs, boolean withSubKv)
                             throws Exception {
+        long num = 0L;
+        long subNum = 0L;
+        for (String input : inputs) {
+            HgkvDir dir = HgkvDirImpl.open(input);
+            dir.close();
+            num += dir.numEntries();
+            subNum += dir.numSubEntries();
+        }
+
         InputToEntries inputToEntries;
         if (withSubKv) {
             inputToEntries = o -> new HgkvDir4SubKvReaderImpl(o).iterator();
         } else {
             inputToEntries = o -> new HgkvDirReaderImpl(o).iterator();
         }
-        this.mergeInputs(inputs, inputToEntries, flusher, outputs);
+        long time = this.mergeInputs(inputs, inputToEntries, flusher, outputs);
+        if (withSubKv) {
+            LOG.info("SortImpl merge edge file cost: {} ,num: {} ,subkv: {}",
+                      time, num, subNum);
+        } else {
+            LOG.info("SortImpl merge vertex file cost: {} ,num: {} ,subkv: {}",
+                    time, num, subNum);
+        }
     }
 
     @Override
@@ -199,9 +216,11 @@ public class SorterImpl implements Sorter {
         }
     }
 
-    private void mergeInputs(List<String> inputs, InputToEntries inputToEntries,
+    private long mergeInputs(List<String> inputs, InputToEntries inputToEntries,
                              OuterSortFlusher flusher, List<String> outputs)
                              throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
         InputFilesSelector selector = new DisperseEvenlySelector();
         // Each SelectedFiles include some input files per output.
         List<SelectedFiles> results = selector.selectedOfOutputs(inputs,
@@ -212,5 +231,7 @@ public class SorterImpl implements Sorter {
             merger.merge(result.inputs(), inputToEntries,
                          result.output(), flusher);
         }
+        watch.stop();
+        return watch.getTime();
     }
 }
