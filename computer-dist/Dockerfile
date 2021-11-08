@@ -1,4 +1,4 @@
-FROM openjdk:8-jre
+FROM openjdk:8
 LABEL maintainer="HugeGraph Docker Maintainers <hugegraph@googlegroups.com>"
 ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -XshowSettings:vm"
 COPY . /etc/local/hugegraph-computer
