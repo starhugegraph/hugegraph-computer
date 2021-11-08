@@ -63,7 +63,7 @@ public class TriangleCount implements Computation<IdList> {
     }
 
     private Integer triangleCount(ComputationContext context, Vertex vertex,
-                               Iterator<IdList> messages) {
+                                  Iterator<IdList> messages) {
         IdSet allNeighbors = ((TriangleCountValue) vertex.value()).idSet();
 
         if (context.superstep() == 1) {
@@ -78,9 +78,9 @@ public class TriangleCount implements Computation<IdList> {
                 }
             }
 
-            // Send all neighbors to neighbors
+            // Send all neighbors of id less than self to neighbors
             for (Id targetId : allNeighbors.values()) {
-                context.sendMessage(targetId, allNeighbors);
+                context.sendMessage(targetId, neighbors);
             }
         } else if (context.superstep() == 2) {
             int count = 0;
