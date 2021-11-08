@@ -506,6 +506,7 @@ public class FileGraphPartition<M extends Value<M>> {
     private void beforeCompute(int superstep) throws IOException {
 
         if (this.useVariableLengthOnly) {
+            LOG.info("{} workerservice use variable length id", this);
             this.vertexInput = new VertexInput(this.context, 
                                         this.vertexFile, this.vertexCount);
             this.edgesInput = new EdgesInput(this.context, this.edgeFile);
@@ -513,6 +514,7 @@ public class FileGraphPartition<M extends Value<M>> {
             this.edgesInput.init();
         }
         else {
+            LOG.info("{} workerservice use fix length id", this);
             this.vertexInput = new VertexInput(this.context, 
                                     this.vertexComputeFile, this.vertexCount);
             this.edgesInput = new EdgesInput(this.context, 

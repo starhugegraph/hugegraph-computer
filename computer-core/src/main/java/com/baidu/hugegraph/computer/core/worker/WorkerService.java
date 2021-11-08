@@ -230,7 +230,8 @@ public class WorkerService implements Closeable {
             // TODO: Get superstepStat from bsp service.
             superstepStat = null;
         }
-        
+
+        LOG.info("Begin to send id map to others {}", this);
         WorkerContext context0 = new SuperstepContext(-2, superstepStat);
         this.bsp4Worker.workerStepPrepareDone(-2);
         this.bsp4Worker.waitMasterStepPrepareDone(-2);
@@ -242,8 +243,10 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.workerStepComputeDone(-2);
         this.bsp4Worker.waitMasterStepComputeDone(-2);
 
+        LOG.info("Finish send id map to others {}", this);
         this.computeManager.takeRecvedMessages(false);
-
+ 
+        LOG.info("Begin to build id map {}", this);
         this.bsp4Worker.workerStepPrepareDone(-1);
         this.bsp4Worker.waitMasterStepPrepareDone(-1);
         this.managers.beforeSuperstep(this.config, -1);
@@ -254,6 +257,7 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.workerStepComputeDone(-1);
         this.bsp4Worker.waitMasterStepComputeDone(-1);
 
+        LOG.info("Finish build id map {}", this);
         superstep = 0;
          /*
          * The master determine whether to execute the next superstep. The
