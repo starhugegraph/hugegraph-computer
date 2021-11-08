@@ -231,30 +231,30 @@ public class WorkerService implements Closeable {
             superstepStat = null;
         }
         
-        if (true) {
-            WorkerContext context0 = new SuperstepContext(-3, superstepStat);
-            this.bsp4Worker.workerStepPrepareDone(-3);
-            this.bsp4Worker.waitMasterStepPrepareDone(-3);
-            this.managers.beforeSuperstep(this.config, -3);
+        WorkerContext context0 = new SuperstepContext(-2, superstepStat);
+        this.bsp4Worker.workerStepPrepareDone(-2);
+        this.bsp4Worker.waitMasterStepPrepareDone(-2);
+        this.managers.beforeSuperstep(this.config, -2);
 
-            this.computeManager.sendHashIdMsg(context0);
+        this.computeManager.sendHashIdMsg(context0);
 
-            this.managers.afterSuperstep(this.config, -3);
-            this.bsp4Worker.workerStepComputeDone(-3);
-            this.bsp4Worker.waitMasterStepComputeDone(-3);
+        this.managers.afterSuperstep(this.config, -2);
+        this.bsp4Worker.workerStepComputeDone(-2);
+        this.bsp4Worker.waitMasterStepComputeDone(-2);
 
-            this.computeManager.takeRecvedMessages(false);
+        this.computeManager.takeRecvedMessages(false);
 
-            this.bsp4Worker.workerStepPrepareDone(-2);
-            this.bsp4Worker.waitMasterStepPrepareDone(-2);
-            this.managers.beforeSuperstep(this.config, -2);
+        this.bsp4Worker.workerStepPrepareDone(-1);
+        this.bsp4Worker.waitMasterStepPrepareDone(-1);
+        this.managers.beforeSuperstep(this.config, -1);
 
-            this.computeManager.recvHashIdMsg();
+        this.computeManager.recvHashIdMsg();
 
-            this.managers.afterSuperstep(this.config, -2);
-            this.bsp4Worker.workerStepComputeDone(-2);
-            this.bsp4Worker.waitMasterStepComputeDone(-2);
-         }
+        this.managers.afterSuperstep(this.config, -1);
+        this.bsp4Worker.workerStepComputeDone(-1);
+        this.bsp4Worker.waitMasterStepComputeDone(-1);
+
+        superstep = 0;
          /*
          * The master determine whether to execute the next superstep. The
          * superstepStat is active while master decides to execute the next

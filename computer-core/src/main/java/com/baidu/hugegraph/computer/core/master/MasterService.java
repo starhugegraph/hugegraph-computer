@@ -226,7 +226,7 @@ public class MasterService implements Closeable {
 
         // Step 2.5 send id hash
         for (int i = 0; i < 2; i++) {
-            superstep = -3 + i;
+            superstep = -2 + i;
 
             this.bsp4Master.waitWorkersStepPrepareDone(superstep);
             this.managers.beforeSuperstep(this.config, superstep);
