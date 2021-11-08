@@ -94,7 +94,7 @@ public class EdgesInput {
        } catch (IOException e) {
             throw new ComputerException("Can't read from edges input '%s'",
                                         e, this.edgeFile.getAbsoluteFile());
-        }
+       }
     }
 
     public Edges edges(ReusablePointer vidPointer) {
@@ -262,6 +262,7 @@ public class EdgesInput {
      */
     private Edges readEdges(RandomAccessInput in) {
         try {
+            long pos0 = in.position();
             // Could limit edges to read here (unlimited by default)
             int count = in.readFixedInt();
           
@@ -360,7 +361,6 @@ public class EdgesInput {
                     boolean inv = (in.readByte() == 1) ? true : false;
                     //edge.label(StreamGraphInput.readLabel(in));
                     //edge.name(StreamGraphInput.readLabel(in));
-
                     if (!this.useFixLength) {
                         edge.targetId(StreamGraphInput.readId(in));
                     }
@@ -381,14 +381,7 @@ public class EdgesInput {
 
                     edge.label(StreamGraphInput.readLabel(in));
                     edge.name(StreamGraphInput.readLabel(in));
-                    if (edge.label() == "") {
-                        System.out.printf("!!\n");
-                        System.out.println(edge.targetId());
-                    }
-                    //System.out.printf("----label-name-------\n");
-                    //System.out.println(edge.label());
-                    //System.out.println(edge.name());
-                    //System.out.printf("-----------\n");
+
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));

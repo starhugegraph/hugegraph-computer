@@ -109,7 +109,7 @@ public class VertexOutput {
 
              //write properties
              Map<String, Value<?>> keyValues = properties.get();
-             this.writeVInt(this.output, -1);
+             this.writeVInt(this.output, keyValues.size());
              for (Map.Entry<String, Value<?>> entry : keyValues.entrySet()) {
                  String key = entry.getKey();
                  byte[] bkey = CoderUtil.encode(key);

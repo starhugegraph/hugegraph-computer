@@ -485,23 +485,23 @@ public class EdgesOutput {
                     }
 
                     //write properties
-                    edge.properties().write(this.output);
-                    //Map<String, Value<?>> keyValues = edge.properties().get();
-                    //this.output.writeByte(keyValues.size());
-                    //for (Map.Entry<String, Value<?>>
-                    //       entry : keyValues.entrySet()) {
+                    //edge.properties().write(this.output);
+                    Map<String, Value<?>> keyValues = edge.properties().get();
+                    this.writeVInt(this.output, keyValues.size());
+                    for (Map.Entry<String, Value<?>>
+                           entry : keyValues.entrySet()) {
 
-                    //    String key = entry.getKey();
-                    //    byte[] bkey = CoderUtil.encode(key);
-                    //    this.output.writeByte(bkey.length);
-                    //    for (int i = 0; i < bkey.length; i++) {
-                    //        this.output.writeByte((int)bkey[i]);
-                    //    }
+                        String key = entry.getKey();
+                        byte[] bkey = CoderUtil.encode(key);
+                        this.output.writeByte(bkey.length);
+                        for (int i = 0; i < bkey.length; i++) {
+                            this.output.writeByte((int)bkey[i]);
+                        }
 
-                    //    Value<?> value = entry.getValue();
-                    //    this.output.writeByte(value.valueType().code());
-                    //    value.write(this.output);
-                    //}
+                        Value<?> value = entry.getValue();
+                        this.output.writeByte(value.valueType().code());
+                        value.write(this.output);
+                    }
                 }
             }
 
