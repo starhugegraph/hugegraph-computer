@@ -148,12 +148,12 @@ public final class EntriesUtil {
         try {
             BytesInput input = IOFactory.createBytesInput(entry.value()
                                                                .bytes());
-            // Skip sub-entry size
-            input.skip(Integer.BYTES);
+            // Read sub-entry size
+            int subNumEntries = input.readFixedInt();
             KvEntry firstSubKv = EntriesUtil.subKvEntryFromInput(input, true);
 
             return new KvEntryWithFirstSubKv(entry.key(), entry.value(),
-                                             firstSubKv);
+                                             firstSubKv,  subNumEntries);
         } catch (IOException e) {
             throw new ComputerException(e.getMessage(), e);
         }
