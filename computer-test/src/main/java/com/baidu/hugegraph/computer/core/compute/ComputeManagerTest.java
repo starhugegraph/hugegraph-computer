@@ -150,6 +150,7 @@ public class ComputeManagerTest extends UnitTestBase {
             receiveManager.handle(MessageType.MSG, 0, buffer);
         });
         receiveManager.onFinished(this.connectionId);
+        this.computeManager.useVariableLengthOnly();
         this.computeManager.compute(null, 0);
         receiveManager.afterSuperstep(this.config, 0);
 
@@ -158,10 +159,11 @@ public class ComputeManagerTest extends UnitTestBase {
         receiveManager.beforeSuperstep(this.config, 1);
         receiveManager.onStarted(this.connectionId);
         receiveManager.onFinished(this.connectionId);
+        this.computeManager.useVariableLengthOnly();
         this.computeManager.compute(null, 1);
         receiveManager.afterSuperstep(this.config, 1);
-
         // Output
+        this.computeManager.useVariableLengthOnly();
         this.computeManager.output();
     }
 
@@ -190,7 +192,7 @@ public class ComputeManagerTest extends UnitTestBase {
         for (long i = 0L; i < 200L; i++) {
             Vertex vertex = graphFactory().createVertex();
             vertex.id(BytesId.of(i));
-            int count = RANDOM.nextInt(20);
+            int count = RANDOM.nextInt(200);
             if (count == 0) {
                 continue;
             }

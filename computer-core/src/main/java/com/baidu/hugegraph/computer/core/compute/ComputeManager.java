@@ -115,6 +115,12 @@ public class ComputeManager<M extends Value<M>> {
         return workerStat;
     }
 
+    public void useVariableLengthOnly() {
+        for (FileGraphPartition<M> partition : this.partitions.values()) {
+            partition.useVariableLengthOnly();
+        }    
+    }
+
     public void sendHashIdMsg(ComputationContext context) {
         this.sendManager.startSend(MessageType.HASHID);
         for (FileGraphPartition<M> partition : this.partitions.values()) {

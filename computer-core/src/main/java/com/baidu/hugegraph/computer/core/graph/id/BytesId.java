@@ -157,7 +157,8 @@ public class BytesId implements Id {
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.idType = SerialEnum.fromCode(IdType.class, in.readByte());
-        int len = in.readInt();
+        int len = (int)(in.readByte());
+        //int len = in.readInt();
         this.bytes = BytesUtil.ensureCapacityWithoutCopy(this.bytes, len);
         in.readFully(this.bytes, 0, len);
         this.length = len;
