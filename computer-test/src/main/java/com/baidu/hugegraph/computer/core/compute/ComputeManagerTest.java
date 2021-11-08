@@ -192,7 +192,7 @@ public class ComputeManagerTest extends UnitTestBase {
         for (long i = 0L; i < 200L; i++) {
             Vertex vertex = graphFactory().createVertex();
             vertex.id(BytesId.of(i));
-            int count = RANDOM.nextInt(200);
+            int count = RANDOM.nextInt(20);
             if (count == 0) {
                 continue;
             }
