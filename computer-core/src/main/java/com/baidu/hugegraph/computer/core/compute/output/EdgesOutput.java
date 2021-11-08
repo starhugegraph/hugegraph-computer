@@ -354,22 +354,21 @@ public class EdgesOutput {
                     }
 
                     //write properties
-                    Map<String, Value<?>> keyValues = edge.properties().get();
-                    this.output.writeByte(keyValues.size());
-                    for (Map.Entry<String, Value<?>> 
-                           entry : keyValues.entrySet()) {
-        
-                        String key = entry.getKey();
-                        byte[] bkey = CoderUtil.encode(key);
-                        this.output.writeByte(bkey.length);
-                        for (int i = 0; i < bkey.length; i++) {
-                            this.output.writeByte((int)bkey[i]);
-                        }
-        
-                        Value<?> value = entry.getValue();
-                        this.output.writeByte(value.valueType().code());
-                        value.write(this.output);
-                    }
+                    edge.properties().write(this.output);
+                    //Map<String, Value<?>> keyValues = edge.properties().get();
+                    //this.output.writeByte(keyValues.size());
+                    //for (Map.Entry<String, Value<?>> 
+                    //       entry : keyValues.entrySet()) {
+                    //   String key = entry.getKey();
+                    //    byte[] bkey = CoderUtil.encode(key);
+                    //    this.output.writeByte(bkey.length);
+                    //    for (int i = 0; i < bkey.length; i++) {
+                    //        this.output.writeByte((int)bkey[i]);
+                    //    }
+                    //    Value<?> value = entry.getValue();
+                    //    this.output.writeByte(value.valueType().code());
+                    //    value.write(this.output);
+                    //}
                 }
             }
             else if (this.frequency == EdgeFrequency.SINGLE_PER_LABEL) {
@@ -410,22 +409,21 @@ public class EdgesOutput {
                         edge.id().write(this.output);
                     }
                     //write properties
-                    Map<String, Value<?>> keyValues = edge.properties().get();
-                    this.output.writeByte(keyValues.size());
-                    for (Map.Entry<String, Value<?>>
-                           entry : keyValues.entrySet()) {
-
-                        String key = entry.getKey();
-                        byte[] bkey = CoderUtil.encode(key);
-                        this.output.writeByte(bkey.length);
-                        for (int i = 0; i < bkey.length; i++) {
-                            this.output.writeByte((int)bkey[i]);
-                        }
-
-                        Value<?> value = entry.getValue();
-                        this.output.writeByte(value.valueType().code());
-                        value.write(this.output);
-                    } 
+                    edge.properties().write(this.output);
+                    //Map<String, Value<?>> keyValues = edge.properties().get();
+                    //this.output.writeByte(keyValues.size());
+                    //for (Map.Entry<String, Value<?>>
+                    //       entry : keyValues.entrySet()) {
+                    //    String key = entry.getKey();
+                    //    byte[] bkey = CoderUtil.encode(key);
+                    //    this.output.writeByte(bkey.length);
+                    //    for (int i = 0; i < bkey.length; i++) {
+                    //        this.output.writeByte((int)bkey[i]);
+                    //    }
+                    //    Value<?> value = entry.getValue();
+                    //    this.output.writeByte(value.valueType().code());
+                    //    value.write(this.output);
+                    //} 
                 }
             }
             else {
@@ -483,22 +481,23 @@ public class EdgesOutput {
                     }
 
                     //write properties
-                    Map<String, Value<?>> keyValues = edge.properties().get();
-                    this.output.writeByte(keyValues.size());
-                    for (Map.Entry<String, Value<?>>
-                           entry : keyValues.entrySet()) {
+                    edge.properties().write(this.output);
+                    //Map<String, Value<?>> keyValues = edge.properties().get();
+                    //this.output.writeByte(keyValues.size());
+                    //for (Map.Entry<String, Value<?>>
+                    //       entry : keyValues.entrySet()) {
 
-                        String key = entry.getKey();
-                        byte[] bkey = CoderUtil.encode(key);
-                        this.output.writeByte(bkey.length);
-                        for (int i = 0; i < bkey.length; i++) {
-                            this.output.writeByte((int)bkey[i]);
-                        }
+                    //    String key = entry.getKey();
+                    //    byte[] bkey = CoderUtil.encode(key);
+                    //    this.output.writeByte(bkey.length);
+                    //    for (int i = 0; i < bkey.length; i++) {
+                    //        this.output.writeByte((int)bkey[i]);
+                    //    }
 
-                        Value<?> value = entry.getValue();
-                        this.output.writeByte(value.valueType().code());
-                        value.write(this.output);
-                    }
+                    //    Value<?> value = entry.getValue();
+                    //    this.output.writeByte(value.valueType().code());
+                    //    value.write(this.output);
+                    //}
                 }
             }
 
