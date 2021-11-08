@@ -381,6 +381,14 @@ public class EdgesInput {
 
                     edge.label(StreamGraphInput.readLabel(in));
                     edge.name(StreamGraphInput.readLabel(in));
+                    if (edge.label() == "") {
+                        System.out.printf("!!\n");
+                        System.out.println(edge.targetId());
+                    }
+                    //System.out.printf("----label-name-------\n");
+                    //System.out.println(edge.label());
+                    //System.out.println(edge.name());
+                    //System.out.printf("-----------\n");
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));

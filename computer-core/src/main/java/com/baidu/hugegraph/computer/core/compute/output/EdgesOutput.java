@@ -347,11 +347,12 @@ public class EdgesOutput {
                         edge.id().write(this.output);
                     }
                     //write label
-                    byte[] blabel = CoderUtil.encode(edge.label());
-                    this.output.writeByte(blabel.length);
-                    for (int i = 0; i < blabel.length; i++) {
-                        this.output.writeByte((int)blabel[i]);
-                    }
+                    this.output.writeUTF(edge.label());
+                    //byte[] blabel = CoderUtil.encode(edge.label());
+                    //this.output.writeByte(blabel.length);
+                    //for (int i = 0; i < blabel.length; i++) {
+                    //    this.output.writeByte((int)blabel[i]);
+                    //}
 
                     //write properties
                     edge.properties().write(this.output);
@@ -398,11 +399,12 @@ public class EdgesOutput {
                         this.writeFixLengthId(this.output, edge.targetId());
                     }
                     //write label
-                    byte[] blabel = CoderUtil.encode(edge.label());
-                    this.output.writeByte(blabel.length);
-                    for (int i = 0; i < blabel.length; i++) {
-                        this.output.writeByte((int)blabel[i]);
-                    }
+                    this.output.writeUTF(edge.label());
+                    //byte[] blabel = CoderUtil.encode(edge.label());
+                    //this.output.writeByte(blabel.length);
+                    //for (int i = 0; i < blabel.length; i++) {
+                    //    this.output.writeByte((int)blabel[i]);
+                    //}
 
                     //write edge id
                     if (!this.useFixLength) {
@@ -462,18 +464,20 @@ public class EdgesOutput {
                     }
 
                     //write label
-                    byte[] blabel = CoderUtil.encode(edge.label());
-                    this.output.writeByte(blabel.length);
-                    for (int i = 0; i < blabel.length; i++) {
-                        this.output.writeByte((int)blabel[i]);
-                    }
+                    this.output.writeUTF(edge.label());
+                    //byte[] blabel = CoderUtil.encode(edge.label());
+                    //this.output.writeByte(blabel.length);
+                    //for (int i = 0; i < blabel.length; i++) {
+                    //    this.output.writeByte((int)blabel[i]);
+                    //}
 
                     //write name
-                    byte[] bname = CoderUtil.encode(edge.name());
-                    this.output.writeByte(bname.length);
-                    for (int i = 0; i < bname.length; i++) {
-                        this.output.writeByte((int)bname[i]);
-                    }
+                    this.output.writeUTF(edge.name());
+                    //byte[] bname = CoderUtil.encode(edge.name());
+                    //this.output.writeByte(bname.length);
+                    //for (int i = 0; i < bname.length; i++) {
+                    //    this.output.writeByte((int)bname[i]);
+                    //}
 
                     //write edge id
                     if (!this.useFixLength) {
