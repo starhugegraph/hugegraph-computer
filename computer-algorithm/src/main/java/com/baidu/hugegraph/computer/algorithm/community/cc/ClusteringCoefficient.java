@@ -71,6 +71,24 @@ public class ClusteringCoefficient implements Computation<IdList> {
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
+        ClusteringCoefficientValue value = new ClusteringCoefficientValue();
+        IdSet allNeighbors = value.idSet();
+
+        // Collect all neighbors, include of incoming and outgoing
+        allNeighbors.addAll(getAllNeighbors(vertex));
+
+        // Collect neighbors of id less than self from all neighbors
+        IdList neighbors = new IdList();
+        for (Id neighbor : allNeighbors.values()) {
+            if (neighbor.compareTo(vertex.id()) < 0) {
+                neighbors.add(neighbor);
+            }
+        }
+
+        // Send all neighbors of id less than self to neighbors
+        for (Id targetId : allNeighbors.values()) {
+            context.sendMessage(targetId, neighbors);
+        }
         vertex.value(new ClusteringCoefficientValue());
     }
 
@@ -90,25 +108,6 @@ public class ClusteringCoefficient implements Computation<IdList> {
                                                                  .idSet();
 
         if (context.superstep() == 1) {
-            // Collect outgoing neighbors
-            allNeighbors.addAll(getAllNeighbors(vertex));
-
-            // Collect neighbors of id less than self from all neighbors
-            IdList neighbors = new IdList();
-            for (Id neighbor : allNeighbors.values()) {
-                if (neighbor.compareTo(vertex.id()) < 0) {
-                    neighbors.add(neighbor);
-                }
-            }
-            // Save degree to vertex value here (optional)
-            ((ClusteringCoefficientValue) vertex.value())
-                                          .setDegree(allNeighbors.size());
-
-            // Send all neighbors to neighbors
-            for (Id targetId : allNeighbors.values()) {
-                context.sendMessage(targetId, allNeighbors);
-            }
-        } else if (context.superstep() == 2) {
             int count = 0;
 
             while (messages.hasNext()) {
