@@ -89,7 +89,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
         for (Id targetId : allNeighbors.values()) {
             context.sendMessage(targetId, neighbors);
         }
-        vertex.value(new ClusteringCoefficientValue());
+        vertex.value(value);
     }
 
     @Override
