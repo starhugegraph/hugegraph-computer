@@ -49,7 +49,26 @@ public class TriangleCount implements Computation<IdList> {
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
-        vertex.value(new TriangleCountValue());
+        TriangleCountValue value = new TriangleCountValue();
+        IdSet allNeighbors = value.idSet();
+
+        // Collect all neighbors, include of incoming and outgoing
+        allNeighbors.addAll(getAllNeighbors(vertex));
+
+        // Collect neighbors of id less than self from all neighbors
+        IdList neighbors = new IdList();
+        for (Id neighbor : allNeighbors.values()) {
+            if (neighbor.compareTo(vertex.id()) < 0) {
+                neighbors.add(neighbor);
+            }
+        }
+
+        // Send all neighbors of id less than self to neighbors
+        for (Id targetId : allNeighbors.values()) {
+            context.sendMessage(targetId, neighbors);
+        }
+
+        vertex.value(value);
     }
 
     @Override
@@ -67,22 +86,6 @@ public class TriangleCount implements Computation<IdList> {
         IdSet allNeighbors = ((TriangleCountValue) vertex.value()).idSet();
 
         if (context.superstep() == 1) {
-            // Collect all neighbors, include of incoming and outgoing
-            allNeighbors.addAll(getAllNeighbors(vertex));
-
-            // Collect neighbors of id less than self from all neighbors
-            IdList neighbors = new IdList();
-            for (Id neighbor : allNeighbors.values()) {
-                if (neighbor.compareTo(vertex.id()) < 0) {
-                    neighbors.add(neighbor);
-                }
-            }
-
-            // Send all neighbors of id less than self to neighbors
-            for (Id targetId : allNeighbors.values()) {
-                context.sendMessage(targetId, neighbors);
-            }
-        } else if (context.superstep() == 2) {
             int count = 0;
 
             while (messages.hasNext()) {
