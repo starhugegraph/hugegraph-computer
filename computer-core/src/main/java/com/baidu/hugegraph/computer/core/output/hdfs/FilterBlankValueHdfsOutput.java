@@ -6,9 +6,13 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 
 public class FilterBlankValueHdfsOutput extends HdfsOutput {
 
+    private static final String EMPTY_COLLECTION = "[]";
+
     @Override
     protected boolean filter(Vertex vertex) {
+        String value;
         return vertex.value() != null &&
-               StringUtils.isNoneEmpty(vertex.value().string());
+               StringUtils.isNotEmpty(value = vertex.value().string()) &&
+               !EMPTY_COLLECTION.equals(value);
     }
 }

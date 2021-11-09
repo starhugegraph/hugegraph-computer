@@ -94,6 +94,11 @@ public class LinksValue implements Value<LinksValue> {
 
     @Override
     public String toString() {
+        return this.values.toString();
+    }
+
+    @Override
+    public String string() {
         return CollectionUtils.isNotEmpty(this.values) ?
                this.values.toString() :
                Constants.EMPTY_STR;
