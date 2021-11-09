@@ -97,12 +97,12 @@ public class ClusteringCoefficientTest extends AlgorithmTestBase {
     @Test
     public void testClusteringCoefficientValue() {
         ClusteringCoefficientValue value = new ClusteringCoefficientValue();
-        value.count(10L);
+        value.count(10);
 
         ClusteringCoefficientValue copy;
         copy = (ClusteringCoefficientValue) value.copy();
-        Assert.assertEquals(10L, copy.count());
-        Assert.assertNotSame(value.idList(), copy.idList());
+        Assert.assertEquals(10, copy.count());
+        Assert.assertNotSame(value.idSet(), copy.idSet());
     }
 
     @Test

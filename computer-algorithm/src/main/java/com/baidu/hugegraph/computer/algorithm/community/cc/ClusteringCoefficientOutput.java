@@ -50,7 +50,7 @@ public class ClusteringCoefficientOutput extends HugeOutput {
         hugeVertex.id(vertex.id().asObject());
         float triangle = ((ClusteringCoefficientValue) vertex.value()).count();
         int degree = ((ClusteringCoefficientValue) vertex.value())
-                                                  .idList().size();
+                                                  .idSet().size();
         hugeVertex.property(this.name(), 2 * triangle / degree / (degree - 1));
         return hugeVertex;
     }
