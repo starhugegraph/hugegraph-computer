@@ -141,6 +141,9 @@ public class QueuedMessageSender implements MessageSender {
                             // Only consume the message after it is sent
                             channel.queue.take();
                         } else {
+                            LOG.info("The channel can't SendAvailable, " +
+                                     "channel:{}",
+                                     channel.client.connectionId());
                             ++busyClientCount;
                         }
                     }
@@ -159,8 +162,8 @@ public class QueuedMessageSender implements MessageSender {
                      * until any client is available
                      */
                     if (busyClientCount >= channelCount) {
-                        LOG.debug("The send executor was blocked " +
-                                  "to wait any client not busy");
+                        LOG.info("The send executor was blocked " +
+                                 "to wait any client not busy");
                         QueuedMessageSender.this.waitAnyClientNotBusy();
                     }
                 } catch (InterruptedException e) {
