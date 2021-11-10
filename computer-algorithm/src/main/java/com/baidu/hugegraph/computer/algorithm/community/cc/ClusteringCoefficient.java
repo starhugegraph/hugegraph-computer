@@ -77,11 +77,11 @@ public class ClusteringCoefficient implements Computation<IdList> {
             Id targetId = edge.targetId();
             int compareResult = targetId.compareTo(vertex.id());
             if (compareResult != 0) {
-                allNeighbors.add(targetId);
                 // Collect neighbors of id less than self from all neighbors
                 if (compareResult < 0 && !allNeighbors.contains(targetId)) {
                     neighbors.add(targetId);
                 }
+                allNeighbors.add(targetId);
             }
         }
 
