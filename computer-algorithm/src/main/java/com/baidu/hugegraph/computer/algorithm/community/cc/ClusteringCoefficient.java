@@ -72,7 +72,6 @@ public class ClusteringCoefficient implements Computation<IdList> {
         IdSet allNeighbors = value.idSet();
 
         IdList neighbors = new IdList();
-        // Collect all neighbors, include of incoming and outgoing
         for (Edge edge : vertex.edges()) {
             Id targetId = edge.targetId();
             int compareResult = targetId.compareTo(vertex.id());
@@ -81,6 +80,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
                 if (compareResult < 0 && !allNeighbors.contains(targetId)) {
                     neighbors.add(targetId);
                 }
+                // Collect all neighbors, include of incoming and outgoing
                 allNeighbors.add(targetId);
             }
         }
