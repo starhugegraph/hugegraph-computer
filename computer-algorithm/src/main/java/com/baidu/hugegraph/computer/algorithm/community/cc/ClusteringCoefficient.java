@@ -79,7 +79,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
             if (compareResult != 0) {
                 allNeighbors.add(targetId);
                 // Collect neighbors of id less than self from all neighbors
-                if (compareResult < 0) {
+                if (compareResult < 0 && !allNeighbors.contains(targetId)) {
                     neighbors.add(targetId);
                 }
             }
