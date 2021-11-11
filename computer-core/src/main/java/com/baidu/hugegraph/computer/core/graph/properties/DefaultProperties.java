@@ -82,12 +82,8 @@ public class DefaultProperties implements Properties {
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
             String key = in.readUTF();
-            Byte btype = in.readByte();
-            if ((int)btype == 0) {
-                System.out.printf("%d %s %d\n", size, key, (int)btype);
-            } 
             ValueType valueType = SerialEnum.fromCode(ValueType.class,
-                                                      btype);
+                                                      in.readByte());
             Value<?> value = this.graphFactory.createValue(valueType);
             value.read(in);
             this.keyValues.put(key, value);

@@ -56,9 +56,6 @@ public class ReusablePointer implements Pointer, Readable {
     public void read(RandomAccessInput in) throws IOException {
         this.length = in.readFixedInt();
         if (this.bytes.length < this.length) {
-            if (this.length > 200) {
-                LOG.info("{} read id", this.length);
-            }
             this.bytes = new byte[this.length];
             this.input = IOFactory.createBytesInput(this.bytes);
         }

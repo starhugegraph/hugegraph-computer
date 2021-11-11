@@ -54,7 +54,6 @@ public class MessageInput<T extends Value<?>> {
 
         if (!inCompute) {
             this.value = (T)(new IdList());
-            System.out.println(MessageInput.this.value.valueType());
         }
         else {
             this.value = this.config.createObject(
