@@ -136,7 +136,8 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = EXPECT_RESULTS.get(result.id());
             //Assert.assertNotNull(expect);
-            //assertDoubleEquals(expect, (double) result.property(super.name()));
+            //assertDoubleEquals(expect,
+            //  (double) result.property(super.name()));
             return result;
         }
     }
