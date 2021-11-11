@@ -137,8 +137,9 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = EXPECT_RESULTS.get(result.id());
-            LOG.info("result is {} {}", result.id(), expect);
-            //Assert.assertNotNull(expect);
+            LOG.info("result is {} {} {} {}", result.id(), expect,
+                        result.properties(), super.name()); 
+            Assert.assertNotNull(expect);
             //assertDoubleEquals(expect,
             //  (double) result.property(super.name()));
             return result;
