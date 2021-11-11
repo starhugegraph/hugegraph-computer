@@ -157,9 +157,9 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = expectResults.get(result.id());
-            //Assert.assertNotNull(expect);
-            //assertDoubleValueEqual(expect,
-            //                       (double) result.property(super.name()));
+            Assert.assertNotNull(expect);
+            assertDoubleValueEqual(expect,
+                                   (double) result.property(super.name()));
             return result;
         }
     }
