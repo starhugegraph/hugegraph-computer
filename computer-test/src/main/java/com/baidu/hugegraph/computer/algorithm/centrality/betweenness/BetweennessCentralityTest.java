@@ -37,16 +37,16 @@ import com.google.common.collect.ImmutableMap;
 
 public class BetweennessCentralityTest extends AlgorithmTestBase {
 
-    private static final Map<Integer, Double> EXPECT_RESULTS =
-                         ImmutableMap.<Integer, Double>builder()
-                                     .put(0, 0D)
-                                     .put(1, 4.666666666666D)
-                                     .put(2, 8.0D)
-                                     .put(3, 0.666666666666D)
-                                     .put(4, 8.666666666666D)
-                                     .put(5, 10.0D)
-                                     .put(6, 0.0D)
-                                     .put(7, 0.0D)
+    private static final Map<Long, Double> EXPECT_RESULTS =
+                         ImmutableMap.<Long, Double>builder()
+                                     .put(0L, 0D)
+                                     .put(1L, 4.666666666666D)
+                                     .put(2L, 8.0D)
+                                     .put(3L, 0.666666666666D)
+                                     .put(4L, 8.666666666666D)
+                                     .put(5L, 10.0D)
+                                     .put(6L, 0.0D)
+                                     .put(7L, 0.0D)
                                      .build();
 
     @BeforeClass
@@ -135,9 +135,12 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = EXPECT_RESULTS.get(result.id());
-            //Assert.assertNotNull(expect);
-            //assertDoubleEquals(expect,
-            //  (double) result.property(super.name()));
+            System.out.printf("\n\n\n\n\n\n\n a0");
+            System.out.println(expect);
+            System.out.printf("a1 \n\n\n\n\n\n\n");
+            Assert.assertNotNull(expect);
+            assertDoubleEquals(expect,
+              (double) result.property(super.name()));
             return result;
         }
     }

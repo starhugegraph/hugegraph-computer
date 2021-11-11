@@ -108,14 +108,14 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
     public static class ClosenessWithWeightPropertyTestOutput
            extends ClosenessCentralityOutput {
 
-        private final Map<Integer, Double> expectResults =
-                ImmutableMap.<Integer, Double>builder()
-                            .put(0, 2.083333333333333)
-                            .put(1, 2.5333333333333337)
-                            .put(2, 2.583333333333333)
-                            .put(3, 3.1666666666666665)
-                            .put(4, 2.583333333333333)
-                            .put(5, 1.45)
+        private final Map<Long, Double> expectResults =
+                ImmutableMap.<Long, Double>builder()
+                            .put(0L, 2.083333333333333)
+                            .put(1L, 2.5333333333333337)
+                            .put(2L, 2.583333333333333)
+                            .put(3L, 3.1666666666666665)
+                            .put(4L, 2.583333333333333)
+                            .put(5L, 1.45)
                             .build();
 
         @Override
@@ -142,14 +142,14 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
     public static class ClosenessWithoutWeightPropertyTestOutput
            extends ClosenessCentralityOutput {
 
-        private final Map<Integer, Double> expectResults =
-                ImmutableMap.<Integer, Double>builder()
-                            .put(0, 2.6666666666666665)
-                            .put(1, 4.0)
-                            .put(2, 4.0)
-                            .put(3, 4.5)
-                            .put(4, 3.833333333333333)
-                            .put(5, 3.333333333333333)
+        private final Map<Long, Double> expectResults =
+                ImmutableMap.<Long, Double>builder()
+                            .put(0L, 2.6666666666666665)
+                            .put(1L, 4.0)
+                            .put(2L, 4.0)
+                            .put(3L, 4.5)
+                            .put(4L, 3.833333333333333)
+                            .put(5L, 3.333333333333333)
                             .build();
 
         @Override
