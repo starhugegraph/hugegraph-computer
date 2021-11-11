@@ -198,7 +198,7 @@ public class SortLargeDataTest {
         LOG.info("testMergeBuffers finished");
     }
 
-    //@Test
+    @Test
     public void testMergeBuffersAllSameKey() throws Exception {
         LOG.info("testMergeBuffersAllSameKy begin");
         List<RandomAccessInput> buffers = new ArrayList<>();
@@ -223,7 +223,7 @@ public class SortLargeDataTest {
         LOG.info("testMergeBuffersAllSameKy finish");
     }
 
-    //@Test
+    @Test
     public void testDiffNumEntriesFileMerge() throws Exception {
         LOG.info("testMergeBuffersAllSameKy begin");
         Config config = UnitTestBase.updateWithRequiredOptions(
