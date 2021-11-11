@@ -37,8 +37,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class BetweennessCentralityTest extends AlgorithmTestBase {
 
-    private static final Map<String, Double> EXPECT_RESULTS =
-                         ImmutableMap.<Int, Double>builder()
+    private static final Map<Integer, Double> EXPECT_RESULTS =
+                         ImmutableMap.<Integer, Double>builder()
                                      .put(0, 0D)
                                      .put(1, 4.666666666666D)
                                      .put(2, 8.0D)

@@ -108,8 +108,8 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
     public static class ClosenessWithWeightPropertyTestOutput
            extends ClosenessCentralityOutput {
 
-        private final Map<String, Double> expectResults =
-                ImmutableMap.<Int, Double>builder()
+        private final Map<Integer, Double> expectResults =
+                ImmutableMap.<Integer, Double>builder()
                             .put(0, 2.083333333333333)
                             .put(1, 2.5333333333333337)
                             .put(2, 2.583333333333333)
@@ -142,14 +142,14 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
     public static class ClosenessWithoutWeightPropertyTestOutput
            extends ClosenessCentralityOutput {
 
-        private final Map<String, Double> expectResults =
-                ImmutableMap.<String, Double>builder()
-                            .put("A", 2.6666666666666665)
-                            .put("B", 4.0)
-                            .put("C", 4.0)
-                            .put("D", 4.5)
-                            .put("E", 3.833333333333333)
-                            .put("F", 3.333333333333333)
+        private final Map<Integer, Double> expectResults =
+                ImmutableMap.<Integer, Double>builder()
+                            .put(0, 2.6666666666666665)
+                            .put(1, 4.0)
+                            .put(2, 4.0)
+                            .put(3, 4.5)
+                            .put(4, 3.833333333333333)
+                            .put(5, 3.333333333333333)
                             .build();
 
         @Override
