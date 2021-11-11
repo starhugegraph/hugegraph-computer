@@ -38,15 +38,15 @@ import com.google.common.collect.ImmutableMap;
 public class BetweennessCentralityTest extends AlgorithmTestBase {
 
     private static final Map<String, Double> EXPECT_RESULTS =
-                         ImmutableMap.<String, Double>builder()
-                                     .put("0", 0D)
-                                     .put("1", 4.666666666666D)
-                                     .put("2", 8.0D)
-                                     .put("3", 0.666666666666D)
-                                     .put("4", 8.666666666666D)
-                                     .put("5", 10.0D)
-                                     .put("6", 0.0D)
-                                     .put("7", 0.0D)
+                         ImmutableMap.<Int, Double>builder()
+                                     .put(0, 0D)
+                                     .put(1, 4.666666666666D)
+                                     .put(2, 8.0D)
+                                     .put(3, 0.666666666666D)
+                                     .put(4, 8.666666666666D)
+                                     .put(5, 10.0D)
+                                     .put(6, 0.0D)
+                                     .put(7, 0.0D)
                                      .build();
 
     @BeforeClass
@@ -135,9 +135,9 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = EXPECT_RESULTS.get(result.id());
-            //Assert.assertNotNull(expect);
-            //assertDoubleEquals(expect,
-            //  (double) result.property(super.name()));
+            Assert.assertNotNull(expect);
+            assertDoubleEquals(expect,
+              (double) result.property(super.name()));
             return result;
         }
     }

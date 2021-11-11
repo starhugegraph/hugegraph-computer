@@ -32,7 +32,7 @@ import com.baidu.hugegraph.driver.HugeClient;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
-//import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.testutil.Assert;
 import com.google.common.collect.ImmutableMap;
 
 public class ClosenessCentralityTest extends AlgorithmTestBase {
@@ -109,13 +109,13 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
            extends ClosenessCentralityOutput {
 
         private final Map<String, Double> expectResults =
-                ImmutableMap.<String, Double>builder()
-                            .put("A", 2.083333333333333)
-                            .put("B", 2.5333333333333337)
-                            .put("C", 2.583333333333333)
-                            .put("D", 3.1666666666666665)
-                            .put("E", 2.583333333333333)
-                            .put("F", 1.45)
+                ImmutableMap.<Int, Double>builder()
+                            .put(0, 2.083333333333333)
+                            .put(1, 2.5333333333333337)
+                            .put(2, 2.583333333333333)
+                            .put(3, 3.1666666666666665)
+                            .put(4, 2.583333333333333)
+                            .put(5, 1.45)
                             .build();
 
         @Override
@@ -123,9 +123,9 @@ public class ClosenessCentralityTest extends AlgorithmTestBase {
                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             Vertex result = super.constructHugeVertex(vertex);
             Double expect = expectResults.get(result.id());
-            //Assert.assertNotNull(expect);
-            //assertDoubleValueEqual(expect,
-            //                       (double) result.property(super.name()));
+            Assert.assertNotNull(expect);
+            assertDoubleValueEqual(expect,
+                                   (double) result.property(super.name()));
             return result;
         }
     }
