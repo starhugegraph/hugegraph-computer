@@ -28,7 +28,7 @@ import com.baidu.hugegraph.structure.constant.WriteType;
  */
 public class ClusteringCoefficientOutput extends HugeOutput {
 
-    private final int SINGLE_NODE_DEGREE = 1;
+    private static final int SINGLE_NODE_DEGREE = 1;
 
     @Override
     public String name() {
