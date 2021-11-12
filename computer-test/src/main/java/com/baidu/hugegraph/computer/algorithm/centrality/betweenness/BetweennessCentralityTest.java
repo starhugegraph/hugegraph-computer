@@ -21,8 +21,8 @@ package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 
 import java.util.Map;
 
-//import org.junit.AfterClass;
-//import org.junit.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
@@ -51,7 +51,7 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
                                      .put(7L, 0.0D)
                                      .build();
 
-    //@BeforeClass
+    @BeforeClass
     public static void setup() {
         clearAll();
 
@@ -115,7 +115,7 @@ public class BetweennessCentralityTest extends AlgorithmTestBase {
         v7.addEdge("link", v6);
     }
 
-    //@AfterClass
+    @AfterClass
     public static void clear() {
         clearAll();
     }
