@@ -159,12 +159,12 @@ public class LinksTest extends AlgorithmTestBase {
         public void write(
                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             LinksValue values = vertex.value();
-            LOG.info("value is {}", values);
             Set<String> result =
                         EXPECT_RESULT.getOrDefault(vertex.id().toString(),
                                                    new HashSet<>());
             //Assert.assertEquals(result.size(), values.size());
             values.values().forEach(value -> {
+                LOG.info("valuelink is {}", value.toString());
                 //Assert.assertTrue(result.contains(value.toString()));
             });
             super.write(vertex);

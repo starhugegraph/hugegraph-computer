@@ -88,7 +88,9 @@ public class LinksSpreadFilter {
     }
 
     public boolean isStartVertexes(Vertex vertex) {
-        return this.startVertexes.contains(vertex.id());
+        String strid = Long.toString((long)vertex.id().asObject());
+        Id id = BytesId.of(strid);
+        return this.startVertexes.contains(id);
     }
 
     public boolean isEndVertex(Vertex vertex) {
