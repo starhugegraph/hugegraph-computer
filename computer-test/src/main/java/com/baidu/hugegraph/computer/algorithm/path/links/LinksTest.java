@@ -34,7 +34,7 @@ import com.baidu.hugegraph.driver.HugeClient;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
-//import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.testutil.Assert;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.baidu.hugegraph.util.Log;
@@ -48,16 +48,14 @@ public class LinksTest extends AlgorithmTestBase {
     private static final String LABEL_PAY = "pay";
     private static final String LABEL_KNOW = "know";
 
-    private static final Map<String, Set<String>> EXPECT_RESULT =
+    private static final Map<Long, Set<String>> EXPECT_RESULT =
             ImmutableMap.of(
-                "A", ImmutableSet.of("{A, SA>1>>SB, B}",
-                                         "{B, SB>1>>SD, D, SD>1>>SA, A, " +
-                                         "SA>1>>SB, B}",
-                                         "{D, SD>1>>SA, A, SA>1>>SB, B}"),
-                "E", ImmutableSet.of("{E, SE>1>>SD, D}",
-                                         "{A, SA>1>>SC, C, SC>1>>SE, E, " +
-                                         "SE>1>>SD, D}",
-                                         "{C, SC>1>>SE, E, SE>1>>SD, D}")
+                0L, ImmutableSet.of("{0, , 1}",
+                                    "{1, , 3, , 0, , 1}",
+                                    "{3, , 0, , 1}"),
+                4L, ImmutableSet.of("{4, , 3}",
+                                    "{0, , 2, , 4, , 3}",
+                                    "{2, , 4, , 3}")
             );
 
     @BeforeClass
@@ -120,11 +118,11 @@ public class LinksTest extends AlgorithmTestBase {
     public void test() throws InterruptedException {
         String analyze = "{" +
                          "    \"start_vertexes\": [" +
-                         "        \"A\"," +
-                         "        \"B\"," +
-                         "        \"C\"," +
-                         "        \"D\"," +
-                         "        \"E\"" +
+                         "        \"0\"," +
+                         "        \"1\"," +
+                         "        \"2\"," +
+                         "        \"3\"," +
+                         "        \"4\"" +
                          "    ]," +
                          "    \"edge_end_condition\": {" +
                          "        \"label\": \"pay\"," +
@@ -153,19 +151,20 @@ public class LinksTest extends AlgorithmTestBase {
 
     public static class LinksTestOutput extends LinksHugeOutput {
 
-        public static Map<String, Set<String>> EXPECT_RESULT;
+        public static Map<Long, Set<String>> EXPECT_RESULT;
 
         @Override
         public void write(
                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             LinksValue values = vertex.value();
+
             Set<String> result =
-                        EXPECT_RESULT.getOrDefault(vertex.id().toString(),
-                                                   new HashSet<>());
-            //Assert.assertEquals(result.size(), values.size());
+               EXPECT_RESULT.getOrDefault(vertex.id().asObject(), 
+                                                  new HashSet<>());
+            Assert.assertEquals(result.size(), values.size());
             values.values().forEach(value -> {
-                LOG.info("valuelink is {}", value.toString());
-                //Assert.assertTrue(result.contains(value.toString()));
+                //LOG.info("valuelink is {}", value.toString());
+                Assert.assertTrue(result.contains(value.toString()));
             });
             super.write(vertex);
         }
