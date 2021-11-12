@@ -41,11 +41,11 @@ import com.google.common.collect.ImmutableSet;
 
 public class RingsDetectionWithFilterTest extends AlgorithmTestBase {
 
-    private static final Map<String, Set<String>> EXPECT_RINGS =
+    private static final Map<Long, Set<String>> EXPECT_RINGS =
             ImmutableMap.of(
-                    "A", ImmutableSet.of("ACA", "ADCA", "ABCA"),
-                    "B", ImmutableSet.of("BCB"),
-                    "C", ImmutableSet.of("CDC")
+                    0L, ImmutableSet.of("020", "0320", "0120"),
+                    1L, ImmutableSet.of("121"),
+                    2L, ImmutableSet.of("232")
             );
 
     @BeforeClass

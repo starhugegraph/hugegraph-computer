@@ -36,7 +36,7 @@ import com.baidu.hugegraph.driver.HugeClient;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
-//import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.testutil.Assert;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -45,11 +45,11 @@ import com.baidu.hugegraph.util.Log;
 
 public class RingsDetectionTest extends AlgorithmTestBase {
     private static final Logger LOG = Log.logger("rings detection test");
-    private static final Map<String, Set<String>> EXPECT_RINGS =
+    private static final Map<Long, Set<String>> EXPECT_RINGS =
             ImmutableMap.of(
-                    "A", ImmutableSet.of("ABCA", "ACA", "ABCDEA", "ADA",
-                                             "ADCA", "ACEDA"),
-                    "C", ImmutableSet.of("CEDC")
+                    0L, ImmutableSet.of("0120", "020", "012340", "030",
+                                             "0320", "02430"),
+                    2L, ImmutableSet.of("2432")
             );
 
     @BeforeClass
@@ -111,7 +111,7 @@ public class RingsDetectionTest extends AlgorithmTestBase {
 
     public static class RingsDetectionTestOutput extends RingsDetectionOutput {
 
-        public static Map<String, Set<String>> EXPECT_RINGS;
+        public static Map<Long, Set<String>> EXPECT_RINGS;
 
         @Override
         public void write(
@@ -124,18 +124,18 @@ public class RingsDetectionTest extends AlgorithmTestBase {
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             IdListList rings = vertex.value();
             Set<String> expect =
-                        EXPECT_RINGS.getOrDefault(vertex.id().toString(),
+                        EXPECT_RINGS.getOrDefault(vertex.id(),
                                                   new HashSet<>());
             LOG.info("result is {}", rings);
             LOG.info("expect is {}", expect); 
-            //Assert.assertEquals(expect.size(), rings.size());
+            Assert.assertEquals(expect.size(), rings.size());
             for (int i = 0; i < rings.size(); i++) {
                 IdList ring = rings.get(0);
                 StringBuilder ringValue = new StringBuilder();
                 for (int j = 0; j < ring.size(); j++) {
                     ringValue.append(ring.get(j).toString());
                 }
-                //Assert.assertTrue(expect.contains(ringValue.toString()));
+                Assert.assertTrue(expect.contains(ringValue.toString()));
             }
         }
     }
