@@ -113,8 +113,8 @@ public class VertexInput {
                 buffer.flip();
                 Long lId = buffer.getLong();
                 this.vertex.id(this.context.graphFactory().
-                                            createId(lId));                 
-                this.idPointer = new ReusablePointer(bId, Long.BYTES);   
+                                            createId(lId)); 
+                this.idPointer = new ReusablePointer(blId, Long.BYTES);   
 
                 this.valuePointer.read(this.input);
                 RandomAccessInput valueInput = this.valuePointer.input();
