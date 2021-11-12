@@ -123,9 +123,10 @@ public class RingsDetectionTest extends AlgorithmTestBase {
         private void assertResult(
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             IdListList rings = vertex.value();
+            Long lId = (long)vertex.id().asObject();
             Set<String> expect =
-                        EXPECT_RINGS.getOrDefault(vertex.id(),
-                                                  new HashSet<>());
+                        EXPECT_RINGS.getOrDefault(lId, new HashSet<>());
+            LOG.info("lId is {}", lId);
             LOG.info("result is {}", rings);
             LOG.info("expect is {}", expect); 
             Assert.assertEquals(expect.size(), rings.size());
