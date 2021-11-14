@@ -182,7 +182,13 @@ public class MessageSendManager implements Manager {
     }
 
     private WriteBuffers sortIfTargetBufferIsFull(Id id, MessageType type) {
-        int partitionId = this.partitioner.partitionId(id);
+        int partitionId;
+        if (type == MessageType.MSG) {
+            partitionId = this.partitioner.partitionIdFixIdLength(id);
+        }
+        else {
+            partitionId = this.partitioner.partitionId(id);
+        }
         WriteBuffers buffer = this.buffers.get(partitionId);
         if (buffer.reachThreshold()) {
             /*
