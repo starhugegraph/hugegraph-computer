@@ -30,8 +30,6 @@ import org.slf4j.Logger;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.exceptions.WriteBackException;
-
-
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.Printer;
 import com.baidu.hugegraph.driver.HugeClient;
@@ -67,9 +65,7 @@ public final class TaskManager {
 
         // Use token first, then try passwd mode
         HugeClientBuilder clientBuilder = new HugeClientBuilder(url, graph);
-        if (token != null && token.length() != 0) {
-            this.client = clientBuilder.configToken(token).build();
-        } else if (usrname != null && usrname.length() != 0) {
+        if (usrname != null && usrname.length() != 0) {
             this.client = clientBuilder.configUser(usrname, passwd).build();
         } else {
             this.client = clientBuilder.build();
