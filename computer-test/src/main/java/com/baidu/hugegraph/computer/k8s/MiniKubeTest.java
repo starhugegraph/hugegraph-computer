@@ -139,7 +139,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         Mockito.verify(jobObserver, Mockito.timeout(15000L).atLeast(1))
                .onJobStateChanged(Mockito.eq(jobState2));
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -171,7 +171,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         Mockito.verify(jobObserver, Mockito.timeout(15000L).atLeast(1))
                .onJobStateChanged(Mockito.eq(jobState2));
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -210,7 +210,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         String diagnostics = this.driver.diagnostics(jobId, params);
         Assert.assertContains("No such file or directory", diagnostics);
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -235,7 +235,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         String diagnostics = this.driver.diagnostics(jobId, params);
         Assert.assertContains("Unschedulable", diagnostics);
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -271,7 +271,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         Mockito.verify(jobObserver, Mockito.timeout(15000L).atLeast(1))
                .onJobStateChanged(Mockito.eq(jobState2));
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -312,7 +312,7 @@ public class MiniKubeTest extends AbstractK8sTest {
 
         UnitTestBase.sleep(1000L);
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -336,7 +336,7 @@ public class MiniKubeTest extends AbstractK8sTest {
         String diagnostics = this.driver.diagnostics(jobId, params);
         Assert.assertContains("ImagePullBackOff", diagnostics);
 
-        future.getNow(null);
+        future.cancel(true);
     }
 
     @Test
@@ -371,6 +371,6 @@ public class MiniKubeTest extends AbstractK8sTest {
                                          new HashMap<String, String>());
         Assert.assertNotEquals(0, pods.size());
 
-        future.getNow(null);
+        future.cancel(true);
     }
 }
