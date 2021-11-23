@@ -1,0 +1,251 @@
+/*
+ * Copyright 2017 HugeGraph Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.baidu.hugegraph.computer.algorithm.path.subgraph;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+
+import com.baidu.hugegraph.computer.core.graph.edge.Edge;
+import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+public class MinHeightTree {
+
+    private TreeNode root;
+    private final Map<Integer, TreeNode> idNodeMap;
+
+    private Set<TreeNode> upperLevelLeaves;
+    private final BitSet leavesVisited;
+
+    private MinHeightTree() {
+        this.idNodeMap = new HashMap<>();
+        this.leavesVisited = new BitSet();
+    }
+
+    public static MinHeightTree buildMHT(QueryGraph graph) {
+        // Build temporary MHT
+        QueryGraph.Vertex temporaryRoot = graph.vertices().get(0);
+
+        MinHeightTree temporaryTree = buildTree(graph, temporaryRoot);
+
+        // Find real graph center node
+        List<TreeNode> nodes = temporaryTree.nodes();
+        while (nodes.size() > 2) {
+            Iterator<TreeNode> itr = nodes.iterator();
+            while (itr.hasNext()) {
+                TreeNode node = itr.next();
+                if (node.degree == 1) {
+                    node.parent.degree -= 1;
+                    for (TreeNode child : node.children) {
+                        child.degree -= 1;
+                    }
+                    itr.remove();
+                }
+            }
+        }
+        TreeNode realRoot = nodes.get(0);
+
+        // Build real MHT
+        graph.resetEdgeVisited();
+        return buildTree(graph, realRoot.vertex);
+    }
+
+    private static MinHeightTree buildTree(QueryGraph graph,
+                                           QueryGraph.Vertex root) {
+        int nodeId = 1;
+        TreeNode treeRoot = new TreeNode(nodeId++, null, true,
+                                         root, null);
+        treeRoot.parent = treeRoot;
+
+        MinHeightTree tree = new MinHeightTree();
+        tree.root = treeRoot;
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(treeRoot);
+        while (!queue.isEmpty()) {
+            TreeNode parent = queue.poll();
+            QueryGraph.Vertex parentVertex = parent.vertex;
+
+            ImmutableList<List<QueryGraph.Edge>> edges =
+                                                 ImmutableList.of(
+                                                 parentVertex.inEdges(),
+                                                 parentVertex.outEdges());
+            for (int i = 0; i < edges.size(); i++) {
+                boolean isInEdge = (i & 1) == 0;
+                for (QueryGraph.Edge edge : edges.get(i)) {
+                    if (graph.isEdgeVisited(edge.id())) {
+                        continue;
+                    }
+                    graph.visitEdge(edge.id());
+                    String target;
+                    if (isInEdge) {
+                        target = edge.source();
+                    } else {
+                        target = edge.target();
+                    }
+                    QueryGraph.Vertex vertex = graph.findVertexById(target);
+                    TreeNode node = new TreeNode(nodeId++, parent, isInEdge,
+                                                 vertex, edge);
+                    parent.addChild(node);
+                    queue.offer(node);
+                }
+            }
+        }
+
+        afterBuild(tree);
+
+        return tree;
+    }
+
+    private static void afterBuild(MinHeightTree tree) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(tree.root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            // If parent is root node
+            int degree = 1;
+            if (node.parent == node) {
+                degree = 0;
+            }
+            node.degree = degree + node.children.size();
+
+            tree.idNodeMap.put(node.nodeId, node);
+
+            for (TreeNode child : node.children) {
+                queue.offer(child);
+            }
+        }
+    }
+
+    public TreeNode findNodeById(int nodeId) {
+        return this.idNodeMap.get(nodeId);
+    }
+
+    public Set<TreeNode> nextLevelLeaves() {
+        // Don't have next level leaves when root visited
+        if (this.leavesVisited.get(this.root.nodeId)) {
+            return ImmutableSet.of();
+        }
+
+        Set<TreeNode> leaves = new HashSet<>();
+        if (this.upperLevelLeaves == null) {
+            Queue<TreeNode> queue = new LinkedList<>();
+            queue.offer(this.root);
+            while (!queue.isEmpty()) {
+                TreeNode node = queue.poll();
+                if (CollectionUtils.isEmpty(node.children)) {
+                    leaves.add(node);
+                    this.leavesVisited.set(node.nodeId);
+                } else {
+                    for (TreeNode child : node.children) {
+                        queue.offer(child);
+                    }
+                }
+            }
+        } else {
+            for (TreeNode leaf : this.upperLevelLeaves) {
+                leaves.add(leaf.parent);
+            }
+            Iterator<TreeNode> itr = leaves.iterator();
+            while (itr.hasNext()) {
+                TreeNode parent = itr.next();
+                boolean allChildVisited = true;
+                for (TreeNode child : parent.children) {
+                    if (!this.leavesVisited.get(child.nodeId)) {
+                        allChildVisited = false;
+                        break;
+                    }
+                }
+                if (!allChildVisited) {
+                    itr.remove();
+                }
+            }
+            for (TreeNode parent : leaves) {
+                this.leavesVisited.set(parent.nodeId);
+            }
+        }
+        this.upperLevelLeaves = leaves;
+        return ImmutableSet.copyOf(leaves);
+    }
+
+    public void resetLeaves() {
+        this.upperLevelLeaves = null;
+        this.leavesVisited.clear();
+    }
+
+    private List<TreeNode> nodes() {
+        List<TreeNode> nodes = new LinkedList<>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(this.root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            nodes.add(node);
+            for (TreeNode child : node.children) {
+                queue.offer(child);
+            }
+        }
+        return nodes;
+    }
+
+    public static class TreeNode {
+
+        private final int nodeId;
+        private TreeNode parent;
+        private final boolean inToParent;
+        private final QueryGraph.Vertex vertex;
+        private final QueryGraph.Edge edgeToParent;
+        private final List<TreeNode> children;
+        private int degree;
+
+        public TreeNode(int nodeId, TreeNode parent, boolean inToParent,
+                        QueryGraph.Vertex vertex,
+                        QueryGraph.Edge edgeToParent) {
+            this.nodeId = nodeId;
+            this.parent = parent;
+            this.inToParent = inToParent;
+            this.vertex = vertex;
+            this.edgeToParent = edgeToParent;
+            this.children = new ArrayList<>();
+        }
+
+        public void addChild(TreeNode node) {
+            this.children.add(node);
+        }
+
+        public boolean match(Vertex vertex) {
+            return false;
+        }
+
+        public boolean match(Edge edge) {
+            return false;
+        }
+    }
+}
