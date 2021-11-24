@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -220,7 +221,6 @@ public class KubernetesDriverTest extends AbstractK8sTest {
         CompletableFuture<Void> future = this.driver.waitJobAsync(jobId,
                                                                   params,
                                                                   jobObserver);
-
         Mockito.verify(jobObserver, Mockito.timeout(5000L).atLeast(1))
                .onJobStateChanged(Mockito.any(DefaultJobState.class));
 

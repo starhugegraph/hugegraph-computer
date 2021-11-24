@@ -63,7 +63,6 @@ public interface ComputerDriver extends Closeable {
     CompletableFuture<Void> waitJobAsync(String jobId,
                                          Map<String, String> params,
                                          JobObserver observer);
-
     /**
      * Get the current job state. Throws ComputerException if can't found the
      * job.

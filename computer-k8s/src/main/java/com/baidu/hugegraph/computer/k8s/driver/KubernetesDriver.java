@@ -425,7 +425,6 @@ public class KubernetesDriver implements ComputerDriver {
             future.cancel(true);
             iterator.remove();
         }
-
         if (this.watch != null) {
             this.watch.close();
             this.watchActive.setFalse();
