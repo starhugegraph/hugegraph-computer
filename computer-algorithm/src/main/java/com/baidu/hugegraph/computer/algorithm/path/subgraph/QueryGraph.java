@@ -28,8 +28,11 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import com.baidu.hugegraph.computer.algorithm.ExpressionUtil;
+import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.util.E;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.googlecode.aviator.Expression;
 
 public class QueryGraph {
@@ -119,10 +122,6 @@ public class QueryGraph {
             return this.label;
         }
 
-        public Expression propertyFilter() {
-            return this.propertyFilter;
-        }
-
         public List<Edge> inEdges() {
             return this.inEdges;
         }
@@ -137,6 +136,16 @@ public class QueryGraph {
 
         public void addOutEdge(Edge edge) {
             this.outEdges.add(edge);
+        }
+
+        public boolean match(
+               com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
+            if (!this.label.equals(vertex.label())) {
+                return false;
+            }
+            Map<String, Map<String, Value<?>>> param =
+                ImmutableMap.of("$element", vertex.properties().get());
+            return ExpressionUtil.expressionExecute(param, this.propertyFilter);
         }
     }
 
@@ -173,8 +182,14 @@ public class QueryGraph {
             return this.label;
         }
 
-        public Expression propertyFilter() {
-            return this.propertyFilter;
+        public boolean match(com.baidu.hugegraph.computer.core.graph.edge.Edge
+                             edge) {
+            if (!this.label.equals(edge.label())) {
+                return false;
+            }
+            Map<String, Map<String, Value<?>>> param =
+                ImmutableMap.of("$element", edge.properties().get());
+            return ExpressionUtil.expressionExecute(param, this.propertyFilter);
         }
     }
 }

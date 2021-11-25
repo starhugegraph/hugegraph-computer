@@ -19,5 +19,51 @@
 
 package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
-public class SubGraphMatch {
+import java.util.Iterator;
+import java.util.Set;
+
+import com.baidu.hugegraph.computer.core.config.Config;
+import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
+import com.baidu.hugegraph.computer.core.worker.Computation;
+import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.computer.core.worker.WorkerContext;
+
+public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
+
+    public static final String SUBGRAPH_OPTION = "subgraph.query_graph_config";
+
+    private MinHeightTree subgraphTree;
+    private Set<MinHeightTree.TreeNode> leaves;
+
+    @Override
+    public String name() {
+        return "subgraph_match";
+    }
+
+    @Override
+    public String category() {
+        return "path";
+    }
+
+    @Override
+    public void init(Config config) {
+        String subgraphConfig = config.getString(SUBGRAPH_OPTION, "{}");
+        this.subgraphTree = MinHeightTree.build(new QueryGraph(subgraphConfig));
+    }
+
+    @Override
+    public void beforeSuperstep(WorkerContext context) {
+        this.leaves = this.subgraphTree.nextLevelLeaves();
+    }
+
+    @Override
+    public void compute0(ComputationContext context, Vertex vertex) {
+
+    }
+
+    @Override
+    public void compute(ComputationContext context, Vertex vertex,
+                        Iterator<SubGraphMatchMessage> messages) {
+
+    }
 }

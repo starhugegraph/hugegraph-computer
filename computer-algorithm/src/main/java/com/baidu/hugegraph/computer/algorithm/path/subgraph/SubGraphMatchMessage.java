@@ -28,22 +28,17 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
-import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 
-public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
+public class SubGraphMatchMessage implements Value<SubGraphMatchMessage> {
 
-    private final IdListList res;
-    private final List<Integer> counter;
-    private final List<List<Pair<Integer, Id>>> mp;
+    private List<Pair<Integer, Id>> subMatch;
 
-    public SubGraphMatchValue() {
-        this.res = new IdListList();
-        this.counter = new ArrayList<>();
-        this.mp = new ArrayList<>();
+    public SubGraphMatchMessage() {
+        this.subMatch = new ArrayList<>();
     }
 
     @Override
@@ -52,12 +47,12 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
     }
 
     @Override
-    public void assign(Value<SubGraphMatchValue> value) {
+    public void assign(Value<SubGraphMatchMessage> value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Value<SubGraphMatchValue> copy() {
+    public Value<SubGraphMatchMessage> copy() {
         throw new UnsupportedOperationException();
     }
 
@@ -68,52 +63,28 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
 
     @Override
     public void read(RandomAccessInput in) throws IOException {
-        this.res.read(in);
-
-        int counterSize = in.readInt();
-        for (int i = 0; i < counterSize; i++) {
-            this.counter.add(in.readInt());
-        }
-
-        int mpSize = in.readInt();
-        for (int i = 0; i < mpSize; i++) {
-            List<Pair<Integer, Id>> pairs = new ArrayList<>();
-            this.mp.add(pairs);
-            int pairSize = in.readInt();
-            for (int j = 0; j < pairSize; j++) {
-                int nodeId = in.readInt();
-                Id id = new BytesId();
-                id.read(in);
-                pairs.add(new MutablePair<>(nodeId, id));
-            }
+        this.subMatch = new ArrayList<>();
+        int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            int nodeId = in.readInt();
+            BytesId id = new BytesId();
+            id.read(in);
+            subMatch.add(new MutablePair<>(nodeId, id));
         }
     }
 
     @Override
     public void write(RandomAccessOutput out) throws IOException {
-        this.res.write(out);
-
-        out.writeInt(this.counter.size());
-        for (Integer nodeId : counter) {
-            out.writeInt(nodeId);
-        }
-
-        out.writeInt(this.mp.size());
-        for (List<Pair<Integer, Id>> pairs : this.mp) {
-            for (Pair<Integer, Id> pair : pairs) {
-                out.writeInt(pair.getLeft());
-                pair.getRight().write(out);
-            }
+        out.writeInt(this.subMatch.size());
+        for (int i = 0; i < this.subMatch.size(); i++) {
+            Pair<Integer, Id> pair = subMatch.get(i);
+            out.writeInt(pair.getLeft());
+            pair.getRight().write(out);
         }
     }
 
     @Override
-    public String string() {
-        return this.res.toString();
-    }
-
-    @Override
-    public int compareTo(SubGraphMatchValue o) {
+    public int compareTo(SubGraphMatchMessage o) {
         throw new UnsupportedOperationException();
     }
 }

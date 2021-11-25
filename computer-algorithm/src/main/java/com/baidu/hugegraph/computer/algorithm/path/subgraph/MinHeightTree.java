@@ -50,7 +50,7 @@ public class MinHeightTree {
         this.leavesVisited = new BitSet();
     }
 
-    public static MinHeightTree buildMHT(QueryGraph graph) {
+    public static MinHeightTree build(QueryGraph graph) {
         // Build temporary MHT
         QueryGraph.Vertex temporaryRoot = graph.vertices().get(0);
 
@@ -241,11 +241,11 @@ public class MinHeightTree {
         }
 
         public boolean match(Vertex vertex) {
-            return false;
+            return this.vertex.match(vertex);
         }
 
         public boolean match(Edge edge) {
-            return false;
+            return this.edgeToParent.match(edge);
         }
     }
 }

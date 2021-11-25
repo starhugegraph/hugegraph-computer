@@ -100,7 +100,7 @@ public class MhtTest {
                         "]";
 
         QueryGraph graph = new QueryGraph(config);
-        MinHeightTree tree = MinHeightTree.buildMHT(graph);
+        MinHeightTree tree = MinHeightTree.build(graph);
 
         Set<MinHeightTree.TreeNode> leaves;
         leaves = tree.nextLevelLeaves();
