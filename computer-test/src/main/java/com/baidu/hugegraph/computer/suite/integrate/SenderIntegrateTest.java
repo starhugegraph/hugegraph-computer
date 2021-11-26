@@ -247,7 +247,7 @@ public class SenderIntegrateTest {
                                                       "sendFunction");
         Function<Message, Future<Void>> sendFunc = message -> {
             try {
-                Thread.sleep(100);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
