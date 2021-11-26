@@ -94,9 +94,9 @@ public class MasterService implements Closeable {
         this.config = config;
 
         this.maxSuperStep = this.config.get(ComputerOptions.BSP_MAX_SUPER_STEP);
-
+        LOG.info("{} aa", this);
         InetSocketAddress rpcAddress = this.initManagers();
-
+        LOG.info("{} bb", this);
         this.masterInfo = new ContainerInfo(ContainerInfo.MASTER_ID,
                                             TransportUtil.host(rpcAddress),
                                             rpcAddress.getPort());
