@@ -45,11 +45,11 @@ import com.baidu.hugegraph.util.Log;
 
 public class RingsDetectionTest extends AlgorithmTestBase {
     private static final Logger LOG = Log.logger("rings detection test");
-    private static final Map<Long, Set<String>> EXPECT_RINGS =
+    private static final Map<String, Set<String>> EXPECT_RINGS =
             ImmutableMap.of(
-                    0L, ImmutableSet.of("0120", "020", "012340", "030",
-                                             "0320", "02430"),
-                    2L, ImmutableSet.of("2432")
+                    "A", ImmutableSet.of("ABCA", "ACA", "ABCDEA", "ADA",
+                                             "ADCA", "ACEDA"),
+                    "C", ImmutableSet.of("CEDC")
             );
 
     @BeforeClass
@@ -111,7 +111,7 @@ public class RingsDetectionTest extends AlgorithmTestBase {
 
     public static class RingsDetectionTestOutput extends RingsDetectionOutput {
 
-        public static Map<Long, Set<String>> EXPECT_RINGS;
+        public static Map<String, Set<String>> EXPECT_RINGS;
 
         @Override
         public void write(
@@ -123,10 +123,10 @@ public class RingsDetectionTest extends AlgorithmTestBase {
         private void assertResult(
                 com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
             IdListList rings = vertex.value();
-            Long lId = (long)vertex.id().asObject();
+            //Long lId = (long)vertex.id().asObject();
             Set<String> expect =
-                        EXPECT_RINGS.getOrDefault(lId, new HashSet<>());
-            LOG.info("lId is {}", lId);
+                        EXPECT_RINGS.getOrDefault(vertex.id().toString(), 
+                                                  new HashSet<>());
             LOG.info("result is {}", rings);
             LOG.info("expect is {}", expect); 
             Assert.assertEquals(expect.size(), rings.size());

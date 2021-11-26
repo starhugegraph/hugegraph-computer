@@ -94,6 +94,7 @@ public class FileGraphPartition<M extends Value<M>> {
 
     private VertexInput vertexInput;
     private EdgesInput edgesInput;
+    private VertexInput vertexOriginInput;
     private MessageInput<M> messageInput;
 
     private final MessageSendManager sendManager;
@@ -383,6 +384,13 @@ public class FileGraphPartition<M extends Value<M>> {
             Vertex vertex = this.vertexInput.next();
             this.readVertexStatusAndValue(vertex, result);
 
+            if (!this.useVariableLengthOnly) {
+                if (this.vertexOriginInput.hasNext()) {
+                    Vertex vertex1 = this.vertexOriginInput.next();
+                    vertex.id(vertex1.id());
+                }
+            }
+
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
             vertex.edges(edges);
             output.write(vertex);
@@ -576,10 +584,13 @@ public class FileGraphPartition<M extends Value<M>> {
             this.edgesInput.init();
         }
         else {
+            this.vertexOriginInput = new VertexInput(this.context,
+                                     this.vertexFile, this.vertexCount);
             this.vertexInput = new VertexInput(this.context, 
                                      this.vertexComputeFile, this.vertexCount);
             this.edgesInput = new EdgesInput(this.context, 
                                      this.edgeComputeFile);
+            this.vertexOriginInput.init();
             this.vertexInput.init();
             this.edgesInput.init();
 

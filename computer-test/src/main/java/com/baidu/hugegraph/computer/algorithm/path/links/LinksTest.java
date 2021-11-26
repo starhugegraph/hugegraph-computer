@@ -48,14 +48,14 @@ public class LinksTest extends AlgorithmTestBase {
     private static final String LABEL_PAY = "pay";
     private static final String LABEL_KNOW = "know";
 
-    private static final Map<Long, Set<String>> EXPECT_RESULT =
+    private static final Map<String, Set<String>> EXPECT_RESULT =
             ImmutableMap.of(
-                0L, ImmutableSet.of("{0, , 1}",
-                                    "{1, , 3, , 0, , 1}",
-                                    "{3, , 0, , 1}"),
-                4L, ImmutableSet.of("{4, , 3}",
-                                    "{0, , 2, , 4, , 3}",
-                                    "{2, , 4, , 3}")
+                "A", ImmutableSet.of("{A, , B}",
+                                    "{B, , D, , A, , B}",
+                                    "{D, , A, , B}"),
+                "E", ImmutableSet.of("{E, , D}",
+                                    "{A, , C, , E, , D}",
+                                    "{C, , E, , D}")
             );
 
     @BeforeClass
@@ -151,7 +151,7 @@ public class LinksTest extends AlgorithmTestBase {
 
     public static class LinksTestOutput extends LinksHugeOutput {
 
-        public static Map<Long, Set<String>> EXPECT_RESULT;
+        public static Map<String, Set<String>> EXPECT_RESULT;
 
         @Override
         public void write(
@@ -159,7 +159,7 @@ public class LinksTest extends AlgorithmTestBase {
             LinksValue values = vertex.value();
 
             Set<String> result =
-               EXPECT_RESULT.getOrDefault(vertex.id().asObject(), 
+               EXPECT_RESULT.getOrDefault(vertex.id().toString(), 
                                                   new HashSet<>());
             Assert.assertEquals(result.size(), values.size());
             values.values().forEach(value -> {

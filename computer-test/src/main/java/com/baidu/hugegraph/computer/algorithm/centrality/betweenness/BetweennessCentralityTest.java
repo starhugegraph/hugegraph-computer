@@ -39,16 +39,16 @@ import com.baidu.hugegraph.util.Log;
 
 public class BetweennessCentralityTest extends AlgorithmTestBase {
     private static final Logger LOG = Log.logger("betweenness centrality");
-    private static final Map<Long, Double> EXPECT_RESULTS =
-                         ImmutableMap.<Long, Double>builder()
-                                     .put(0L, 0D)
-                                     .put(1L, 4.666666666666D)
-                                     .put(2L, 8.0D)
-                                     .put(3L, 0.666666666666D)
-                                     .put(4L, 8.666666666666D)
-                                     .put(5L, 10.0D)
-                                     .put(6L, 0.0D)
-                                     .put(7L, 0.0D)
+    private static final Map<String, Double> EXPECT_RESULTS =
+                         ImmutableMap.<String, Double>builder()
+                                     .put("0", 0D)
+                                     .put("1", 4.666666666666D)
+                                     .put("2", 8.0D)
+                                     .put("3", 0.666666666666D)
+                                     .put("4", 8.666666666666D)
+                                     .put("5", 10.0D)
+                                     .put("6", 0.0D)
+                                     .put("7", 0.0D)
                                      .build();
 
     @BeforeClass
