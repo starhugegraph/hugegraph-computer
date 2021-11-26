@@ -47,7 +47,7 @@ public class HugeInputSplitFetcher implements InputSplitFetcher {
         String token = config.get(ComputerOptions.AUTH_TOKEN);
         String usrname = config.get(ComputerOptions.AUTH_USRNAME);
         String passwd = config.get(ComputerOptions.AUTH_PASSWD);
-        LOG.info("{} {}", url, graph);
+        LOG.info("{} {}", usrname, token);
 
         // Use token first, then try passwd mode
         HugeClientBuilder clientBuilder = new HugeClientBuilder(url, graph);
@@ -56,7 +56,9 @@ public class HugeInputSplitFetcher implements InputSplitFetcher {
         } else if (usrname != null && usrname.length() != 0) {
             this.client = clientBuilder.configUser(usrname, passwd).build();
         } else {
+            LOG.info("a0 {} {}", url, graph);
             this.client = clientBuilder.build();
+            LOG.info("a1");
         }
     }
 
