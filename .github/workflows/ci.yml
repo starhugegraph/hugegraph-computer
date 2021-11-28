@@ -70,7 +70,7 @@ jobs:
       - name: Prepare env and service
         env:
           TRAVIS_DIR: computer-dist/src/assembly/travis
-          BRANCH: gh-pre-release
+          BRANCH: gh-pre-release-202111021-bak
           COMMIT_ID: 17a8c166096b7379c019e6580507b0c5d3128398
         run: |
           $TRAVIS_DIR/install-env.sh
