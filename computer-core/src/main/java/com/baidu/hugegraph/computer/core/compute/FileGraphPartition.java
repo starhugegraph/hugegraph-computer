@@ -395,7 +395,6 @@ public class FileGraphPartition<M extends Value<M>> {
                     vertex.id(vertex1.id());
                 }
             }
-
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
             vertex.edges(edges);
             output.write(vertex);
