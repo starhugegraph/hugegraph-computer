@@ -113,8 +113,6 @@ public class RingsDetection implements Computation<IdList> {
                 }
             }
         }
-        LOG.info("vertexid = {}", id);
-        LOG.info("vertexvalue = {}", vertex.value());
         if (halt) {
             vertex.inactivate();
         }
