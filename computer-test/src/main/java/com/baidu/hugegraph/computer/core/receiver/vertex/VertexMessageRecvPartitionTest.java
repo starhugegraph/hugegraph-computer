@@ -101,7 +101,6 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
 
     @Test
     public void testVertexMessageRecvPartition() throws IOException {
-        LOG.info("test 1 0");
         Assert.assertEquals(MessageType.VERTEX.name(), this.partition.type());
         Assert.assertEquals(0L, this.partition.totalBytes());
         addTenVertexBuffer(this.partition::addBuffer);
@@ -109,12 +108,10 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
         PeekableIterator<KvEntry> it = this.partition.iterator();
         checkPartitionIterator(it);
         Assert.assertFalse(it.hasNext());
-        LOG.info("test 1 1");
     }
 
     @Test
     public void testOverwriteCombiner() throws IOException {
-        LOG.info("test 2 0");
         this.config = UnitTestBase.updateWithRequiredOptions(
             ComputerOptions.JOB_ID, "local_001",
             ComputerOptions.JOB_WORKERS_COUNT, "1",
@@ -139,12 +136,10 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
         checkPartitionIterator(this.partition.iterator());
 
         this.fileManager.close(this.config);
-        LOG.info("test 2 1");
     }
 
     @Test
     public void testMergePropertiesCombiner() throws IOException {
-        LOG.info("test 3 0");
         this.config = UnitTestBase.updateWithRequiredOptions(
                 ComputerOptions.JOB_ID, "local_001",
                 ComputerOptions.JOB_WORKERS_COUNT, "1",
@@ -171,12 +166,10 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
         checkTenVertexWithMergedProperties(this.partition.iterator());
 
         this.fileManager.close(this.config);
-        LOG.info("test 3 1");
     }
 
     //@Test
     public void testMergeBuffersFailed() {
-        LOG.info("test 4 0");
         addTwoEmptyBuffer(this.partition::addBuffer);
 
         Assert.assertThrows(ComputerException.class, () -> {
@@ -185,7 +178,6 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
             Assert.assertContains("Failed to merge 2 buffers to file",
                                   e.getMessage());
         });
-        LOG.info("test 4 1");
     }
 
     @Test

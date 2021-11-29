@@ -62,6 +62,7 @@ public class MessageSendManager implements Manager {
     private final MessageSender sender;
     private final AtomicReference<Throwable> exception;
     private final TransportConf transportConf;
+    private boolean useVariableLengthOnly;
 
     public MessageSendManager(ComputerContext context, SortManager sortManager,
                               MessageSender sender) {
@@ -73,6 +74,7 @@ public class MessageSendManager implements Manager {
         this.sortManager = sortManager;
         this.sender = sender;
         this.exception = new AtomicReference<>();
+        this.useVariableLengthOnly = false;
     }
 
     @Override
@@ -181,9 +183,13 @@ public class MessageSendManager implements Manager {
         return this.buffers.get(partitionId).messageWritten();
     }
 
+    public void useVariableLengthOnly() {
+        this.useVariableLengthOnly = true;
+    }
+
     private WriteBuffers sortIfTargetBufferIsFull(Id id, MessageType type) {
         int partitionId;
-        if (type == MessageType.MSG) {
+        if (type == MessageType.MSG && !this.useVariableLengthOnly) {
             partitionId = this.partitioner.partitionIdFixIdLength(id);
         }
         else {

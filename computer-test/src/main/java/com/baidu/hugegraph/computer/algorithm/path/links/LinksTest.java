@@ -50,12 +50,14 @@ public class LinksTest extends AlgorithmTestBase {
 
     private static final Map<String, Set<String>> EXPECT_RESULT =
             ImmutableMap.of(
-                "A", ImmutableSet.of("{A, , B}",
-                                    "{B, , D, , A, , B}",
-                                    "{D, , A, , B}"),
-                "E", ImmutableSet.of("{E, , D}",
-                                    "{A, , C, , E, , D}",
-                                    "{C, , E, , D}")
+                "A", ImmutableSet.of("{A, SA>1>>SB, B}",
+                                         "{B, SB>1>>SD, D, SD>1>>SA, A, " +
+                                         "SA>1>>SB, B}",
+                                         "{D, SD>1>>SA, A, SA>1>>SB, B}"),
+                "E", ImmutableSet.of("{E, SE>1>>SD, D}",
+                                         "{A, SA>1>>SC, C, SC>1>>SE, E, " +
+                                         "SE>1>>SD, D}",
+                                         "{C, SC>1>>SE, E, SE>1>>SD, D}")
             );
 
     @BeforeClass
@@ -118,11 +120,11 @@ public class LinksTest extends AlgorithmTestBase {
     public void test() throws InterruptedException {
         String analyze = "{" +
                          "    \"start_vertexes\": [" +
-                         "        \"0\"," +
-                         "        \"1\"," +
-                         "        \"2\"," +
-                         "        \"3\"," +
-                         "        \"4\"" +
+                         "        \"A\"," +
+                         "        \"B\"," +
+                         "        \"C\"," +
+                         "        \"D\"," +
+                         "        \"E\"" +
                          "    ]," +
                          "    \"edge_end_condition\": {" +
                          "        \"label\": \"pay\"," +
@@ -163,7 +165,7 @@ public class LinksTest extends AlgorithmTestBase {
                                                   new HashSet<>());
             Assert.assertEquals(result.size(), values.size());
             values.values().forEach(value -> {
-                //LOG.info("valuelink is {}", value.toString());
+                LOG.info("valuelink is {}", value.toString());
                 Assert.assertTrue(result.contains(value.toString()));
             });
             super.write(vertex);

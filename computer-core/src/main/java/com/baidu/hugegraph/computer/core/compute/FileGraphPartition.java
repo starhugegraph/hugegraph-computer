@@ -325,10 +325,15 @@ public class FileGraphPartition<M extends Value<M>> {
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
             this.readVertexStatusAndValue(vertex, result);
-            long lid = (long)vertex.id().asObject();
-            Iterator<M> messageIter = this.messageInput.iterator(lid);
-            //Iterator<M> messageIter = this.messageInput.iterator(
-            //                          this.vertexInput.idPointer());
+            Iterator<M> messageIter;
+            if (this.useVariableLengthOnly) {
+                messageIter = this.messageInput.iterator(
+                                            this.vertexInput.idPointer());
+            }
+            else {
+                long lid = (long)vertex.id().asObject();
+                messageIter = this.messageInput.iterator(lid);
+            }
             if (messageIter.hasNext()) {
                 vertex.reactivate();
             }

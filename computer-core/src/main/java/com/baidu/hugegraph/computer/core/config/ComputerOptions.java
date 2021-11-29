@@ -822,6 +822,13 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(true, false),
                     false
             );
+    public static final ConfigOption<Boolean> USE_ID_FIXLENGTH =
+            new ConfigOption<>(
+                    "input.use_id_fixlength",
+                    "if use id fix length, computing will use self increase id",
+                    allowValues(true, false),
+                    false
+            );
     public static final ConfigOption<Integer> ID_FIXLENGTH_BYTES = 
             new ConfigOption<>(
                     "input.id_fixlength_bytes",
