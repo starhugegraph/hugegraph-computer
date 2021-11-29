@@ -241,7 +241,7 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.waitMasterStepPrepareDone(-2);
         this.managers.beforeSuperstep(this.config, -2);
 
-        if (!this.useIdFixLength) {
+        if (this.useIdFixLength) {
             this.computeManager.sendHashIdMsg(context0);
         }
 
@@ -249,7 +249,7 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.workerStepComputeDone(-2);
         this.bsp4Worker.waitMasterStepComputeDone(-2);
 
-        if (!this.useIdFixLength) {
+        if (this.useIdFixLength) {
             LOG.info("Finish send id map to others {}", this);
             this.computeManager.takeRecvedMessages(false);
             LOG.info("Begin to build id map {}", this);
@@ -259,7 +259,7 @@ public class WorkerService implements Closeable {
         this.bsp4Worker.waitMasterStepPrepareDone(-1);
         this.managers.beforeSuperstep(this.config, -1);
 
-        if (!this.useIdFixLength) {
+        if (this.useIdFixLength) {
             this.computeManager.recvHashIdMsg();
         }
         this.managers.afterSuperstep(this.config, -1);
