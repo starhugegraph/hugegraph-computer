@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.algorithm.path.paths;
+package com.baidu.hugegraph.computer.algorithm.path.sssp;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
@@ -25,12 +25,12 @@ import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.combiner.ValueMinCombiner;
 import java.util.Map;
 
-public class PathFindingParams implements AlgorithmParams {
+public class SsspParams implements AlgorithmParams {
 
     @Override
     public void setAlgorithmParameters(Map<String, String> params) {
         this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
-                         PathFinding.class.getName());
+                         Sssp.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          DoubleValue.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
@@ -38,12 +38,12 @@ public class PathFindingParams implements AlgorithmParams {
         this.setIfAbsent(params, ComputerOptions.WORKER_COMBINER_CLASS,
                          ValueMinCombiner.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
-                         PathFindingOutput.class.getName());
+                         SsspOutput.class.getName());
         this.setIfAbsent(params,
                          ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                          Boolean.TRUE.toString());
         this.setIfAbsent(params,
-                         PathFinding.OPTION_PATHFINDING_TARGET,
+                         Sssp.OPTION_SSSP_TARGET,
                          "A");
     }
 }

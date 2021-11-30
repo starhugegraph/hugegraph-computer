@@ -17,18 +17,18 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.algorithm.path.paths;
+package com.baidu.hugegraph.computer.algorithm.path.sssp;
 //import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.structure.constant.WriteType;
 
 
-public class PathFindingOutput extends HugeOutput {
+public class SsspOutput extends HugeOutput {
 
     @Override
     public String name() {
-        return "paths";
+        return "sssp";
     }
 
     @Override
@@ -48,6 +48,8 @@ public class PathFindingOutput extends HugeOutput {
                 new com.baidu.hugegraph.structure.graph.Vertex(null);
         hugeVertex.id(vertex.id().asObject());
         hugeVertex.property(this.name(), vertex.value().toString());
+        System.out.printf("output = %s %s\n", vertex.id(), 
+                        vertex.value().toString());
         return hugeVertex;
     }
 }
