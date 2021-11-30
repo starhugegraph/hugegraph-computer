@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
+import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
@@ -37,13 +38,27 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
 
     private final IdListList res;
-    private final List<Integer> counter;
     private final List<List<Pair<Integer, Id>>> mp;
 
     public SubGraphMatchValue() {
         this.res = new IdListList();
-        this.counter = new ArrayList<>();
         this.mp = new ArrayList<>();
+    }
+
+    public List<List<Pair<Integer, Id>>> mp() {
+        return this.mp;
+    }
+
+    public void addRes(IdList ids) {
+        this.res.add(ids);
+    }
+
+    public void addMp(List<Pair<Integer, Id>> path) {
+        this.mp.add(path);
+    }
+
+    public void clearMp() {
+        this.mp.clear();
     }
 
     @Override
@@ -70,11 +85,7 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
     public void read(RandomAccessInput in) throws IOException {
         this.res.read(in);
 
-        int counterSize = in.readInt();
-        for (int i = 0; i < counterSize; i++) {
-            this.counter.add(in.readInt());
-        }
-
+        this.mp.clear();
         int mpSize = in.readInt();
         for (int i = 0; i < mpSize; i++) {
             List<Pair<Integer, Id>> pairs = new ArrayList<>();
@@ -93,13 +104,9 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
     public void write(RandomAccessOutput out) throws IOException {
         this.res.write(out);
 
-        out.writeInt(this.counter.size());
-        for (Integer nodeId : counter) {
-            out.writeInt(nodeId);
-        }
-
         out.writeInt(this.mp.size());
         for (List<Pair<Integer, Id>> pairs : this.mp) {
+            out.writeInt(pairs.size());
             for (Pair<Integer, Id> pair : pairs) {
                 out.writeInt(pair.getLeft());
                 pair.getRight().write(out);

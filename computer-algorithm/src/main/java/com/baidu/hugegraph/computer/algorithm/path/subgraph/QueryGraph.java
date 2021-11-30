@@ -82,6 +82,10 @@ public class QueryGraph {
         return ImmutableList.copyOf(vertices);
     }
 
+    public int vertexSize() {
+        return this.vertexMap.size();
+    }
+
     public Vertex findVertexById(String id) {
         return this.vertexMap.get(id);
     }
@@ -143,8 +147,12 @@ public class QueryGraph {
             if (!this.label.equals(vertex.label())) {
                 return false;
             }
+            if (this.propertyFilter == null) {
+                return true;
+            }
+
             Map<String, Map<String, Value<?>>> param =
-                ImmutableMap.of("$element", vertex.properties().get());
+                    ImmutableMap.of("$element", vertex.properties().get());
             return ExpressionUtil.expressionExecute(param, this.propertyFilter);
         }
     }
@@ -186,6 +194,9 @@ public class QueryGraph {
                              edge) {
             if (!this.label.equals(edge.label())) {
                 return false;
+            }
+            if (this.propertyFilter == null) {
+                return true;
             }
             Map<String, Map<String, Value<?>>> param =
                 ImmutableMap.of("$element", edge.properties().get());

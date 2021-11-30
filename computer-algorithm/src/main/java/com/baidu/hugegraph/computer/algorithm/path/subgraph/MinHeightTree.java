@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,14 +41,18 @@ import com.google.common.collect.ImmutableSet;
 public class MinHeightTree {
 
     private TreeNode root;
+    private Integer treeHeight;
     private final Map<Integer, TreeNode> idNodeMap;
 
     private Set<TreeNode> upperLevelLeaves;
     private final BitSet leavesVisited;
+    private List<List<Integer>> paths;
+    private int graphVertexSize;
 
     private MinHeightTree() {
         this.idNodeMap = new HashMap<>();
         this.leavesVisited = new BitSet();
+        this.paths = new ArrayList<>();
     }
 
     public static MinHeightTree build(QueryGraph graph) {
@@ -120,6 +125,7 @@ public class MinHeightTree {
             }
         }
 
+        tree.graphVertexSize = graph.vertexSize();
         afterBuild(tree);
 
         return tree;
@@ -143,10 +149,57 @@ public class MinHeightTree {
                 queue.offer(child);
             }
         }
+
+        tree.paths = listPath(tree.root);
+
+        tree.treeHeight = tree.paths.stream()
+                                    .map(List::size)
+                                    .max(Integer::compareTo)
+                                    .get();
+    }
+
+    private static List<List<Integer>> listPath(TreeNode node) {
+        List<List<Integer>> paths = new ArrayList<>();
+        listPath(node, new ArrayList<>(), paths);
+        paths.forEach(Collections::reverse);
+        return paths;
+    }
+
+    private static void listPath(TreeNode node, List<Integer> path,
+                                 List<List<Integer>> paths) {
+        path.add(node.nodeId);
+        if (CollectionUtils.isEmpty(node.children)) {
+            paths.add(new ArrayList<>(path));
+        } else {
+            for (TreeNode child : node.children) {
+                listPath(child, path, paths);
+            }
+        }
+        path.remove(path.size() - 1);
+    }
+
+    public int treeHeight() {
+        return this.treeHeight;
+    }
+
+    public TreeNode root() {
+        return this.root;
+    }
+
+    public boolean matchRoot(Vertex vertex) {
+        return this.root.match(vertex);
     }
 
     public TreeNode findNodeById(int nodeId) {
         return this.idNodeMap.get(nodeId);
+    }
+
+    public List<List<Integer>> paths() {
+        return this.paths;
+    }
+
+    public int graphVertexSize() {
+        return this.graphVertexSize;
     }
 
     public Set<TreeNode> nextLevelLeaves() {
@@ -201,6 +254,21 @@ public class MinHeightTree {
         this.leavesVisited.clear();
     }
 
+    public boolean matchRootPath(List<Integer> needPath) {
+        return this.paths.stream().anyMatch(path -> {
+            if (path.size() != needPath.size()) {
+                return false;
+            }
+            boolean match = true;
+            for (int i = 0; i < path.size(); i++) {
+                if (!path.get(i).equals(needPath.get(i))) {
+                    return false;
+                }
+            }
+            return match;
+        });
+    }
+
     private List<TreeNode> nodes() {
         List<TreeNode> nodes = new LinkedList<>();
         Queue<TreeNode> queue = new LinkedList<>();
@@ -234,6 +302,22 @@ public class MinHeightTree {
             this.vertex = vertex;
             this.edgeToParent = edgeToParent;
             this.children = new ArrayList<>();
+        }
+
+        public int nodeId() {
+            return this.nodeId;
+        }
+
+        public TreeNode parent() {
+            return this.parent;
+        }
+
+        public boolean isInToParent() {
+            return this.inToParent;
+        }
+
+        public List<TreeNode> children() {
+            return this.children;
         }
 
         public void addChild(TreeNode node) {

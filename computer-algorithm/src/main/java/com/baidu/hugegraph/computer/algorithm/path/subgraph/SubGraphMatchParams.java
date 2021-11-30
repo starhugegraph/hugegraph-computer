@@ -39,5 +39,7 @@ public class SubGraphMatchParams implements AlgorithmParams {
                          LimitedLogOutput.class.getName());
         params.put(ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                    "true");
+        params.put(ComputerOptions.BSP_MAX_SUPER_STEP.name(),
+                   String.valueOf(Integer.MAX_VALUE));
     }
 }

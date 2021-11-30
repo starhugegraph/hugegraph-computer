@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -35,10 +36,22 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 
 public class SubGraphMatchMessage implements Value<SubGraphMatchMessage> {
 
-    private List<Pair<Integer, Id>> subMatch;
+    private List<Pair<Integer, Id>> matchPath;
 
     public SubGraphMatchMessage() {
-        this.subMatch = new ArrayList<>();
+        this.matchPath = new LinkedList<>();
+    }
+
+    public void merge(Pair<Integer, Id> pair) {
+        this.matchPath.add(pair);
+    }
+
+    public List<Pair<Integer, Id>> matchPath() {
+        return this.matchPath;
+    }
+
+    public Pair<Integer, Id> lastNode() {
+        return this.matchPath.get(this.matchPath.size() - 1);
     }
 
     @Override
@@ -63,21 +76,20 @@ public class SubGraphMatchMessage implements Value<SubGraphMatchMessage> {
 
     @Override
     public void read(RandomAccessInput in) throws IOException {
-        this.subMatch = new ArrayList<>();
+        this.matchPath = new ArrayList<>();
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
             int nodeId = in.readInt();
             BytesId id = new BytesId();
             id.read(in);
-            subMatch.add(new MutablePair<>(nodeId, id));
+            matchPath.add(new MutablePair<>(nodeId, id));
         }
     }
 
     @Override
     public void write(RandomAccessOutput out) throws IOException {
-        out.writeInt(this.subMatch.size());
-        for (int i = 0; i < this.subMatch.size(); i++) {
-            Pair<Integer, Id> pair = subMatch.get(i);
+        out.writeInt(this.matchPath.size());
+        for (Pair<Integer, Id> pair : this.matchPath) {
             out.writeInt(pair.getLeft());
             pair.getRight().write(out);
         }
