@@ -37,14 +37,12 @@ import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
-import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 
 public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
 
     public static final String SUBGRAPH_OPTION = "subgraph.query_graph_config";
 
     private MinHeightTree subgraphTree;
-    private Set<MinHeightTree.TreeNode> leaves;
 
     @Override
     public String name() {
@@ -67,15 +65,11 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
     }
 
     @Override
-    public void beforeSuperstep(WorkerContext context) {
-        this.leaves = this.subgraphTree.nextLevelLeaves();
-    }
-
-    @Override
     public void compute0(ComputationContext context, Vertex vertex) {
         vertex.value(new SubGraphMatchValue());
 
-        for (MinHeightTree.TreeNode leaf : this.leaves) {
+        Set<MinHeightTree.TreeNode> leaves = this.subgraphTree.leaves();
+        for (MinHeightTree.TreeNode leaf : leaves) {
             if (!leaf.match(vertex)) {
                 break;
             }
@@ -197,9 +191,9 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
     private void cartesianProduct(List<List<List<Id>>> group, int index,
                                   Set<Id> res, SubGraphMatchValue value) {
         List<List<Id>> groupItem = group.get(index);
-        for (int i = 0; i < groupItem.size(); i++) {
+        for (List<Id> idList : groupItem) {
             List<Id> notExist = new ArrayList<>();
-            for (Id id : groupItem.get(i)) {
+            for (Id id : idList) {
                 if (!res.contains(id)) {
                     notExist.add(id);
                     res.add(id);

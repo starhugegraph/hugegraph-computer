@@ -36,7 +36,6 @@ import org.apache.commons.collections.CollectionUtils;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class MinHeightTree {
 
@@ -44,7 +43,6 @@ public class MinHeightTree {
     private Integer treeHeight;
     private final Map<Integer, TreeNode> idNodeMap;
 
-    private Set<TreeNode> upperLevelLeaves;
     private final BitSet leavesVisited;
     private List<List<Integer>> paths;
     private int graphVertexSize;
@@ -202,56 +200,22 @@ public class MinHeightTree {
         return this.graphVertexSize;
     }
 
-    public Set<TreeNode> nextLevelLeaves() {
-        // Don't have next level leaves when root visited
-        if (this.leavesVisited.get(this.root.nodeId)) {
-            return ImmutableSet.of();
-        }
-
+    public Set<TreeNode> leaves() {
         Set<TreeNode> leaves = new HashSet<>();
-        if (this.upperLevelLeaves == null) {
-            Queue<TreeNode> queue = new LinkedList<>();
-            queue.offer(this.root);
-            while (!queue.isEmpty()) {
-                TreeNode node = queue.poll();
-                if (CollectionUtils.isEmpty(node.children)) {
-                    leaves.add(node);
-                    this.leavesVisited.set(node.nodeId);
-                } else {
-                    for (TreeNode child : node.children) {
-                        queue.offer(child);
-                    }
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(this.root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if (CollectionUtils.isEmpty(node.children)) {
+                leaves.add(node);
+                this.leavesVisited.set(node.nodeId);
+            } else {
+                for (TreeNode child : node.children) {
+                    queue.offer(child);
                 }
-            }
-        } else {
-            for (TreeNode leaf : this.upperLevelLeaves) {
-                leaves.add(leaf.parent);
-            }
-            Iterator<TreeNode> itr = leaves.iterator();
-            while (itr.hasNext()) {
-                TreeNode parent = itr.next();
-                boolean allChildVisited = true;
-                for (TreeNode child : parent.children) {
-                    if (!this.leavesVisited.get(child.nodeId)) {
-                        allChildVisited = false;
-                        break;
-                    }
-                }
-                if (!allChildVisited) {
-                    itr.remove();
-                }
-            }
-            for (TreeNode parent : leaves) {
-                this.leavesVisited.set(parent.nodeId);
             }
         }
-        this.upperLevelLeaves = leaves;
-        return ImmutableSet.copyOf(leaves);
-    }
-
-    public void resetLeaves() {
-        this.upperLevelLeaves = null;
-        this.leavesVisited.clear();
+        return leaves;
     }
 
     public boolean matchRootPath(List<Integer> needPath) {
@@ -314,10 +278,6 @@ public class MinHeightTree {
 
         public boolean isInToParent() {
             return this.inToParent;
-        }
-
-        public List<TreeNode> children() {
-            return this.children;
         }
 
         public void addChild(TreeNode node) {
