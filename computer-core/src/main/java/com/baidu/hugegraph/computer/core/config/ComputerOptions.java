@@ -286,10 +286,10 @@ public class ComputerOptions extends OptionHolder {
 
     public static final ConfigOption<Short> OUTPUT_HDFS_REPLICATION =
             new ConfigOption<>(
-                    "hdfs.replication",
+                    "output.hdfs_replication",
                     "The replication number of hdfs.",
                     positiveInt(),
-                    (short) 1
+                    (short) 3
             );
 
     public static final ConfigOption<String> OUTPUT_HDFS_DIR =
