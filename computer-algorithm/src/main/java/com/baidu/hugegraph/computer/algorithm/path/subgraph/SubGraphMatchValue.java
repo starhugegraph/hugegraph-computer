@@ -50,6 +50,13 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
     }
 
     public void addRes(IdList ids) {
+        ids.sort();
+        for (int i = 0; i < res.size(); i++) {
+            IdList item = this.res.get(i);
+            if (ids.equals(item)) {
+                return;
+            }
+        }
         this.res.add(ids);
     }
 

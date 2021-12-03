@@ -20,9 +20,11 @@
 package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -105,8 +107,9 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
             if (parent == this.subgraphTree.root()) {
                 // Filter out invalid match path
                 List<Pair<Integer, Id>> path = message.matchPath();
-                Set<Id> ids = path.stream().map(Pair::getRight)
-                                           .collect(Collectors.toSet());
+                Set<Id> ids = path.stream()
+                                  .map(Pair::getRight)
+                                  .collect(Collectors.toSet());
                 if (ids.size() != path.size()) {
                     continue;
                 }
@@ -146,72 +149,92 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
         List<List<Pair<Integer, Id>>> mp = value.mp();
         List<List<Integer>> paths = this.subgraphTree.paths();
 
-        List<List<List<Id>>> group = new ArrayList<>(paths.size());
+        List<List<List<Pair<Integer, Id>>>> group = new ArrayList<>(
+                                                        paths.size());
         for (int i = 0; i < paths.size(); i++) {
             group.add(new ArrayList<>());
         }
         for (List<Pair<Integer, Id>> mpItem : mp) {
             for (int i = 0; i < paths.size(); i++) {
                 List<Integer> path = paths.get(i);
-                List<Integer> mpItemPath = mpItem.stream()
-                                                 .map(Pair::getLeft)
-                                                 .collect(Collectors.toList());
-                if (this.pathMatch(path, mpItemPath)) {
-                    List<Id> idPath = mpItem.stream()
-                                            .map(Pair::getRight)
-                                            .collect(Collectors.toList());
-                    group.get(i).add(idPath);
+                if (this.pathMatch(path, mpItem)) {
+                    group.get(i).add(mpItem);
                 }
             }
         }
         value.clearMp();
 
-        for (List<List<Id>> groupItem : group) {
+        for (List<List<Pair<Integer, Id>>> groupItem : group) {
             if (groupItem.size() == 0) {
                 return;
             }
         }
 
         // Cartesian Product
-        cartesianProduct(group, 0, new HashSet<>(), value);
+        cartesianProductAndFilterRes(group, 0, new HashMap<>(), new HashSet<>(),
+                                     value);
     }
 
-    private boolean pathMatch(List<Integer> path, List<Integer> other) {
-        if (path.size() != other.size()) {
+    private boolean pathMatch(List<Integer> path,
+                              List<Pair<Integer, Id>> mp) {
+        if (path.size() != mp.size()) {
             return false;
         }
+        List<Integer> mpPath = mp.stream()
+                                 .map(Pair::getLeft)
+                                 .collect(Collectors.toList());
         for (int i = 0; i < path.size(); i++) {
-            if (!path.get(i).equals(other.get(i))) {
+            if (!path.get(i).equals(mpPath.get(i))) {
                 return false;
             }
         }
         return true;
     }
 
-    private void cartesianProduct(List<List<List<Id>>> group, int index,
-                                  Set<Id> res, SubGraphMatchValue value) {
-        List<List<Id>> groupItem = group.get(index);
-        for (List<Id> idList : groupItem) {
-            List<Id> notExist = new ArrayList<>();
-            for (Id id : idList) {
-                if (!res.contains(id)) {
-                    notExist.add(id);
-                    res.add(id);
+    private void cartesianProductAndFilterRes(
+            List<List<List<Pair<Integer, Id>>>> pathGroup, int index,
+            Map<QueryGraph.Vertex, Id> res, Set<Id> ids,
+            SubGraphMatchValue value) {
+        List<List<Pair<Integer, Id>>> group = pathGroup.get(index);
+        for (List<Pair<Integer, Id>> pathMp : group) {
+            List<QueryGraph.Vertex> notExistVertex = new ArrayList<>();
+            List<Id> notExistId = new ArrayList<>();
+            boolean needEnd = false;
+            for (Pair<Integer, Id> mp : pathMp) {
+                QueryGraph.Vertex vertex = this.subgraphTree.findNodeById(
+                                                             mp.getLeft())
+                                                            .vertex();
+                if (!res.containsKey(vertex)) {
+                    notExistVertex.add(vertex);
+                    res.put(vertex, mp.getRight());
+                    if (ids.add(mp.getRight())) {
+                        notExistId.add(mp.getRight());
+                    }
+                }
+
+                if (!res.get(vertex).equals(mp.getRight()) ||
+                    res.size() != ids.size()) {
+                    needEnd = true;
                 }
             }
 
-            if (index == group.size() - 1) {
-                if (this.subgraphTree.graphVertexSize() == res.size()) {
-                    IdList ids = new IdList();
-                    ids.addAll(res);
-                    value.addRes(ids);
+            if (!needEnd) {
+                if (index == pathGroup.size() - 1) {
+                    IdList resIds = new IdList();
+                    resIds.addAll(res.values());
+                    value.addRes(resIds);
+                } else {
+                    cartesianProductAndFilterRes(pathGroup, index + 1, res,
+                                                 ids, value);
                 }
-            } else {
-                cartesianProduct(group, index + 1, res, value);
             }
 
-            for (Id id : notExist) {
-                res.remove(id);
+            // Clear
+            for (QueryGraph.Vertex vertex : notExistVertex) {
+                res.remove(vertex);
+            }
+            for (Id id : notExistId) {
+                ids.remove(id);
             }
         }
     }

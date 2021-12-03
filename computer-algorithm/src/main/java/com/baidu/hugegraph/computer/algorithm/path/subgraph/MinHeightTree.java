@@ -291,5 +291,9 @@ public class MinHeightTree {
         public boolean match(Edge edge) {
             return this.edgeToParent.match(edge);
         }
+
+        public QueryGraph.Vertex vertex() {
+            return this.vertex;
+        }
     }
 }
