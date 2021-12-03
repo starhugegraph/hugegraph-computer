@@ -17,33 +17,33 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.algorithm.centrality.pagerank;
-
-import java.util.Map;
+package com.baidu.hugegraph.computer.algorithm.path.sssp;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
-import com.baidu.hugegraph.computer.core.combiner.DoubleValueSumCombiner;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
+import com.baidu.hugegraph.computer.core.combiner.ValueMinCombiner;
+import java.util.Map;
 
-public class PageRankParams implements AlgorithmParams {
+public class SsspParams implements AlgorithmParams {
 
     @Override
     public void setAlgorithmParameters(Map<String, String> params) {
-        this.setIfAbsent(params, ComputerOptions.MASTER_COMPUTATION_CLASS,
-                         PageRank4Master.class.getName());
         this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
-                         PageRank.class.getName());
-        this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
-                         DoubleValue.class.getName());
+                         Sssp.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          DoubleValue.class.getName());
+        this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
+                         DoubleValue.class.getName());
         this.setIfAbsent(params, ComputerOptions.WORKER_COMBINER_CLASS,
-                         DoubleValueSumCombiner.class.getName());
+                         ValueMinCombiner.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
-                         PageRankOutput.class.getName());
+                         SsspOutput.class.getName());
         this.setIfAbsent(params,
-                         ComputerOptions.USE_ID_FIXLENGTH.name(),
+                         ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                          Boolean.TRUE.toString());
+        this.setIfAbsent(params,
+                         Sssp.OPTION_SSSP_TARGET,
+                         "A");
     }
 }

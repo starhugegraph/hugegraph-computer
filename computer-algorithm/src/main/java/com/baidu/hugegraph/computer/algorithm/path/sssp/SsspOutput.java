@@ -17,61 +17,39 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.algorithm.centrality.closeness;
-
-import java.util.Map;
-
-import org.slf4j.Logger;
-
-import com.baidu.hugegraph.computer.core.graph.id.Id;
-import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
+package com.baidu.hugegraph.computer.algorithm.path.sssp;
+//import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.structure.constant.WriteType;
-import com.baidu.hugegraph.util.Log;
 
-public class ClosenessCentralityOutput extends HugeOutput {
 
-    private static final Logger LOG =
-            Log.logger(ClosenessCentralityOutput.class);
+public class SsspOutput extends HugeOutput {
 
     @Override
     public String name() {
-        return "closeness_centrality";
+        return "sssp";
     }
 
     @Override
     public void prepareSchema() {
         this.client().schema().propertyKey(this.name())
-                     .asDouble()
-                     .writeType(WriteType.OLAP_RANGE)
+                     .asText()
+                     .writeType(WriteType.OLAP_COMMON)
+                     .valueList()
                      .ifNotExist()
                      .create();
     }
 
     @Override
-    public com.baidu.hugegraph.structure.graph.Vertex constructHugeVertex(
-                                                      Vertex vertex) {
-        LOG.info("The closeness centrality aaa\n");
-
+    public com.baidu.hugegraph.structure.graph.Vertex  constructHugeVertex(
+                                                       Vertex vertex) {
         com.baidu.hugegraph.structure.graph.Vertex hugeVertex =
                 new com.baidu.hugegraph.structure.graph.Vertex(null);
         hugeVertex.id(vertex.id().asObject());
-
-        LOG.info("The closeness centrality bbb\n");
-
-        // TODO：How to get the total vertices count here?
-        // long n = context.totalVertexCount() - 1;
-        ClosenessValue localValue = vertex.value();
-        // Cumulative distance
-        double centrality = 0;
-        for (Map.Entry<Id, DoubleValue> entry : localValue.entrySet()) {
-            centrality += 1.0D / entry.getValue().value();
-        }
-        LOG.info("The closeness centrality ccc\n");
-        hugeVertex.property(this.name(), centrality);
-        LOG.info("The closeness centrality of vertex {} is {}",
-                 vertex, centrality);
+        hugeVertex.property(this.name(), vertex.value().toString());
+        System.out.printf("output = %s %s\n", vertex.id(), 
+                        vertex.value().toString());
         return hugeVertex;
     }
 }
