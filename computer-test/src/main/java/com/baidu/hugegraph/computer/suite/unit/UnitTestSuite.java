@@ -95,7 +95,7 @@ public class UnitTestSuite {
                                   "hdfs://127.0.0.1:9000");
         Whitebox.setInternalState(ComputerOptions.HDFS_USER,
                                   "defaultValue",
-                                  "hadoop");
+                                  System.getProperty("user.name"));
         Whitebox.setInternalState(ComputerOptions.HDFS_KERBEROS_ENABLE,
                                   "defaultValue",
                                   false);
