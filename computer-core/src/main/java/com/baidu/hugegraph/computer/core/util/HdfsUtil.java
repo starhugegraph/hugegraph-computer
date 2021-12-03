@@ -54,7 +54,7 @@ public class HdfsUtil {
             return FileSystem.get(conf);
         } else {
             String user = config.get(ComputerOptions.HDFS_USER);
-            return FileSystem.get(new URI(url), conf, user);
+            return FileSystem.get(URI.create(url), conf, user);
         }
     }
 }
