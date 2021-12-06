@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.input.filter.ExtractAllPropertyInputFilter;
 import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 
 public class SubGraphMatchParams implements AlgorithmParams {
@@ -36,11 +37,13 @@ public class SubGraphMatchParams implements AlgorithmParams {
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          SubGraphMatchMessage.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
-                         LimitedLogOutput.class.getName());
+                         SubGraphMatchHugeOutput.class.getName());
 
         params.put(ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                    Boolean.TRUE.toString());
         params.put(ComputerOptions.BSP_MAX_SUPER_STEP.name(),
                    String.valueOf(Integer.MAX_VALUE));
+        params.put(ComputerOptions.INPUT_FILTER_CLASS.name(),
+                   ExtractAllPropertyInputFilter.class.getName());
     }
 }
