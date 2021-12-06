@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.baidu.hugegraph.computer.algorithm.ExpressionUtil;
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.util.E;
 import com.google.common.collect.ImmutableList;
@@ -71,6 +72,10 @@ public class QueryGraph {
         Collection<Edge> edges = edgeMap.values();
         for (Edge edge : edges) {
             Vertex vertex = this.vertexMap.get(edge.target);
+            if (vertex == null) {
+                throw new ComputerException("Can't find vertex [%s] in query " +
+                                            "graph config", edge.target);
+            }
             vertex.addInEdge(edge);
         }
         this.edgeVisited = new BitSet(edges.size());

@@ -133,6 +133,6 @@ public class LinksSpreadFilter {
                     ImmutableMap.of(OUT, edge.properties().get(),
                                     IN, lastEdgeProperties.get());
         return ExpressionUtil.expressionExecute(
-                              param, this.endEdgeCondition.getValue());
+                              param, this.edgeSpreadCondition.getValue());
     }
 }
