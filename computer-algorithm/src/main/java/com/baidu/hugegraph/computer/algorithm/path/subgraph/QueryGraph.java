@@ -38,7 +38,6 @@ import com.googlecode.aviator.Expression;
 public class QueryGraph {
 
     private final Map<String, Vertex> vertexMap;
-    private final Map<Integer, Edge> edgeMap;
     private final BitSet edgeVisited;
 
     public QueryGraph(String graphDescribe) {
@@ -49,7 +48,7 @@ public class QueryGraph {
                         "least one vertex");
 
         this.vertexMap = new HashMap<>();
-        this.edgeMap = new HashMap<>();
+        Map<Integer, Edge> edgeMap = new HashMap<>();
         int edgeId = 0;
         for (QueryGraphDescribe.VertexDescribe describe : describes) {
             String vId = describe.id();
@@ -65,11 +64,11 @@ public class QueryGraph {
                                      edgeDescribe.label(),
                                      edgeDescribe.propertyFilter());
                 vertex.addOutEdge(edge);
-                this.edgeMap.put(edgeId, edge);
+                edgeMap.put(edgeId, edge);
             }
         }
 
-        Collection<Edge> edges = this.edgeMap.values();
+        Collection<Edge> edges = edgeMap.values();
         for (Edge edge : edges) {
             Vertex vertex = this.vertexMap.get(edge.target);
             vertex.addInEdge(edge);
@@ -80,10 +79,6 @@ public class QueryGraph {
     public List<Vertex> vertices() {
         Vertex[] vertices = this.vertexMap.values().toArray(new Vertex[0]);
         return ImmutableList.copyOf(vertices);
-    }
-
-    public int vertexSize() {
-        return this.vertexMap.size();
     }
 
     public Vertex findVertexById(String id) {

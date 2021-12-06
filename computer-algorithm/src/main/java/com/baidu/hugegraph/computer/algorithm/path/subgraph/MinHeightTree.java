@@ -33,6 +33,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,6 @@ public class MinHeightTree {
 
     private final BitSet leavesVisited;
     private List<List<Integer>> paths;
-    private int graphVertexSize;
 
     private MinHeightTree() {
         this.idNodeMap = new HashMap<>();
@@ -123,7 +123,6 @@ public class MinHeightTree {
             }
         }
 
-        tree.graphVertexSize = graph.vertexSize();
         afterBuild(tree);
 
         return tree;
@@ -150,10 +149,13 @@ public class MinHeightTree {
 
         tree.paths = listPath(tree.root);
 
+        String msg = "Can't find path in query graph";
         tree.treeHeight = tree.paths.stream()
                                     .map(List::size)
                                     .max(Integer::compareTo)
-                                    .get();
+                                    .orElseThrow(() -> {
+                                        return new ComputerException(msg);
+                                    });
     }
 
     private static List<List<Integer>> listPath(TreeNode node) {
@@ -194,10 +196,6 @@ public class MinHeightTree {
 
     public List<List<Integer>> paths() {
         return this.paths;
-    }
-
-    public int graphVertexSize() {
-        return this.graphVertexSize;
     }
 
     public Set<TreeNode> leaves() {

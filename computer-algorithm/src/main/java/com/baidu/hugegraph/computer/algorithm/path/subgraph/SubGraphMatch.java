@@ -45,6 +45,7 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
     public static final String SUBGRAPH_OPTION = "subgraph.query_graph_config";
 
     private MinHeightTree subgraphTree;
+    private Set<MinHeightTree.TreeNode> leaves;
 
     @Override
     public String name() {
@@ -64,16 +65,16 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
                                         SUBGRAPH_OPTION);
         }
         this.subgraphTree = MinHeightTree.build(new QueryGraph(subgraphConfig));
+        this.leaves = this.subgraphTree.leaves();
     }
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
         vertex.value(new SubGraphMatchValue());
 
-        Set<MinHeightTree.TreeNode> leaves = this.subgraphTree.leaves();
-        for (MinHeightTree.TreeNode leaf : leaves) {
+        for (MinHeightTree.TreeNode leaf : this.leaves) {
             if (!leaf.match(vertex)) {
-                break;
+                continue;
             }
             SubGraphMatchMessage message = new SubGraphMatchMessage();
             message.merge(new MutablePair<>(leaf.nodeId(), vertex.id()));
@@ -192,10 +193,10 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
     }
 
     private void cartesianProductAndFilterRes(
-            List<List<List<Pair<Integer, Id>>>> pathGroup, int index,
-            Map<QueryGraph.Vertex, Id> res, Set<Id> ids,
+            List<List<List<Pair<Integer, Id>>>> pathGroup, int groupIndex,
+            Map<QueryGraph.Vertex, Id> resItem, Set<Id> resIds,
             SubGraphMatchValue value) {
-        List<List<Pair<Integer, Id>>> group = pathGroup.get(index);
+        List<List<Pair<Integer, Id>>> group = pathGroup.get(groupIndex);
         for (List<Pair<Integer, Id>> pathMp : group) {
             List<QueryGraph.Vertex> notExistVertex = new ArrayList<>();
             List<Id> notExistId = new ArrayList<>();
@@ -204,37 +205,37 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
                 QueryGraph.Vertex vertex = this.subgraphTree.findNodeById(
                                                              mp.getLeft())
                                                             .vertex();
-                if (!res.containsKey(vertex)) {
+                if (!resItem.containsKey(vertex)) {
                     notExistVertex.add(vertex);
-                    res.put(vertex, mp.getRight());
-                    if (ids.add(mp.getRight())) {
+                    resItem.put(vertex, mp.getRight());
+                    if (resIds.add(mp.getRight())) {
                         notExistId.add(mp.getRight());
                     }
                 }
 
-                if (!res.get(vertex).equals(mp.getRight()) ||
-                    res.size() != ids.size()) {
+                if (!resItem.get(vertex).equals(mp.getRight()) ||
+                    resItem.size() != resIds.size()) {
                     needEnd = true;
                 }
             }
 
             if (!needEnd) {
-                if (index == pathGroup.size() - 1) {
-                    IdList resIds = new IdList();
-                    resIds.addAll(res.values());
-                    value.addRes(resIds);
+                if (groupIndex == pathGroup.size() - 1) {
+                    IdList realRes = new IdList();
+                    realRes.addAll(resItem.values());
+                    value.addRes(realRes);
                 } else {
-                    cartesianProductAndFilterRes(pathGroup, index + 1, res,
-                                                 ids, value);
+                    cartesianProductAndFilterRes(pathGroup, groupIndex + 1,
+                                                 resItem, resIds, value);
                 }
             }
 
             // Clear
             for (QueryGraph.Vertex vertex : notExistVertex) {
-                res.remove(vertex);
+                resItem.remove(vertex);
             }
             for (Id id : notExistId) {
-                ids.remove(id);
+                resIds.remove(id);
             }
         }
     }
