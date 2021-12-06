@@ -19,17 +19,25 @@
 
 package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
+import com.baidu.hugegraph.computer.core.graph.value.IdList;
+import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.driver.GraphManager;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.testutil.Assert;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class SubGraphMatchTest extends AlgorithmTestBase {
 
@@ -44,91 +52,189 @@ public class SubGraphMatchTest extends AlgorithmTestBase {
     }
 
     @Test
-    public void testSubGraphLabelMatch() throws InterruptedException {
+    public void testWithNoExpression() throws InterruptedException {
+
+        final String PROPERTY_WEIGHT = "weight";
         final String VERTEX_LABEL = "person";
         final String EDGE_LABEL = "knows";
 
         SchemaManager schema = client().schema();
 
+        schema.propertyKey(PROPERTY_WEIGHT)
+              .asInt()
+              .ifNotExist()
+              .create();
         schema.vertexLabel(VERTEX_LABEL)
               .useCustomizeStringId()
+              .properties(PROPERTY_WEIGHT)
               .ifNotExist()
               .create();
         schema.edgeLabel(EDGE_LABEL)
               .sourceLabel(VERTEX_LABEL)
               .targetLabel(VERTEX_LABEL)
+              .properties(PROPERTY_WEIGHT)
               .ifNotExist()
               .create();
 
         GraphManager graph = client().graph();
-        Vertex vA = graph.addVertex(T.label, VERTEX_LABEL, T.id, "A");
-        Vertex vB = graph.addVertex(T.label, VERTEX_LABEL, T.id, "B");
-        Vertex vC = graph.addVertex(T.label, VERTEX_LABEL, T.id, "C");
-        Vertex vD = graph.addVertex(T.label, VERTEX_LABEL, T.id, "D");
-        Vertex vE = graph.addVertex(T.label, VERTEX_LABEL, T.id, "E");
+        Vertex v1 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "1",
+                                    PROPERTY_WEIGHT, 1);
+        Vertex v2 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "2",
+                                    PROPERTY_WEIGHT, 1);
+        Vertex v3 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "3",
+                                    PROPERTY_WEIGHT, 1);
+        Vertex v4 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "4",
+                                    PROPERTY_WEIGHT, 1);
+        Vertex v9 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "9",
+                                    PROPERTY_WEIGHT, 1);
+        Vertex v10 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "10",
+                                     PROPERTY_WEIGHT, 1);
+        Vertex v11 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "11",
+                                     PROPERTY_WEIGHT, 1);
+        // Special property
+        Vertex v12 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "12",
+                                     PROPERTY_WEIGHT, 2);
+        Vertex v13 = graph.addVertex(T.label, VERTEX_LABEL, T.id, "13",
+                                     PROPERTY_WEIGHT, 1);
 
-        graph.addEdge(vA, EDGE_LABEL, vB);
-        graph.addEdge(vA, EDGE_LABEL, vD);
-        graph.addEdge(vA, EDGE_LABEL, vE);
-        graph.addEdge(vB, EDGE_LABEL, vC);
-        graph.addEdge(vC, EDGE_LABEL, vA);
-        graph.addEdge(vC, EDGE_LABEL, vD);
-        graph.addEdge(vD, EDGE_LABEL, vE);
-        graph.addEdge(vE, EDGE_LABEL, vD);
+        graph.addEdge(v1, EDGE_LABEL, v2, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v1, EDGE_LABEL, v3, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v2, EDGE_LABEL, v10, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v2, EDGE_LABEL, v12, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v3, EDGE_LABEL, v4, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v4, EDGE_LABEL, v1, PROPERTY_WEIGHT, 1);
+        // Special property
+        graph.addEdge(v4, EDGE_LABEL, v13, PROPERTY_WEIGHT, 2);
+        graph.addEdge(v9, EDGE_LABEL, v3, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v9, EDGE_LABEL, v10, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v9, EDGE_LABEL, v11, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v11, EDGE_LABEL, v12, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v12, EDGE_LABEL, v9, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v13, EDGE_LABEL, v2, PROPERTY_WEIGHT, 1);
+        graph.addEdge(v13, EDGE_LABEL, v3, PROPERTY_WEIGHT, 1);
 
-        String config = "[" +
+        String noExpressionConfig = "[" +
                         "    {" +
                         "        \"id\": \"A\"," +
                         "        \"label\": \"person\"," +
                         "        \"edges\": [" +
                         "            {" +
-                        "                \"targetId\": \"D\"," +
+                        "                \"targetId\": \"B\"," +
                         "                \"label\": \"knows\"" +
                         "            }," +
                         "            {" +
-                        "                \"targetId\": \"E\"," +
+                        "                \"targetId\": \"C\"," +
+                        "                \"label\": \"knows\"" +
+                        "            }" +
+                        "        ]" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"B\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"D\"," +
                         "                \"label\": \"knows\"" +
                         "            }" +
                         "        ]" +
                         "    }," +
                         "    {" +
                         "        \"id\": \"C\"," +
+                        "        \"label\": \"person\"" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"D\"," +
                         "        \"label\": \"person\"," +
                         "        \"edges\": [" +
                         "            {" +
                         "                \"targetId\": \"A\"," +
                         "                \"label\": \"knows\"" +
-                        "            }," +
-                        "            {" +
-                        "                \"targetId\": \"D\"," +
-                        "                \"label\": \"knows\"" +
                         "            }" +
                         "        ]" +
+                        "    }" +
+                        "]";
+
+        SubGraphMatchTestOutput.EXPECT_RESULT =
+                                ImmutableMap.of(
+                                 "1", ImmutableSet.of("1, 2, 3, 4"),
+                                 "4", ImmutableSet.of("1, 3, 4, 13"),
+                                 "9", ImmutableSet.of("9, 10, 11, 12",
+                                                          "3, 9, 11, 12"),
+                                 "13", ImmutableSet.of("2, 3, 4, 13")
+                                );
+
+        runAlgorithm(SubGraphMatchTestParams.class.getName(),
+                     SubGraphMatch.SUBGRAPH_OPTION, noExpressionConfig);
+
+        String expressionConfig = "[" +
+                        "    {" +
+                        "        \"id\": \"A\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"B\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }," +
+                        "            {" +
+                        "                \"targetId\": \"C\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
                         "    }," +
                         "    {" +
-                        "        \"id\": \"E\"," +
+                        "        \"id\": \"B\"," +
                         "        \"label\": \"person\"," +
                         "        \"edges\": [" +
                         "            {" +
                         "                \"targetId\": \"D\"," +
-                        "                \"label\": \"knows\"" +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
                         "            }" +
-                        "        ]" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"C\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
                         "    }," +
                         "    {" +
                         "        \"id\": \"D\"," +
-                        "        \"label\": \"person\"" +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"A\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
                         "    }" +
                         "]";
 
-        runAlgorithm(SubGraphMatchParams.class.getName(),
-                     SubGraphMatch.SUBGRAPH_OPTION, config,
-                     ComputerOptions.OUTPUT_CLASS.name(),
-                     LimitedLogOutput.class.getName());
+        SubGraphMatchTestOutput.EXPECT_RESULT =
+                                ImmutableMap.of(
+                                "1", ImmutableSet.of("1, 2, 3, 4")
+                                );
+
+        runAlgorithm(SubGraphMatchTestParams.class.getName(),
+                     SubGraphMatch.SUBGRAPH_OPTION, expressionConfig);
     }
 
     @Test
-    public void testSubMatchWithSameVertex() throws InterruptedException {
+    public void testWithMultiLabel() throws InterruptedException {
+
         final String LABEL_A = "A";
         final String LABEL_B = "B";
         final String LABEL_C = "C";
@@ -201,7 +307,6 @@ public class SubGraphMatchTest extends AlgorithmTestBase {
         graph.addEdge(vC1, EDGE_LABEL_C_D, vD);
         graph.addEdge(vC2, EDGE_LABEL_C_D, vD);
 
-
         String config = "[" +
                         "    {" +
                         "        \"id\": \"A\"," +
@@ -247,9 +352,57 @@ public class SubGraphMatchTest extends AlgorithmTestBase {
                         "    }" +
                         "]";
 
-        runAlgorithm(SubGraphMatchParams.class.getName(),
-                     SubGraphMatch.SUBGRAPH_OPTION, config,
-                     ComputerOptions.OUTPUT_CLASS.name(),
-                     LimitedLogOutput.class.getName());
+        SubGraphMatchTestOutput.EXPECT_RESULT =
+                                ImmutableMap.of(
+                                "A", ImmutableSet.of("A, D, B1, C2",
+                                                        "A, D, B2, C1")
+                                );
+
+        runAlgorithm(SubGraphMatchTestParams.class.getName(),
+                     SubGraphMatch.SUBGRAPH_OPTION, config);
+    }
+
+    public static class SubGraphMatchTestParams extends SubGraphMatchParams {
+
+        @Override
+        public void setAlgorithmParameters(Map<String, String> params) {
+            this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
+                             SubGraphMatchTestOutput.class.getName());
+            super.setAlgorithmParameters(params);
+        }
+    }
+
+    public static class SubGraphMatchTestOutput
+                  extends SubGraphMatchHugeOutput {
+
+        public static Map<String, Set<String>> EXPECT_RESULT;
+
+        @Override
+        public void write(
+               com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
+            super.write(vertex);
+            this.assertResult(vertex);
+        }
+
+        private void assertResult(
+                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
+            SubGraphMatchValue value = vertex.value();
+            IdListList res = value.res();
+            Set<String> expect =
+                        EXPECT_RESULT.getOrDefault(vertex.id().toString(),
+                                                   new HashSet<>());
+            Assert.assertEquals(expect.size(), res.size());
+            for (int i = 0; i < res.size(); i++) {
+                IdList resItem = res.get(0);
+                StringBuilder item = new StringBuilder();
+                for (int j = 0; j < resItem.size(); j++) {
+                    item.append(resItem.get(j).toString());
+                    if (j != resItem.size() - 1) {
+                        item.append(", ");
+                    }
+                }
+                Assert.assertTrue(expect.contains(item.toString()));
+            }
+        }
     }
 }

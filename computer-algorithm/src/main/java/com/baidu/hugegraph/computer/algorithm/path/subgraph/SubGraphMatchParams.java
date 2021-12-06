@@ -24,7 +24,6 @@ import java.util.Map;
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.input.filter.ExtractAllPropertyInputFilter;
-import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 
 public class SubGraphMatchParams implements AlgorithmParams {
 
