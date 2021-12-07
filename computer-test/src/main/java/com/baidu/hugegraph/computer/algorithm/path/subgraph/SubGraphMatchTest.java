@@ -52,7 +52,136 @@ public class SubGraphMatchTest extends AlgorithmTestBase {
     }
 
     @Test
-    public void testWithNoExpression() throws InterruptedException {
+    public void testWithNoPropertyFilter() throws InterruptedException {
+
+        SubGraphMatchTestOutput.EXPECT_RESULT =
+                                ImmutableMap.of(
+                                        "1", ImmutableSet.of("1, 2, 3, 4"),
+                                        "4", ImmutableSet.of("1, 3, 4, 13"),
+                                        "9", ImmutableSet.of("9, 10, 11, 12",
+                                                             "3, 9, 11, 12"),
+                                        "13", ImmutableSet.of("2, 3, 4, 13")
+                                );
+
+        String noExpressionConfig = "[" +
+                                    "    {" +
+                                    "        \"id\": \"A\"," +
+                                    "        \"label\": \"person\"," +
+                                    "        \"edges\": [" +
+                                    "            {" +
+                                    "                \"targetId\": \"B\"," +
+                                    "                \"label\": \"knows\"" +
+                                    "            }," +
+                                    "            {" +
+                                    "                \"targetId\": \"C\"," +
+                                    "                \"label\": \"knows\"" +
+                                    "            }" +
+                                    "        ]" +
+                                    "    }," +
+                                    "    {" +
+                                    "        \"id\": \"B\"," +
+                                    "        \"label\": \"person\"," +
+                                    "        \"edges\": [" +
+                                    "            {" +
+                                    "                \"targetId\": \"D\"," +
+                                    "                \"label\": \"knows\"" +
+                                    "            }" +
+                                    "        ]" +
+                                    "    }," +
+                                    "    {" +
+                                    "        \"id\": \"C\"," +
+                                    "        \"label\": \"person\"" +
+                                    "    }," +
+                                    "    {" +
+                                    "        \"id\": \"D\"," +
+                                    "        \"label\": \"person\"," +
+                                    "        \"edges\": [" +
+                                    "            {" +
+                                    "                \"targetId\": \"A\"," +
+                                    "                \"label\": \"knows\"" +
+                                    "            }" +
+                                    "        ]" +
+                                    "    }" +
+                                    "]";
+
+        this.loadData();
+
+        runAlgorithm(SubGraphMatchTestParams.class.getName(),
+                     SubGraphMatch.SUBGRAPH_OPTION, noExpressionConfig);
+    }
+
+    @Test
+    public void testWithPropertyFilter() throws InterruptedException {
+
+        SubGraphMatchTestOutput.EXPECT_RESULT =
+                ImmutableMap.of(
+                        "1", ImmutableSet.of("1, 2, 3, 4")
+                );
+
+        String expressionConfig = "[" +
+                        "    {" +
+                        "        \"id\": \"A\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"B\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }," +
+                        "            {" +
+                        "                \"targetId\": \"C\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"B\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"D\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"C\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
+                        "    }," +
+                        "    {" +
+                        "        \"id\": \"D\"," +
+                        "        \"label\": \"person\"," +
+                        "        \"edges\": [" +
+                        "            {" +
+                        "                \"targetId\": \"A\"," +
+                        "                \"label\": \"knows\"," +
+                        "                \"property_filter\": \"$element" +
+                        ".weight == 1\"" +
+                        "            }" +
+                        "        ]," +
+                        "        \"property_filter\": \"$element.weight == " +
+                        "1\"" +
+                        "    }" +
+                        "]";
+
+        this.loadData();
+
+        runAlgorithm(SubGraphMatchTestParams.class.getName(),
+                     SubGraphMatch.SUBGRAPH_OPTION, expressionConfig);
+    }
+
+    private void loadData() {
 
         final String PROPERTY_WEIGHT = "weight";
         final String VERTEX_LABEL = "person";
@@ -112,124 +241,6 @@ public class SubGraphMatchTest extends AlgorithmTestBase {
         graph.addEdge(v12, EDGE_LABEL, v9, PROPERTY_WEIGHT, 1);
         graph.addEdge(v13, EDGE_LABEL, v2, PROPERTY_WEIGHT, 1);
         graph.addEdge(v13, EDGE_LABEL, v3, PROPERTY_WEIGHT, 1);
-
-        String noExpressionConfig = "[" +
-                        "    {" +
-                        "        \"id\": \"A\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"B\"," +
-                        "                \"label\": \"knows\"" +
-                        "            }," +
-                        "            {" +
-                        "                \"targetId\": \"C\"," +
-                        "                \"label\": \"knows\"" +
-                        "            }" +
-                        "        ]" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"B\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"D\"," +
-                        "                \"label\": \"knows\"" +
-                        "            }" +
-                        "        ]" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"C\"," +
-                        "        \"label\": \"person\"" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"D\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"A\"," +
-                        "                \"label\": \"knows\"" +
-                        "            }" +
-                        "        ]" +
-                        "    }" +
-                        "]";
-
-        SubGraphMatchTestOutput.EXPECT_RESULT =
-                                ImmutableMap.of(
-                                 "1", ImmutableSet.of("1, 2, 3, 4"),
-                                 "4", ImmutableSet.of("1, 3, 4, 13"),
-                                 "9", ImmutableSet.of("9, 10, 11, 12",
-                                                          "3, 9, 11, 12"),
-                                 "13", ImmutableSet.of("2, 3, 4, 13")
-                                );
-
-        runAlgorithm(SubGraphMatchTestParams.class.getName(),
-                     SubGraphMatch.SUBGRAPH_OPTION, noExpressionConfig);
-
-        String expressionConfig = "[" +
-                        "    {" +
-                        "        \"id\": \"A\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"B\"," +
-                        "                \"label\": \"knows\"," +
-                        "                \"property_filter\": \"$element" +
-                        ".weight == 1\"" +
-                        "            }," +
-                        "            {" +
-                        "                \"targetId\": \"C\"," +
-                        "                \"label\": \"knows\"," +
-                        "                \"property_filter\": \"$element" +
-                        ".weight == 1\"" +
-                        "            }" +
-                        "        ]," +
-                        "        \"property_filter\": \"$element.weight == " +
-                        "1\"" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"B\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"D\"," +
-                        "                \"label\": \"knows\"," +
-                        "                \"property_filter\": \"$element" +
-                        ".weight == 1\"" +
-                        "            }" +
-                        "        ]," +
-                        "        \"property_filter\": \"$element.weight == " +
-                        "1\"" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"C\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"property_filter\": \"$element.weight == " +
-                        "1\"" +
-                        "    }," +
-                        "    {" +
-                        "        \"id\": \"D\"," +
-                        "        \"label\": \"person\"," +
-                        "        \"edges\": [" +
-                        "            {" +
-                        "                \"targetId\": \"A\"," +
-                        "                \"label\": \"knows\"," +
-                        "                \"property_filter\": \"$element" +
-                        ".weight == 1\"" +
-                        "            }" +
-                        "        ]," +
-                        "        \"property_filter\": \"$element.weight == " +
-                        "1\"" +
-                        "    }" +
-                        "]";
-
-        SubGraphMatchTestOutput.EXPECT_RESULT =
-                                ImmutableMap.of(
-                                "1", ImmutableSet.of("1, 2, 3, 4")
-                                );
-
-        runAlgorithm(SubGraphMatchTestParams.class.getName(),
-                     SubGraphMatch.SUBGRAPH_OPTION, expressionConfig);
     }
 
     @Test
