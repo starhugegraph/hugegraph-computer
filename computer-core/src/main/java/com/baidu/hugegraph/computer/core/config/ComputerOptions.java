@@ -90,7 +90,7 @@ public class ComputerOptions extends OptionHolder {
             new ConfigOption<>(
                     "input.source_type",
                     "The source type to load input data",
-                    allowValues("hugegraph"),
+                    allowValues("hugegraph", "hdfs"),
                     "hugegraph"
             );
 
@@ -183,6 +183,22 @@ public class ComputerOptions extends OptionHolder {
                     "stored and transferred together as a batch unit.",
                     disallowEmpty(),
                     -1
+            );
+
+    public static final ConfigOption<String> INPUT_STRUCT_PATH =
+            new ConfigOption<>(
+                    "input.struct_path",
+                    "The struct path of input",
+                    null,
+                    ""
+            );
+
+    public static final ConfigOption<String> INPUT_SCHEMA_PATH =
+            new ConfigOption<>(
+                    "input.schema_path",
+                    "The schema path of input",
+                    null,
+                    ""
             );
 
     public static final ConfigOption<Integer> SORT_THREAD_NUMS =
