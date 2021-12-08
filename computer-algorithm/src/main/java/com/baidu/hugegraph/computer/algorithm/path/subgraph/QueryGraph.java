@@ -38,7 +38,7 @@ import com.googlecode.aviator.Expression;
 
 public class QueryGraph {
 
-    private final Map<String, Vertex> vertexMap;
+    private final Map<String, Vertex> vertexIdMap;
     private final BitSet edgeVisited;
 
     public QueryGraph(String graphDescribe) {
@@ -48,14 +48,14 @@ public class QueryGraph {
                         "Query graph of subgraph match must be have at " +
                         "least one vertex");
 
-        this.vertexMap = new HashMap<>();
+        this.vertexIdMap = new HashMap<>();
         Map<Integer, Edge> edgeMap = new HashMap<>();
         int edgeId = 0;
         for (QueryGraphDescribe.VertexDescribe describe : describes) {
             String vId = describe.id();
             Vertex vertex = new Vertex(vId, describe.label(),
                                        describe.propertyFilter());
-            this.vertexMap.put(vertex.id(), vertex);
+            this.vertexIdMap.put(vertex.id(), vertex);
             // Init out-edge
             List<QueryGraphDescribe.EdgeDescribe> edgeDescribes =
                                                   describe.edges();
@@ -71,7 +71,7 @@ public class QueryGraph {
 
         Collection<Edge> edges = edgeMap.values();
         for (Edge edge : edges) {
-            Vertex vertex = this.vertexMap.get(edge.target);
+            Vertex vertex = this.vertexIdMap.get(edge.target);
             if (vertex == null) {
                 throw new ComputerException("Can't find vertex [%s] in query " +
                                             "graph config", edge.target);
@@ -82,12 +82,12 @@ public class QueryGraph {
     }
 
     public List<Vertex> vertices() {
-        Vertex[] vertices = this.vertexMap.values().toArray(new Vertex[0]);
+        Vertex[] vertices = this.vertexIdMap.values().toArray(new Vertex[0]);
         return ImmutableList.copyOf(vertices);
     }
 
     public Vertex findVertexById(String id) {
-        return this.vertexMap.get(id);
+        return this.vertexIdMap.get(id);
     }
 
     public void resetEdgeVisited() {

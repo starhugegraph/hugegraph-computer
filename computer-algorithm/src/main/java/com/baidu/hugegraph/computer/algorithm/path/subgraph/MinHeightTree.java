@@ -20,7 +20,6 @@
 package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,22 +41,19 @@ public class MinHeightTree {
 
     private TreeNode root;
     private Integer treeHeight;
-    private final Map<Integer, TreeNode> idNodeMap;
+    private final Map<Integer, TreeNode> treeNodeIdMap;
 
-    private final BitSet leavesVisited;
-    private List<List<Integer>> paths;
+    private List<List<Integer>> rootPaths;
 
     private MinHeightTree() {
-        this.idNodeMap = new HashMap<>();
-        this.leavesVisited = new BitSet();
-        this.paths = new ArrayList<>();
+        this.treeNodeIdMap = new HashMap<>();
+        this.rootPaths = new ArrayList<>();
     }
 
     public static MinHeightTree build(QueryGraph graph) {
         // Build temporary MHT
         QueryGraph.Vertex temporaryRoot = graph.vertices().get(0);
-
-        MinHeightTree temporaryTree = buildTree(graph, temporaryRoot);
+        MinHeightTree temporaryTree = buildTreeWithRoot(graph, temporaryRoot);
 
         // Find real graph center node
         List<TreeNode> nodes = temporaryTree.nodes();
@@ -77,12 +73,11 @@ public class MinHeightTree {
         TreeNode realRoot = nodes.get(0);
 
         // Build real MHT
-        graph.resetEdgeVisited();
-        return buildTree(graph, realRoot.vertex);
+        return buildTreeWithRoot(graph, realRoot.vertex);
     }
 
-    private static MinHeightTree buildTree(QueryGraph graph,
-                                           QueryGraph.Vertex root) {
+    private static MinHeightTree buildTreeWithRoot(QueryGraph graph,
+                                                   QueryGraph.Vertex root) {
         int nodeId = 1;
         TreeNode treeRoot = new TreeNode(nodeId++, null, true,
                                          root, null);
@@ -124,6 +119,7 @@ public class MinHeightTree {
         }
 
         afterBuild(tree);
+        graph.resetEdgeVisited();
 
         return tree;
     }
@@ -140,22 +136,23 @@ public class MinHeightTree {
             }
             node.degree = degree + node.children.size();
 
-            tree.idNodeMap.put(node.nodeId, node);
+            tree.treeNodeIdMap.put(node.nodeId, node);
 
             for (TreeNode child : node.children) {
                 queue.offer(child);
             }
         }
 
-        tree.paths = listPath(tree.root);
+        tree.rootPaths = listPath(tree.root);
 
         String msg = "Can't find path in query graph";
-        tree.treeHeight = tree.paths.stream()
-                                    .map(List::size)
-                                    .max(Integer::compareTo)
-                                    .orElseThrow(() -> {
-                                        return new ComputerException(msg);
-                                    });
+        tree.treeHeight = tree.rootPaths
+                              .stream()
+                              .map(List::size)
+                              .max(Integer::compareTo)
+                              .orElseThrow(() -> {
+                                    return new ComputerException(msg);
+                              });
     }
 
     private static List<List<Integer>> listPath(TreeNode node) {
@@ -191,11 +188,11 @@ public class MinHeightTree {
     }
 
     public TreeNode findNodeById(int nodeId) {
-        return this.idNodeMap.get(nodeId);
+        return this.treeNodeIdMap.get(nodeId);
     }
 
     public List<List<Integer>> paths() {
-        return this.paths;
+        return this.rootPaths;
     }
 
     public Set<TreeNode> leaves() {
@@ -206,7 +203,6 @@ public class MinHeightTree {
             TreeNode node = queue.poll();
             if (CollectionUtils.isEmpty(node.children)) {
                 leaves.add(node);
-                this.leavesVisited.set(node.nodeId);
             } else {
                 for (TreeNode child : node.children) {
                     queue.offer(child);
@@ -217,7 +213,7 @@ public class MinHeightTree {
     }
 
     public boolean matchRootPath(List<Integer> needPath) {
-        return this.paths.stream().anyMatch(path -> {
+        return this.rootPaths.stream().anyMatch(path -> {
             if (path.size() != needPath.size()) {
                 return false;
             }
