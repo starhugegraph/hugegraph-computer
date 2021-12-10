@@ -332,6 +332,22 @@ public class ComputerOptions extends OptionHolder {
                     "hadoop"
             );
 
+    public static final ConfigOption<String> OUTPUT_CORE_SITE_PATH =
+            new ConfigOption<>(
+                    "output.core_site_path",
+                    "The hdfs core site path.",
+                    null,
+                    ""
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_SITE_PATH =
+            new ConfigOption<>(
+                    "output.hdfs_site_path",
+                    "The hdfs site path.",
+                    null,
+                    ""
+            );
+
     public static final ConfigOption<Boolean> OUTPUT_HDFS_KERBEROS_ENABLE =
             new ConfigOption<>(
                     "output.hdfs_kerberos_enable",

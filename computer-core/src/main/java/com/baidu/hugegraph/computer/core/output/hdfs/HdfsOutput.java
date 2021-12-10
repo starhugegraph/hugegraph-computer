@@ -23,6 +23,7 @@ package com.baidu.hugegraph.computer.core.output.hdfs;
 import java.io.IOException;
 import java.net.URI;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -142,6 +143,15 @@ public class HdfsOutput implements ComputerOutput {
         String url = config.get(ComputerOptions.OUTPUT_HDFS_URL);
         Boolean enableKerberos = config.get(
                 ComputerOptions.OUTPUT_HDFS_KERBEROS_ENABLE);
+
+        String coreSite = config.get(ComputerOptions.OUTPUT_CORE_SITE_PATH);
+        if (StringUtils.isNotBlank(coreSite)) {
+            conf.addResource(new Path(coreSite));
+        }
+        String hdfsSite = config.get(ComputerOptions.OUTPUT_HDFS_SITE_PATH);
+        if (StringUtils.isNotBlank(hdfsSite)) {
+            conf.addResource(new Path(hdfsSite));
+        }
 
         if (enableKerberos) {
             String krb5Conf = config.get(ComputerOptions.OUTPUT_HDFS_KRB5_CONF);
