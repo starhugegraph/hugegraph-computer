@@ -143,6 +143,13 @@ public class MessageInput<T extends Value<?>> {
                     try {
                         BytesInput in = IOFactory.createBytesInput(
                                         entry.value().bytes());
+                        /*
+                         * TODO: solve the problem of combine shared objects
+                         *  in another way
+                         */
+                        MessageInput.this.value =
+                        MessageInput.this.config.createObject(
+                                     ComputerOptions.ALGORITHM_MESSAGE_CLASS);
                         MessageInput.this.value.read(in);
                     } catch (IOException e) {
                         throw new ComputerException("Can't read value", e);

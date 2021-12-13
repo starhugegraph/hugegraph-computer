@@ -31,12 +31,12 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
 
-public class KcoreValue implements Value<KcoreValue> {
+public class KCoreValue implements Value<KCoreValue> {
 
     private int degree;
     private Id core;
 
-    public KcoreValue() {
+    public KCoreValue() {
         this.degree = 0;
         this.core = new BytesId();
     }
@@ -75,13 +75,13 @@ public class KcoreValue implements Value<KcoreValue> {
     }
 
     @Override
-    public void assign(Value<KcoreValue> other) {
+    public void assign(Value<KCoreValue> other) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Value<KcoreValue> copy() {
-        KcoreValue kcoreValue = new KcoreValue();
+    public Value<KCoreValue> copy() {
+        KCoreValue kcoreValue = new KCoreValue();
         kcoreValue.core = (Id) this.core.copy();
         kcoreValue.degree = this.degree;
         return kcoreValue;
@@ -100,7 +100,7 @@ public class KcoreValue implements Value<KcoreValue> {
     }
 
     @Override
-    public int compareTo(KcoreValue other) {
+    public int compareTo(KCoreValue other) {
         throw new UnsupportedOperationException();
     }
 

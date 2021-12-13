@@ -27,19 +27,24 @@ import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 
-public class KcoreParams implements AlgorithmParams {
+public class KCoreParams implements AlgorithmParams {
 
     @Override
     public void setAlgorithmParameters(Map<String, String> params) {
+        this.setIfAbsent(params, ComputerOptions.MASTER_COMPUTATION_CLASS,
+                         KCore4Master.class.getName());
         this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
-                         Kcore.class.getName());
+                         KCore.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
-                         KcoreValue.class.getName());
+                         KCoreValue.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          BytesId.class.getName());
-        this.setIfAbsent(params, ComputerOptions.WORKER_COMBINER_CLASS,
-                         ValueMinCombiner.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
                          LimitedLogOutput.class.getName());
+
+        params.put(ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
+                   Boolean.TRUE.toString());
+        params.put(ComputerOptions.BSP_MAX_SUPER_STEP.name(),
+                   String.valueOf(Integer.MAX_VALUE));
     }
 }
