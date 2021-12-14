@@ -22,6 +22,8 @@ package com.baidu.hugegraph.computer.algorithm.community.kcore;
 import java.util.Iterator;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
 import com.baidu.hugegraph.computer.core.combiner.ValueMinCombiner;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
@@ -33,9 +35,12 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
+import com.baidu.hugegraph.util.Log;
 import com.google.common.collect.Iterators;
 
 public class KCore implements Computation<Id> {
+
+    private static final Logger LOG = Log.logger(KCore.class.getName());
 
     public static final String ALGORITHM_NAME = "kcore";
     public static final String OPTION_K = "kcore.k";
@@ -72,6 +77,8 @@ public class KCore implements Computation<Id> {
         StringValue algorithmStageValue =
                     context.aggregatedValue(KCore4Master.AGGR_ALGORITHM_STAGE);
         this.stage = algorithmStageValue.value();
+        LOG.info("Algorithm stage is {} in super step {}",
+                 this.stage, context.superstep());
     }
 
     @Override
@@ -115,7 +122,8 @@ public class KCore implements Computation<Id> {
                 wcc(context, vertex, messages);
                 break;
             default:
-                throw new ComputerException("Stage error for: ", this.stage);
+                throw new ComputerException("Algorithm stage error for: ",
+                                            this.stage);
         }
     }
 
