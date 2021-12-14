@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 import com.baidu.hugegraph.driver.GraphManager;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
@@ -126,7 +125,7 @@ public class KCoreTest extends AlgorithmTestBase {
         }
     }
 
-    public static class KCoreTestOutput extends LimitedLogOutput {
+    public static class KCoreTestOutput extends KCoreOutput {
 
         public static Map<String, String> EXPECT_RESULT;
 

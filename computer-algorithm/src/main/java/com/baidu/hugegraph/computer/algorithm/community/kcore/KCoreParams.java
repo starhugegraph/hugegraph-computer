@@ -22,7 +22,6 @@ package com.baidu.hugegraph.computer.algorithm.community.kcore;
 import java.util.Map;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
-import com.baidu.hugegraph.computer.core.combiner.ValueMinCombiner;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;

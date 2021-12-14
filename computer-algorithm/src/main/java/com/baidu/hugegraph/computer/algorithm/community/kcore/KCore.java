@@ -37,6 +37,7 @@ import com.google.common.collect.Iterators;
 
 public class KCore implements Computation<Id> {
 
+    public static final String ALGORITHM_NAME = "kcore";
     public static final String OPTION_K = "kcore.k";
     public static final int K_DEFAULT_VALUE = 3;
 
@@ -50,7 +51,7 @@ public class KCore implements Computation<Id> {
 
     @Override
     public String name() {
-        return "kcore";
+        return ALGORITHM_NAME;
     }
 
     @Override
@@ -108,7 +109,7 @@ public class KCore implements Computation<Id> {
                 kcore(context, vertex, messages);
                 break;
             case KCore4Master.WCC_0:
-                wcc_0(context, vertex);
+                wcc0(context, vertex);
                 break;
             case KCore4Master.WCC:
                 wcc(context, vertex, messages);
@@ -131,7 +132,7 @@ public class KCore implements Computation<Id> {
         }
     }
 
-    private void wcc_0(ComputationContext context, Vertex vertex) {
+    private void wcc0(ComputationContext context, Vertex vertex) {
         context.sendMessageToAllEdgesIf(vertex, vertex.id(),
                                         (source, target) -> {
                                             return source.compareTo(target) < 0;
