@@ -19,15 +19,21 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.kcore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 import com.baidu.hugegraph.driver.GraphManager;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.testutil.Assert;
 
 public class KCoreTest extends AlgorithmTestBase {
 
@@ -97,6 +103,42 @@ public class KCoreTest extends AlgorithmTestBase {
         vM.addEdge(EDGE_LABEL, vJ);
         vN.addEdge(EDGE_LABEL, vE);
 
-        runAlgorithm(KCoreParams.class.getName());
+        Map<String, String> result = new HashMap<>();
+        result.put("A", "A");
+        result.put("B", "A");
+        result.put("C", "A");
+        result.put("D", "A");
+        result.put("E", "E");
+        result.put("G", "E");
+        result.put("H", "E");
+        KCoreTestOutput.EXPECT_RESULT = result;
+
+        runAlgorithm(KCoreTestParams.class.getName());
+    }
+
+    public static class KCoreTestParams extends KCoreParams {
+
+        @Override
+        public void setAlgorithmParameters(Map<String, String> params) {
+            this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS.name(),
+                             KCoreTestOutput.class.getName());
+            super.setAlgorithmParameters(params);
+        }
+    }
+
+    public static class KCoreTestOutput extends LimitedLogOutput {
+
+        public static Map<String, String> EXPECT_RESULT;
+
+        @Override
+        public void write(
+               com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
+            KCoreValue value = vertex.value();
+            if (EXPECT_RESULT.containsKey(vertex.id().string())) {
+                Assert.assertEquals(EXPECT_RESULT.get(vertex.id().string()),
+                                    value.core().string());
+            }
+            super.write(vertex);
+        }
     }
 }
