@@ -26,10 +26,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
@@ -39,13 +42,23 @@ import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.util.Log;
 
 public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
 
     public static final String SUBGRAPH_OPTION = "subgraph.query_graph_config";
 
+    private static final Logger LOG = Log.logger(SubGraphMatch.class.getName());
+    private static final long PRINT_LOG_TIME = TimeUnit.SECONDS.toMillis(10L);
+
     private MinHeightTree subgraphTree;
     private Set<MinHeightTree.TreeNode> leaves;
+
+    // Log
+    private Vertex currentVertex;
+    private long logTime;
+    private long cartesianProductSize;
+    private long currentCartesianProduct;
 
     @Override
     public String name() {
@@ -91,6 +104,7 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
             vertex.inactivate();
             return;
         }
+        this.currentVertex = vertex;
 
         SubGraphMatchValue value = vertex.value();
         while (messages.hasNext()) {
@@ -148,6 +162,10 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
 
     private void setValueRes(SubGraphMatchValue value) {
         List<List<Pair<Integer, Id>>> mp = value.mp();
+        if (CollectionUtils.isEmpty(mp)) {
+            return;
+        }
+
         List<List<Integer>> paths = this.subgraphTree.paths();
 
         List<List<List<Pair<Integer, Id>>>> group = new ArrayList<>(
@@ -172,6 +190,12 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
         }
 
         // Cartesian Product
+        this.logTime = System.currentTimeMillis();
+        this.cartesianProductSize = 1L;
+        this.currentCartesianProduct = 0L;
+        for (List<List<Pair<Integer, Id>>> groupItem : group) {
+            cartesianProductSize *= groupItem.size();
+        }
         cartesianProductAndFilterRes(group, 0, new HashMap<>(), new HashSet<>(),
                                      value);
     }
@@ -196,6 +220,13 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
             List<List<List<Pair<Integer, Id>>>> pathGroup, int groupIndex,
             Map<QueryGraph.Vertex, Id> resItem, Set<Id> resIds,
             SubGraphMatchValue value) {
+        if (PRINT_LOG_TIME <= System.currentTimeMillis() - this.logTime) {
+            LOG.info("Vertex {} is calculating cartesian, cartesian total " +
+                     "size:{}, current cartesian size:{}",
+                     this.currentVertex.id(), this.cartesianProductSize,
+                     this.currentCartesianProduct);
+            this.logTime = System.currentTimeMillis();
+        }
         List<List<Pair<Integer, Id>>> group = pathGroup.get(groupIndex);
         for (List<Pair<Integer, Id>> pathMp : group) {
             List<QueryGraph.Vertex> notExistVertex = new ArrayList<>();
@@ -221,6 +252,7 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
 
             if (!needEnd) {
                 if (groupIndex == pathGroup.size() - 1) {
+                    this.currentCartesianProduct++;
                     IdList realRes = new IdList();
                     realRes.addAll(resItem.values());
                     value.addRes(realRes);
