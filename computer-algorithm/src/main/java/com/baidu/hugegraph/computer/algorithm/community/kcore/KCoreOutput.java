@@ -25,8 +25,6 @@ import com.baidu.hugegraph.structure.graph.Vertex;
 
 public class KCoreOutput extends HugeOutput {
 
-    private static final String NO_RESULT = "NO_RESULT";
-
     @Override
     public String name() {
         return KCore.ALGORITHM_NAME;
@@ -35,7 +33,7 @@ public class KCoreOutput extends HugeOutput {
     @Override
     public void prepareSchema() {
         this.client().schema().propertyKey(this.name())
-            .asText()
+            .asInt()
             .writeType(WriteType.OLAP_COMMON)
             .ifNotExist()
             .create();
@@ -48,11 +46,7 @@ public class KCoreOutput extends HugeOutput {
                 new com.baidu.hugegraph.structure.graph.Vertex(null);
         hugeVertex.id(vertex.id().asObject());
         KCoreValue value = vertex.value();
-        String core = NO_RESULT;
-        if (value.active()) {
-            core = value.string();
-        }
-        hugeVertex.property(this.name(), core);
+        hugeVertex.property(this.name(), value.core());
         return hugeVertex;
     }
 }

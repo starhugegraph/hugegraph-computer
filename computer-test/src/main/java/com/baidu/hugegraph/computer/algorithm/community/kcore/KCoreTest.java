@@ -103,13 +103,13 @@ public class KCoreTest extends AlgorithmTestBase {
         vN.addEdge(EDGE_LABEL, vE);
 
         Map<String, String> result = new HashMap<>();
-        result.put("A", "A");
-        result.put("B", "A");
-        result.put("C", "A");
-        result.put("D", "A");
-        result.put("E", "E");
-        result.put("G", "E");
-        result.put("H", "E");
+        result.put("A", "4");
+        result.put("B", "4");
+        result.put("C", "3");
+        result.put("D", "3");
+        result.put("E", "3");
+        result.put("G", "4");
+        result.put("H", "3");
         KCoreTestOutput.EXPECT_RESULT = result;
 
         runAlgorithm(KCoreTestParams.class.getName());
@@ -135,7 +135,7 @@ public class KCoreTest extends AlgorithmTestBase {
             KCoreValue value = vertex.value();
             if (EXPECT_RESULT.containsKey(vertex.id().string())) {
                 Assert.assertEquals(EXPECT_RESULT.get(vertex.id().string()),
-                                    value.core().string());
+                                    value.string());
             }
             super.write(vertex);
         }

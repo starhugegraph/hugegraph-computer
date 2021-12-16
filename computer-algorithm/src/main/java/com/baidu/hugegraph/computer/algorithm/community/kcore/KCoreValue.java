@@ -20,6 +20,8 @@
 package com.baidu.hugegraph.computer.algorithm.community.kcore;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -29,44 +31,42 @@ import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
-import com.baidu.hugegraph.util.E;
 
 public class KCoreValue implements Value<KCoreValue> {
 
-    private int degree;
-    private Id core;
+    private int core;
+    private Set<Id> deletedNeighbors;
 
     public KCoreValue() {
-        this.degree = 0;
-        this.core = new BytesId();
+        this.core = 0;
+        this.deletedNeighbors = new HashSet<>();
     }
 
-    public void degree(int degree) {
-        assert degree >= 0;
-        this.degree = degree;
-    }
-
-    public int degree() {
-        return this.degree;
-    }
-
-    public int decreaseDegree(int decrease) {
-        assert decrease <= this.degree;
-        this.degree -= decrease;
-        return this.degree;
-    }
-
-    public boolean active() {
-        return this.degree > 0;
-    }
-
-    public void core(Id core) {
+    public void core(int core) {
+        assert core >= 0;
         this.core = core;
     }
 
-    public Id core() {
-        E.checkNotNull(this.core, "core");
+    public int core() {
         return this.core;
+    }
+
+    public int decreaseCore(int decrease) {
+        assert decrease <= this.core;
+        this.core -= decrease;
+        return this.core;
+    }
+
+    public boolean active() {
+        return this.core > 0;
+    }
+
+    public boolean isNeighborDeleted(Id neighborId) {
+        return this.deletedNeighbors.contains(neighborId);
+    }
+
+    public void addDeletedNeighbor(Id neighborId) {
+        this.deletedNeighbors.add(neighborId);
     }
 
     @Override
@@ -82,21 +82,29 @@ public class KCoreValue implements Value<KCoreValue> {
     @Override
     public Value<KCoreValue> copy() {
         KCoreValue kcoreValue = new KCoreValue();
-        kcoreValue.core = (Id) this.core.copy();
-        kcoreValue.degree = this.degree;
+        kcoreValue.core = this.core;
         return kcoreValue;
     }
 
     @Override
     public void read(RandomAccessInput in) throws IOException {
-        this.core.read(in);
-        this.degree = in.readInt();
+        this.core = in.readInt();
+        int size = in.readInt();
+        this.deletedNeighbors = new HashSet<>((int)((float) size / 0.75 + 1));
+        for (int i = 0; i < size; i++) {
+            Id id = new BytesId();
+            id.read(in);
+            deletedNeighbors.add(id);
+        }
     }
 
     @Override
     public void write(RandomAccessOutput out) throws IOException {
-        this.core.write(out);
-        out.writeInt(this.degree);
+        out.writeInt(this.core);
+        out.writeInt(this.deletedNeighbors.size());
+        for (Id id : this.deletedNeighbors) {
+            id.write(out);
+        }
     }
 
     @Override
@@ -108,7 +116,6 @@ public class KCoreValue implements Value<KCoreValue> {
     public String toString() {
         return new ToStringBuilder(this)
                    .append("core", this.core)
-                   .append("degree", this.degree)
                    .toString();
     }
 

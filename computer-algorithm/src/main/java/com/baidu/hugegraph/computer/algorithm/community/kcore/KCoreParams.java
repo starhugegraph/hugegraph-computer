@@ -24,14 +24,11 @@ import java.util.Map;
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
-import com.baidu.hugegraph.computer.core.output.LimitedLogOutput;
 
 public class KCoreParams implements AlgorithmParams {
 
     @Override
     public void setAlgorithmParameters(Map<String, String> params) {
-        this.setIfAbsent(params, ComputerOptions.MASTER_COMPUTATION_CLASS,
-                         KCore4Master.class.getName());
         this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
                          KCore.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
@@ -39,7 +36,7 @@ public class KCoreParams implements AlgorithmParams {
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          BytesId.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
-                         LimitedLogOutput.class.getName());
+                         KCoreOutput.class.getName());
 
         params.put(ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                    Boolean.TRUE.toString());

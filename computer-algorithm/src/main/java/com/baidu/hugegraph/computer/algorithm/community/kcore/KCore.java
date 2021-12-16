@@ -20,27 +20,13 @@
 package com.baidu.hugegraph.computer.algorithm.community.kcore;
 
 import java.util.Iterator;
-import java.util.Objects;
-
-import org.slf4j.Logger;
-
-import com.baidu.hugegraph.computer.core.combiner.Combiner;
-import com.baidu.hugegraph.computer.core.combiner.ValueMinCombiner;
-import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
-import com.baidu.hugegraph.computer.core.graph.value.LongValue;
-import com.baidu.hugegraph.computer.core.graph.value.StringValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
-import com.baidu.hugegraph.computer.core.worker.WorkerContext;
-import com.baidu.hugegraph.util.Log;
-import com.google.common.collect.Iterators;
 
 public class KCore implements Computation<Id> {
-
-    private static final Logger LOG = Log.logger(KCore.class.getName());
 
     public static final String ALGORITHM_NAME = "kcore";
     public static final String OPTION_K = "kcore.k";
@@ -49,10 +35,6 @@ public class KCore implements Computation<Id> {
     private final KCoreValue initValue = new KCoreValue();
 
     private int k;
-    private Combiner<Id> wccCombiner;
-
-    private String stage;
-    private long currentStepDeleteVertexNum;
 
     @Override
     public String name() {
@@ -67,39 +49,19 @@ public class KCore implements Computation<Id> {
     @Override
     public void init(Config config) {
         this.k = config.getInt(OPTION_K, K_DEFAULT_VALUE);
-        this.wccCombiner = new ValueMinCombiner<>();
-        this.currentStepDeleteVertexNum = 0L;
-    }
-
-    @Override
-    public void beforeSuperstep(WorkerContext context) {
-        this.currentStepDeleteVertexNum = 0L;
-        StringValue algorithmStageValue =
-                    context.aggregatedValue(KCore4Master.AGGR_ALGORITHM_STAGE);
-        this.stage = algorithmStageValue.value();
-        LOG.info("Algorithm stage is {} in super step {}",
-                 this.stage, context.superstep());
     }
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
         KCoreValue value = this.initValue;
-        value.core((Id) vertex.id().copy());
+        value.core(vertex.numEdges());
         vertex.value(value);
 
-        if (vertex.numEdges() < this.k) {
-            value.degree(0);
-            currentStepDeleteVertexNum++;
-            /*
-             * TODO: send int type message at phase 1, it's different from id
-             * type of phase 2 (wcc message), need support switch message type.
-             */
+        if (value.core() < this.k) {
+            value.core(0);
             context.sendMessageToAllEdges(vertex, vertex.id());
-            vertex.inactivate();
-        } else {
-            value.degree(vertex.numEdges());
-            assert vertex.active();
         }
+        vertex.inactivate();
     }
 
     @Override
@@ -111,61 +73,21 @@ public class KCore implements Computation<Id> {
             return;
         }
 
-        switch (this.stage) {
-            case KCore4Master.K_CORE:
-                kcore(context, vertex, messages);
-                break;
-            case KCore4Master.WCC_0:
-                wcc0(context, vertex);
-                break;
-            case KCore4Master.WCC:
-                wcc(context, vertex, messages);
-                break;
-            default:
-                throw new ComputerException("Algorithm stage error for: ",
-                                            this.stage);
+        int deleted = 0;
+        while (messages.hasNext()) {
+            Id neighborId = messages.next();
+            value.addDeletedNeighbor(neighborId);
+            deleted++;
         }
-    }
 
-    private void kcore(ComputationContext context, Vertex vertex,
-                       Iterator<Id> messages) {
-        KCoreValue value = vertex.value();
-        int deleted = Iterators.size(messages);
-        if (value.decreaseDegree(deleted) < this.k) {
-            // From active to inactive, delete self vertex
-            value.degree(0);
-            this.currentStepDeleteVertexNum++;
-
-            context.sendMessageToAllEdges(vertex, vertex.id());
-        }
-    }
-
-    private void wcc0(ComputationContext context, Vertex vertex) {
-        context.sendMessageToAllEdgesIf(vertex, vertex.id(),
-                                        (source, target) -> {
-                                            return source.compareTo(target) < 0;
-                                        });
-        vertex.inactivate();
-    }
-
-    private void wcc(ComputationContext context, Vertex vertex,
-                     Iterator<Id> messages) {
-        if (!messages.hasNext()) {
-            return;
-        }
-        KCoreValue value = vertex.value();
-        Id min = Combiner.combineAll(this.wccCombiner, messages);
-        assert Objects.nonNull(min);
-        if (value.core().compareTo(min) > 0) {
-            value.core(min);
-            context.sendMessageToAllEdges(vertex, min);
+        if (value.decreaseCore(deleted) < this.k) {
+            value.core(0);
+            context.sendMessageToAllEdgesIf(
+                    vertex, vertex.id(),
+                    (source, target) -> {
+                        return !value.isNeighborDeleted(target);
+                    });
         }
         vertex.inactivate();
-    }
-
-    @Override
-    public void afterSuperstep(WorkerContext context) {
-        context.aggregateValue(KCore4Master.AGGR_DELETE_VERTEX_NUM,
-                               new LongValue(this.currentStepDeleteVertexNum));
     }
 }
