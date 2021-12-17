@@ -77,10 +77,9 @@ public class PersonalPageRank4Master implements MasterComputation {
 
         StringBuilder sb = new StringBuilder();
         sb.append("[Superstep ").append(context.superstep()).append("]")
-          .append(", cumulative dangling probability = ")
           .append(", cumulative probability = ").append(cumulativeProbability)
           .append(", l1 norm difference = ").append(l1NormDifference.value());
-        LOG.info("PageRank running status: {}", sb);
+        LOG.info("PersonalPageRank running status: {}", sb);
 
         boolean l1Diff = l1NormDifference.value() > this.l1DiffThreshold;
         return context.superstep() <= 1 || l1Diff;

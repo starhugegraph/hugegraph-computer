@@ -19,9 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.ppr;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import com.baidu.hugegraph.computer.core.aggregator.Aggregator;
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
@@ -34,7 +32,6 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * In (original) PageRank, the damping factor is the probability of the surfer
@@ -57,9 +54,6 @@ public class PersonalPageRank implements Computation<DoubleValue> {
     private Aggregator<DoubleValue> diffAggr;
     private Aggregator<DoubleValue> cumulativeRankAggr;
 
-    private DoubleValue sourceRank;
-    private DoubleValue contribValue;
-    private Map<Id, Double> ranks;
     private Id sourceId;
 
     @Override
@@ -75,8 +69,6 @@ public class PersonalPageRank implements Computation<DoubleValue> {
     @Override
     public void init(Config config) {
         this.alpha = config.getDouble(OPTION_ALPHA, ALPHA_DEFAULT_VALUE);
-        this.contribValue = new DoubleValue();
-        this.ranks = new HashMap<>(32);
     }
 
     @Override
@@ -87,8 +79,6 @@ public class PersonalPageRank implements Computation<DoubleValue> {
 
         /* Algorithm params */
         this.cumulativeRank = cumulativeRank.value();
-        this.sourceRank = new DoubleValue(1.0);
-
         /* Update aggregator values */
         this.diffAggr = context.createAggregator(
                 PersonalPageRank4Master.AGGR_L1_NORM_DIFFERENCE_KEY);
@@ -98,17 +88,17 @@ public class PersonalPageRank implements Computation<DoubleValue> {
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
-        vertex.value(this.sourceRank);
-        this.cumulativeRankAggr.aggregateValue(this.sourceRank.value());
+        PersonalPageRankValue pprValue = new PersonalPageRankValue();
+        vertex.value(pprValue);
+        this.cumulativeRankAggr.aggregateValue(pprValue.contribValue());
         int degree = vertex.numEdges();
 
-        if (degree == 0) {
-            this.ranks = ImmutableMap.of();
-            vertex.inactivate();
-        } else {
+        if (degree > 0) {
             this.sourceId = vertex.id();
-            this.contribValue.value(this.sourceRank.value() / degree);
-            context.sendMessageToAllEdges(vertex, this.contribValue);
+            pprValue.contribRank(pprValue.contribRank() / degree);
+            context.sendMessageToAllEdges(vertex, pprValue.contribValue());
+        } else {
+            vertex.inactivate();
         }
     }
 
@@ -123,23 +113,25 @@ public class PersonalPageRank implements Computation<DoubleValue> {
                       (1 - this.alpha) * initialRank;
         rank /= this.cumulativeRank;
 
-        DoubleValue oldRank = vertex.value();
-        vertex.value(new DoubleValue(rank));
+        PersonalPageRankValue ppr = vertex.value();
+        ppr.contribRank(rank);
         Edges edges = vertex.edges();
         int degree = edges.size();
 
         for (Edge edge : edges) {
             Id neighbor = edge.targetId();
-            if (ranks.size() < RESULT_LIMIT || ranks.containsKey(neighbor)) {
-                ranks.put(neighbor, rank);
+            if (ppr.size() < RESULT_LIMIT || ppr.containsKey(neighbor)) {
+                ppr.put(neighbor, new DoubleValue(rank));
             }
         }
-        this.diffAggr.aggregateValue(Math.abs(oldRank.value() - rank));
+
+        //vertex.value(ppr);
+        this.diffAggr.aggregateValue(Math.abs(ppr.contribRank() - rank));
         this.cumulativeRankAggr.aggregateValue(rank);
 
         if (degree != 0) {
-            DoubleValue contribValue = new DoubleValue(rank / degree);
-            context.sendMessageToAllEdges(vertex, contribValue);
+            context.sendMessageToAllEdges(vertex, new DoubleValue(rank /
+                                                                  degree));
         }
     }
 

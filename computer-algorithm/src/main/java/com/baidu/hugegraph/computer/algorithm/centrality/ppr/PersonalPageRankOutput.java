@@ -19,7 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.ppr;
 
-import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.structure.constant.WriteType;
@@ -36,7 +35,6 @@ public class PersonalPageRankOutput extends HugeOutput {
         this.client().schema().propertyKey(this.name())
                      .asText()
                      .writeType(WriteType.OLAP_COMMON)
-                     .valueList()
                      .ifNotExist()
                      .create();
     }
@@ -47,8 +45,7 @@ public class PersonalPageRankOutput extends HugeOutput {
         com.baidu.hugegraph.structure.graph.Vertex hugeVertex =
                   new com.baidu.hugegraph.structure.graph.Vertex(null);
         hugeVertex.id(vertex.id().asObject());
-        hugeVertex.property(this.name(),
-                            ((DoubleValue) vertex.value()).value());
+        hugeVertex.property(this.name(), (vertex.value()).value().toString());
         return hugeVertex;
     }
 }

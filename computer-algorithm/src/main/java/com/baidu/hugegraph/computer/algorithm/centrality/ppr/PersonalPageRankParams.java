@@ -35,7 +35,7 @@ public class PersonalPageRankParams implements AlgorithmParams {
         this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
                          PersonalPageRank.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
-                         DoubleValue.class.getName());
+                         PersonalPageRankValue.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          DoubleValue.class.getName());
         this.setIfAbsent(params, ComputerOptions.WORKER_COMBINER_CLASS,
