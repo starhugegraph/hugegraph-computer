@@ -66,8 +66,11 @@ public class RingsDetectionSpreadFilter {
         }
         for (PropertyFilterDescribe describe : describes) {
             String labelName = describe.label();
-            Expression expression = AviatorEvaluator.compile(
-                                                     describe.propertyFilter());
+            Expression expression = null;
+            if (describe.propertyFilter() != null) {
+                expression = AviatorEvaluator.compile(
+                                              describe.propertyFilter());
+            }
             filter.put(labelName, expression);
         }
     }
