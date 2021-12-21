@@ -202,6 +202,15 @@ public class ComputerOptions extends OptionHolder {
                     LogOutput.class
             );
 
+    public static final ConfigOption<String> OUTPUT_PROPERTY_NAME =
+            new ConfigOption<>(
+                    "output.output_property_name",
+                    "The name to output the computation result for each " +
+                    "vertex.",
+                    disallowEmpty(),
+                    ""
+            );
+
     public static final ConfigOption<String> OUTPUT_RESULT_NAME =
             new ConfigOption<>(
                     "output.result_name",
