@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.NotSupportedException;
+
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -36,7 +38,7 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
 
     private final GraphFactory graphFactory;
 
-    private DoubleValue contribRank;
+    private final DoubleValue contribRank;
     private Map<Id, DoubleValue> map;
 
     public PersonalPageRankValue() {
@@ -71,6 +73,10 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
         this.map.put(id, value);
     }
 
+    public void remove(Id id) {
+        this.map.remove(id);
+    }
+
     public Set<Map.Entry<Id, DoubleValue>> entrySet() {
         return this.map.entrySet();
     }
@@ -82,17 +88,17 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
 
     @Override
     public void assign(Value<PersonalPageRankValue> value) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
     public Value<PersonalPageRankValue> copy() {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
     public Object value() {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
@@ -123,7 +129,7 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
 
     @Override
     public int compareTo(PersonalPageRankValue o) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     public int size() {

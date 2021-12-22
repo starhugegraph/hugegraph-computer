@@ -129,7 +129,7 @@ public class PersonalPageRank implements Computation<DoubleValue> {
         this.diffAggr.aggregateValue(Math.abs(ppr.contribRank() - rank));
         this.cumulativeRankAggr.aggregateValue(rank);
 
-        if (degree != 0) {
+        if (degree > 0) {
             context.sendMessageToAllEdges(vertex, new DoubleValue(rank /
                                                                   degree));
         }
