@@ -207,7 +207,7 @@ public class ComputerOptions extends OptionHolder {
                     "output.output_property_name",
                     "The name to output the computation result for each " +
                     "vertex.",
-                    disallowEmpty(),
+                    null,
                     ""
             );
 

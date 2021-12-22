@@ -30,7 +30,7 @@ import com.baidu.hugegraph.util.Log;
  * It can't be used on production environment.
  * Be used for test or development only.
  */
-public class LogOutput implements ComputerOutput {
+public class LogOutput extends AbstractComputerOutput {
 
     private static final Logger LOG = Log.logger(LogOutput.class);
 
