@@ -50,7 +50,7 @@ public class HdfsInputSplitFetcher extends FileInputSplitFetcher {
             HDFSSource hdfsSource = (HDFSSource) source;
             Configuration configuration = this.loadConfiguration(hdfsSource);
             this.enableKerberos(hdfsSource, configuration);
-            try (FileSystem hdfs = FileSystem.get(configuration)){
+            try (FileSystem hdfs = FileSystem.get(configuration)) {
                 Path path = new Path(source.path());
                 FileFilter filter = source.filter();
                 if (hdfs.getFileStatus(path).isFile()) {
@@ -90,7 +90,7 @@ public class HdfsInputSplitFetcher extends FileInputSplitFetcher {
     private void enableKerberos(HDFSSource source,
                                 Configuration conf) throws IOException {
         KerberosConfig kerberosConfig = source.kerberosConfig();
-        if (kerberosConfig != null && kerberosConfig.enable() ) {
+        if (kerberosConfig != null && kerberosConfig.enable()) {
             System.setProperty("java.security.krb5.conf",
                                kerberosConfig.krb5Conf());
             UserGroupInformation.setConfiguration(conf);
