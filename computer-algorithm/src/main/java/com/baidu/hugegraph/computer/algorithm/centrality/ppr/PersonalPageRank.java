@@ -102,8 +102,8 @@ public class PersonalPageRank implements Computation<DoubleValue> {
         int degree = vertex.numEdges();
 
         if (isSource && degree > 0) {
-            ppr.contribRank(ppr.contribRank() / degree);
-            context.sendMessageToAllEdges(vertex, ppr.contribValue());
+            double rank = ppr.contribValue().value() / degree;
+            context.sendMessageToAllEdges(vertex, new DoubleValue(rank));
         } else {
             vertex.inactivate();
         }
