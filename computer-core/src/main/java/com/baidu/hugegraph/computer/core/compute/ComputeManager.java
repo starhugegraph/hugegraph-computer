@@ -21,13 +21,19 @@ package com.baidu.hugegraph.computer.core.compute;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.partition.PartitionStat;
-import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
@@ -35,31 +41,37 @@ import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
-import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
+import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
 
-public class ComputeManager<M extends Value<M>> {
+public class ComputeManager {
 
     private static final Logger LOG = Log.logger(ComputeManager.class);
+    private static final String PREFIX = "partition-compute-executor-%s";
 
     private final ComputerContext context;
     private final Managers managers;
 
-    private final Map<Integer, FileGraphPartition<M>> partitions;
-    private final Computation<M> computation;
+    private final Map<Integer, FileGraphPartition> partitions;
     private final MessageRecvManager recvManager;
     private final MessageSendManager sendManager;
+    private final ExecutorService computeExecutor;
 
-    public ComputeManager(ComputerContext context, Managers managers,
-                          Computation<M> computation) {
+    public ComputeManager(ComputerContext context, Managers managers) {
         this.context = context;
         this.managers = managers;
-        this.computation = computation;
         this.partitions = new HashMap<>();
         this.recvManager = this.managers.get(MessageRecvManager.NAME);
         this.sendManager = this.managers.get(MessageSendManager.NAME);
+        this.computeExecutor = ExecutorUtil.newFixedThreadPool(
+                               this.threadNum(context.config()), PREFIX);
+    }
+
+    private Integer threadNum(Config config) {
+        return config.get(ComputerOptions.PARTITIONS_COMPUTE_THREAD_NUMS);
     }
 
     public WorkerStat input() {
@@ -80,9 +92,9 @@ public class ComputeManager<M extends Value<M>> {
                                             partition,
                                             PeekableIterator.emptyIterator());
 
-            FileGraphPartition<M> part = new FileGraphPartition<>(this.context,
-                                                                  this.managers,
-                                                                  partition);
+            FileGraphPartition part = new FileGraphPartition(this.context,
+                                                             this.managers,
+                                                             partition);
             PartitionStat partitionStat = null;
             ComputerException inputException = null;
             try {
@@ -116,24 +128,25 @@ public class ComputeManager<M extends Value<M>> {
     }
 
     public void useVariableLengthOnly() {
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
+        for (FileGraphPartition partition : this.partitions.values()) {
             partition.useVariableLengthOnly();
         }    
     }
 
     public void sendHashIdMsg(ComputationContext context) {
         this.sendManager.startSend(MessageType.HASHID);
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
+        for (FileGraphPartition partition : this.partitions.values()) {
             partition.sendIdHash(context);
         }
         this.sendManager.finishSend(MessageType.HASHID);
     }
 
     public void recvHashIdMsg() {
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
+        for (FileGraphPartition partition : this.partitions.values()) {
             partition.partitionHashId();
         }
     }
+
     /**
      * Get compute-messages from MessageRecvManager, then put message to
      * corresponding partition. Be called before
@@ -147,37 +160,62 @@ public class ComputeManager<M extends Value<M>> {
         else {
             messages = this.recvManager.messagePartitions();
         }
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
+        for (FileGraphPartition partition : this.partitions.values()) {
             partition.messages(messages.get(partition.partition()), inCompute);
         }
     }
 
-    public WorkerStat compute(ComputationContext context, int superstep) {
+    public WorkerStat compute(WorkerContext context, int superstep) {
+        CountDownLatch latch = new CountDownLatch(this.partitions.size());
+
         this.sendManager.startSend(MessageType.MSG);
         WorkerStat workerStat = new WorkerStat();
-        Map<Integer, PartitionStat> partitionStats = new HashMap<>(
-                                                     this.partitions.size());
+        Map<Integer, PartitionStat> stats = new ConcurrentHashMap<>();
+        Thread thread = Thread.currentThread();
+        AtomicReference<Throwable> exception = new AtomicReference<>();
         if (superstep == 0) {
-            // TODO: parallel compute process.
-            for (FileGraphPartition<M> partition : this.partitions.values()) {
-                PartitionStat stat = partition.compute0(context,
-                                                        this.computation);
-                partitionStats.put(stat.partitionId(), stat);
+            for (FileGraphPartition partition : this.partitions.values()) {
+                CompletableFuture.supplyAsync(
+                                  () -> partition.compute0(context),
+                                  computeExecutor)
+                                 .whenComplete((stat, t) -> {
+                                     if (t != null) {
+                                         exception.compareAndSet(null, t);
+                                         thread.interrupt();
+                                     }
+                                     stats.put(stat.partitionId(), stat);
+                                     latch.countDown();
+                                 });
             }
         } else {
-            // TODO: parallel compute process.
-            for (FileGraphPartition<M> partition : this.partitions.values()) {
-                PartitionStat stat = partition.compute(context,
-                                                       this.computation,
-                                                       superstep);
-                partitionStats.put(stat.partitionId(), stat);
+            for (FileGraphPartition partition : this.partitions.values()) {
+                CompletableFuture.supplyAsync(
+                                  () -> partition.compute(context, superstep),
+                                  computeExecutor)
+                                 .whenComplete((stat, t) -> {
+                                     if (t != null) {
+                                         exception.compareAndSet(null, t);
+                                         thread.interrupt();
+                                     }
+                                     stats.put(stat.partitionId(), stat);
+                                     latch.countDown();
+                                 });
             }
         }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            assert exception.get() != null;
+            throw new ComputerException("Partition compute error: ",
+                                        exception.get());
+        }
+
         this.sendManager.finishSend(MessageType.MSG);
         // After compute and send finish signal.
         Map<Integer, MessageStat> recvStats = this.recvManager.messageStats();
         for (Map.Entry<Integer, PartitionStat> entry :
-                                               partitionStats.entrySet()) {
+                                               stats.entrySet()) {
             PartitionStat partStat = entry.getValue();
             int partitionId = partStat.partitionId();
 
@@ -196,7 +234,7 @@ public class ComputeManager<M extends Value<M>> {
 
     public void output() {
         // TODO: Write results back parallel
-        for (FileGraphPartition<M> partition : this.partitions.values()) {
+        for (FileGraphPartition partition : this.partitions.values()) {
             PartitionStat stat = partition.output();
             LOG.info("Output partition {} complete, stat='{}'",
                      partition.partition(), stat);
