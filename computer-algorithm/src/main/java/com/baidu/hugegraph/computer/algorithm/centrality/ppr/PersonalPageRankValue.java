@@ -71,7 +71,10 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
     }
 
     public void put(Id id, DoubleValue value) {
-        this.map.put(id, value);
+        if (this.map.size() < PersonalPageRank.RESULT_LIMIT ||
+            this.map.containsKey(id)) {
+            this.map.put(id, value);
+        }
     }
 
     public void remove(Id id) {

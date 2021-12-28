@@ -101,8 +101,8 @@ public class PersonalPageRank implements Computation<DoubleValue> {
         this.cumulativeRankAggr.aggregateValue(ppr.contribValue());
         int degree = vertex.numEdges();
 
-        if (degree > 0) {
-            ppr.contribRank(isSource ? ppr.contribRank() / degree : 0);
+        if (isSource && degree > 0) {
+            ppr.contribRank(ppr.contribRank() / degree);
             context.sendMessageToAllEdges(vertex, ppr.contribValue());
         } else {
             vertex.inactivate();
@@ -132,7 +132,6 @@ public class PersonalPageRank implements Computation<DoubleValue> {
             }
         }
 
-        //vertex.value(ppr);
         this.diffAggr.aggregateValue(Math.abs(ppr.contribRank() - rank));
         this.cumulativeRankAggr.aggregateValue(rank);
 
