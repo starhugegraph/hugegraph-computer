@@ -90,7 +90,7 @@ public class ComputerOptions extends OptionHolder {
             new ConfigOption<>(
                     "input.source_type",
                     "The source type to load input data",
-                    allowValues("hugegraph", "hdfs"),
+                    allowValues("hugegraph", "loader"),
                     "hugegraph"
             );
 
@@ -185,17 +185,17 @@ public class ComputerOptions extends OptionHolder {
                     -1
             );
 
-    public static final ConfigOption<String> INPUT_STRUCT_PATH =
+    public static final ConfigOption<String> INPUT_LOADER_STRUCT_PATH =
             new ConfigOption<>(
-                    "input.struct_path",
+                    "input.loader_struct_path",
                     "The struct path of input",
                     null,
                     ""
             );
 
-    public static final ConfigOption<String> INPUT_SCHEMA_PATH =
+    public static final ConfigOption<String> INPUT_LOADER_SCHEMA_PATH =
             new ConfigOption<>(
-                    "input.schema_path",
+                    "input.loader_schema_path",
                     "The schema path of input",
                     null,
                     ""
@@ -300,6 +300,38 @@ public class ComputerOptions extends OptionHolder {
                     10
             );
 
+    public static final ConfigOption<String> OUTPUT_HDFS_URL =
+            new ConfigOption<>(
+                    "output.hdfs_url",
+                    "The hdfs url of output.",
+                    disallowEmpty(),
+                    "hdfs://127.0.0.1:9000"
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_USER =
+            new ConfigOption<>(
+                    "output.hdfs_user",
+                    "The hdfs user of output.",
+                    disallowEmpty(),
+                    "hadoop"
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_CORE_SITE_PATH =
+            new ConfigOption<>(
+                    "output.hdfs_core_site_path",
+                    "The hdfs core site path.",
+                    null,
+                    ""
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_SITE_PATH =
+            new ConfigOption<>(
+                    "output.hdfs_site_path",
+                    "The hdfs site path.",
+                    null,
+                    ""
+            );
+
     public static final ConfigOption<Short> OUTPUT_HDFS_REPLICATION =
             new ConfigOption<>(
                     "output.hdfs_replication",
@@ -330,38 +362,6 @@ public class ComputerOptions extends OptionHolder {
                     "Whether merge output files of multiple partitions.",
                     allowValues(true, false),
                     true
-            );
-
-    public static final ConfigOption<String> OUTPUT_HDFS_URL =
-            new ConfigOption<>(
-                    "output.hdfs_url",
-                    "The hdfs url of output.",
-                    disallowEmpty(),
-                    "hdfs://127.0.0.1:9000"
-            );
-
-    public static final ConfigOption<String> OUTPUT_HDFS_USER =
-            new ConfigOption<>(
-                    "output.hdfs_user",
-                    "The user of hdfs.",
-                    disallowEmpty(),
-                    "hadoop"
-            );
-
-    public static final ConfigOption<String> OUTPUT_CORE_SITE_PATH =
-            new ConfigOption<>(
-                    "output.core_site_path",
-                    "The hdfs core site path.",
-                    null,
-                    ""
-            );
-
-    public static final ConfigOption<String> OUTPUT_HDFS_SITE_PATH =
-            new ConfigOption<>(
-                    "output.hdfs_site_path",
-                    "The hdfs site path.",
-                    null,
-                    ""
             );
 
     public static final ConfigOption<Boolean> OUTPUT_HDFS_KERBEROS_ENABLE =
@@ -893,7 +893,7 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(true, false),
                     false
             );
-    public static final ConfigOption<Integer> ID_FIXLENGTH_BYTES = 
+    public static final ConfigOption<Integer> ID_FIXLENGTH_BYTES =
             new ConfigOption<>(
                     "input.id_fixlength_bytes",
                     "how long the id is if its fixed length",
