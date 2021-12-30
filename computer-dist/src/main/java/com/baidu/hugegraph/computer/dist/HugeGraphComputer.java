@@ -131,7 +131,9 @@ public class HugeGraphComputer {
         Properties properties = new Properties();
         BufferedReader bufferedReader = new BufferedReader(
                                             new FileReader(conf));
+        properties.load(bufferedReader);
         ComputerContextUtil.initContext(properties);
+        
         return ComputerContext.instance();
     }
 
