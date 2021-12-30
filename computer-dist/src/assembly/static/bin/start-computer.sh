@@ -15,7 +15,6 @@ LOCAL_DRIVE="local"
 ROLE=
 ROLE_MASTER="master"
 ROLE_WORKER="worker"
-JOB_ID="null"
 
 usage() {
     echo "Usage:"
