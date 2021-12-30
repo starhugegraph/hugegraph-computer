@@ -19,7 +19,6 @@
 package com.baidu.hugegraph.computer.dist;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
-import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.master.MasterService;
@@ -32,7 +31,6 @@ import com.baidu.hugegraph.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -58,12 +56,11 @@ public class HugeGraphComputer {
 
     public static void main(String[] args) throws IOException,
                                                   ClassNotFoundException {
-        E.checkArgument(ArrayUtils.getLength(args) == 4,
+        E.checkArgument(ArrayUtils.getLength(args) == 3,
                         "Argument count must be three, " +
                         "the first is conf path;" +
                         "the second is role type;" +
-                        "the third is drive type;" + 
-                        "the forth is job id");
+                        "the third is drive type");
                         
         String role = args[1];
         E.checkArgument(!StringUtils.isEmpty(role),
@@ -71,12 +68,10 @@ public class HugeGraphComputer {
                         "it must be either '%s' or '%s'",
                         ROLE_MASTER, ROLE_WORKER);
 
-        String jobId = args[3];
-
         setUncaughtExceptionHandler();
         loadClass();
         registerOptions();
-        ComputerContext context = parseContext(args[0], jobId);
+        ComputerContext context = parseContext(args[0]);
         switch (role) {
             case ROLE_MASTER:
                 executeMasterService(context);
@@ -131,22 +126,12 @@ public class HugeGraphComputer {
         }
     }
 
-    private static ComputerContext parseContext(String conf, String jobid)
+    private static ComputerContext parseContext(String conf)
                                                 throws IOException {
         Properties properties = new Properties();
         BufferedReader bufferedReader = new BufferedReader(
                                             new FileReader(conf));
-        properties.load(bufferedReader);
-        if (!jobid.equals("null")) {
-            Map<String, String> params = ComputerContextUtil.
-                                       convertToMap(properties);
-            params.put(ComputerOptions.JOB_ID.
-                                    name(), jobid);
-            ComputerContextUtil.initContext(params);
-        }
-        else {
-            ComputerContextUtil.initContext(properties);
-        }
+        ComputerContextUtil.initContext(properties);
         return ComputerContext.instance();
     }
 

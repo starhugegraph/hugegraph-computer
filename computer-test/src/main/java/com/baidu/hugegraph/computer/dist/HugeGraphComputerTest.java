@@ -28,7 +28,7 @@ public class HugeGraphComputerTest {
         pool.submit(() -> {
             try {
                 Thread.sleep(2000L);
-                String[] args = {work1ConfPath, "worker", "local", "null"};
+                String[] args = {work1ConfPath, "worker", "local"};
                 HugeGraphComputer.main(args);
             } catch (Throwable e) {
                 LOG.error("Failed to start worker", e);
@@ -40,7 +40,7 @@ public class HugeGraphComputerTest {
 
         pool.submit(() -> {
             try {
-                String[] args = {masterConfPath, "master", "local", "null"};
+                String[] args = {masterConfPath, "master", "local"};
                 HugeGraphComputer.main(args);
             } catch (Throwable e) {
                 LOG.error("Failed to start master", e);
@@ -64,7 +64,7 @@ public class HugeGraphComputerTest {
         Assert.assertThrows(IllegalArgumentException.class,
                             () -> {
                                 String[] args1 = {work1ConfPath, "worker111",
-                                                  "local", "null"};
+                                                  "local"};
                                 HugeGraphComputer.main(args1);
                             });
     }
