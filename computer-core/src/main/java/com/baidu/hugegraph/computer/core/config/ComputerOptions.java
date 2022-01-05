@@ -172,7 +172,7 @@ public class ComputerOptions extends OptionHolder {
                     "attached to a vertex, the adjacent edges will be " +
                     "stored and transferred together as a batch unit.",
                     positiveInt(),
-                    200
+                    2000
             );
 
     public static final ConfigOption<Integer> INPUT_LIMIT_EDGES_IN_ONE_VERTEX =
