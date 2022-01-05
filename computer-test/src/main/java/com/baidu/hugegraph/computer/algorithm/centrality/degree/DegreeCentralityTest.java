@@ -34,8 +34,11 @@ import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hdfs.HdfsOutput;
 import com.google.common.collect.Streams;
-
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 public class DegreeCentralityTest extends AlgorithmTestBase {
+
+    private static final Logger LOG = Log.logger("DegreeCentralityTest");
 
     public static boolean isRun;
 
@@ -83,8 +86,11 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
             isRun = true;
             DoubleValue value = vertex.value();
             if (StringUtils.isEmpty(this.weight)) {
+                LOG.info("expect is {}  result is {}", 
+                         vertex.numEdges(), value.value());
                 Assert.assertEquals(vertex.numEdges(), value.value(), 0.000001);
             } else {
+                LOG.info("weight not empty");
                 Iterator<Edge> edges = vertex.edges().iterator();
                 double totalValue = Streams.stream(edges).map(
                                     (edge) -> {
