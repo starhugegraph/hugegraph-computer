@@ -103,8 +103,8 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
                                             return weightValue.value();
                                         }
                                     }).reduce(Double::sum).orElse(0.0);
-                LOG.info("!!!!! edges is {}  totoal value is {}", 
-                                    vertex.numEdges(), value.value());
+                LOG.info("!!!!! edges is {}  {} totoal value is {}", 
+                        vertex.numEdges(), totalValue, value.value());
                 Assert.assertEquals(totalValue, value.value(), 0.000001);
             }
         }
