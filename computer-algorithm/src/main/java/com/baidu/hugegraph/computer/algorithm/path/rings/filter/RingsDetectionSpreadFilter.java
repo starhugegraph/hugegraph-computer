@@ -110,7 +110,7 @@ public class RingsDetectionSpreadFilter {
         }
 
         Map<String, Map<String, Value<?>>> params =
-                    ImmutableMap.of(ELEMENT, edge.properties().get());
+                    ImmutableMap.of(OUT, edge.properties().get());
         return filter(params, expressions);
     }
 
