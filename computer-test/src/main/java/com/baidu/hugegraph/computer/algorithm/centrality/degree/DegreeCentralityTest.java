@@ -91,7 +91,7 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
                          vertex.numEdges(), value.value());
                 Assert.assertEquals(vertex.numEdges(), value.value(), 0.000001);
             } else {
-                LOG.info("!!!!! weight not empty");
+                LOG.info("!!!!! weight not empty {}", vertex.id());
                 Iterator<Edge> edges = vertex.edges().iterator();
                 double totalValue = Streams.stream(edges).map(
                                     (edge) -> {
