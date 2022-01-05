@@ -839,7 +839,6 @@ public class FileGraphPartition<M extends Value<M>> {
                     Id idv = vertex.id();
                     if (this.messageQueue == null) {
                         //compute 0, no message
-                        LOG.info("!!!!! vertex = {}", vertex.id());
                         this.computation.compute0(context, vertex);
                     }
                     else {
@@ -926,8 +925,6 @@ public class FileGraphPartition<M extends Value<M>> {
         private void saveVertex(Vertex vertex) throws IOException {
             this.curStatusOutput.writeBoolean(vertex.active());
             Value<?> value = vertex.value();
-            
-            LOG.info("!!!!! value = {}", value);
             value.write(this.curValueOutput);
         }
     }
