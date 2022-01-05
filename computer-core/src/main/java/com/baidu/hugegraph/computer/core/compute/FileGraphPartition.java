@@ -19,27 +19,28 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Iterator;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import com.baidu.hugegraph.computer.core.compute.input.EdgesInput;
-import com.baidu.hugegraph.computer.core.compute.input.MessageInput;
+import com.baidu.hugegraph.computer.core.compute.input.EdgesInputFast;
+import com.baidu.hugegraph.computer.core.compute.input.MessageInputFast;
 import com.baidu.hugegraph.computer.core.compute.input.VertexInput;
 import com.baidu.hugegraph.computer.core.compute.output.EdgesOutput;
 import com.baidu.hugegraph.computer.core.compute.output.VertexOutput;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.edge.Edges;
+import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.partition.PartitionStat;
+import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
+import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.io.BufferedFileInput;
 import com.baidu.hugegraph.computer.core.io.BufferedFileOutput;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.output.ComputerOutput;
+import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.store.FileGenerator;
 import com.baidu.hugegraph.computer.core.store.FileManager;
@@ -50,15 +51,18 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.util.E;
-
-import com.baidu.hugegraph.computer.core.graph.id.Id;
-import com.baidu.hugegraph.computer.core.graph.value.IdList;
-import com.baidu.hugegraph.computer.core.graph.edge.Edge;
-import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
-import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
-
 import com.baidu.hugegraph.util.Log;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
+
 
 public class FileGraphPartition<M extends Value<M>> {
 
@@ -93,21 +97,37 @@ public class FileGraphPartition<M extends Value<M>> {
     private BufferedFileInput preValueInput;
 
     private VertexInput vertexInput;
-    private EdgesInput edgesInput;
+    private EdgesInputFast edgesInput;
     private VertexInput vertexOriginInput;
-    private MessageInput<M> messageInput;
+    private MessageInputFast<M> messageInput;
 
     private final MessageSendManager sendManager;
     private boolean useVariableLengthOnly;
+    private String useMode;
 
     public FileGraphPartition(ComputerContext context,
                               Managers managers,
-                              int partition) {
+                              int partition, String mode) {
         this.context = context;
         this.fileGenerator = managers.get(FileManager.NAME);
         this.partition = partition;
-        this.vertexFile = new File(this.fileGenerator.randomDirectory(VERTEX));
-        this.edgeFile = new File(this.fileGenerator.randomDirectory(EDGE));
+        if (mode == "all") {
+            this.vertexFile = new File(this.fileGenerator.
+                                       randomDirectory(VERTEX));
+            this.edgeFile = new File(this.fileGenerator.
+                                       randomDirectory(EDGE));
+        }
+        else {
+
+            String vertexFileName  = this.fileGenerator.
+                             fixDirectory(partition, "VERTEX");
+            String edgeFileName  = this.fileGenerator.
+                             fixDirectory(partition, "EDGE");     
+            this.vertexFile = new File(vertexFileName);
+            this.edgeFile = new File(edgeFileName);
+        }
+      
+        this.useMode = mode;
         this.vertexComputeFile = 
                            new File(this.fileGenerator.randomDirectory(VERTEX));
         this.edgeComputeFile = 
@@ -143,7 +163,6 @@ public class FileGraphPartition<M extends Value<M>> {
                       "Failed to init FileGraphPartition '%s'",
                       e, this.partition);
         }
-
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount, 0L);
     }
@@ -157,21 +176,47 @@ public class FileGraphPartition<M extends Value<M>> {
             throw new ComputerException(
                       "Error occurred when beforeCompute at superstep 0", e);
         }
-        while (this.vertexInput.hasNext()) {
-            Vertex vertex = this.vertexInput.next();
-            Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
-            vertex.edges(edges);
-            computation.compute0(context, vertex);
-            if (vertex.active()) {
-                activeVertexCount++;
-            }
+
+        BlockingQueue<Vertex> vertexQueue =
+                                new LinkedBlockingQueue<Vertex>(100);
+        BlockingQueue<Vertex> inputQueue = 
+                                new LinkedBlockingQueue<Vertex>(100);
+        
+        ComputeConsumer computeConsumer = 
+                        new ComputeConsumer(context, computation, 
+                                curValueOutput, curStatusOutput,
+                                vertexQueue, null,
+                                this.vertexCount);
+                                                            
+        UnSerializeConsumerProducer unSerializeConsumerProducer =
+                        new  UnSerializeConsumerProducer (
+                                inputQueue, vertexQueue, 
+                                this.edgesInput);
+                                    
+        Thread t1 = new Thread(computeConsumer);
+        t1.start();
+                    
+        Thread t2 = new Thread(unSerializeConsumerProducer);
+        t2.start();
+      
+        while (true) {
             try {
-                this.saveVertex(vertex);
-            } catch (IOException e) {
-                throw new ComputerException(
-                          "Error occurred when saveVertex: %s", e, vertex);
+                byte[] data = this.edgesInput.getOneVertexBuffer();
+                if (data == null) {
+                    break;
+                }
+
+                Vertex rawVertex = this.context.graphFactory().
+                                                createVertex();
+                rawVertex.data(data);
+                inputQueue.put(rawVertex);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
+
+        activeVertexCount = computeConsumer.getActiveVertexCount();
+
         try {
             this.afterCompute(0);
         } catch (Exception e) {
@@ -187,7 +232,9 @@ public class FileGraphPartition<M extends Value<M>> {
             //this.beforeCompute(-1);
             this.vertexInput = new VertexInput(this.context,
                                        this.vertexFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, this.edgeFile);
+            this.edgesInput = new EdgesInputFast(this.context, 
+                                                 this.edgeFile,
+                                                 this.vertexFile);
             this.vertexInput.init();
             this.edgesInput.init();
         } catch (IOException e) {
@@ -234,7 +281,9 @@ public class FileGraphPartition<M extends Value<M>> {
             //this.beforeCompute(-1);
             this.vertexInput = new VertexInput(this.context,
                                        this.vertexFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, this.edgeFile);
+            this.edgesInput = new EdgesInputFast(this.context,
+                                                 this.edgeFile,
+                                                 this.vertexFile);
             this.vertexInput.init();
             this.edgesInput.init();
         } catch (IOException e) {
@@ -309,6 +358,22 @@ public class FileGraphPartition<M extends Value<M>> {
         }
     }
 
+    public void setVertexCount(long vertexCount) {
+        this.vertexCount = vertexCount;
+    }
+
+    public void setEdgeCount(long edgeCount) {
+        this.edgeCount = edgeCount;
+    }
+
+    public long getVertexCount() {
+        return this.vertexCount;
+    }
+
+    public long getEdgeCount() {
+        return this.edgeCount;
+    }
+
     protected PartitionStat compute(ComputationContext context,
                                     Computation<M> computation,
                                     int superstep) {
@@ -319,48 +384,66 @@ public class FileGraphPartition<M extends Value<M>> {
                       "Error occurred when beforeCompute at superstep %s",
                       e, superstep);
         }
-        Value<?> result = this.context.config().createObject(
-                          ComputerOptions.ALGORITHM_RESULT_CLASS);
+
+        long startTime =  System.currentTimeMillis();
+        /*if (this.partition == 0) {
+            System.out.printf("start computing 0\n");
+        }*/
+
         long activeVertexCount = 0L;
-        while (this.vertexInput.hasNext()) {
-            Vertex vertex = this.vertexInput.next();
-            this.readVertexStatusAndValue(vertex, result);
-            Iterator<M> messageIter;
-            if (this.useVariableLengthOnly) {
-                messageIter = this.messageInput.iterator(
-                                            this.vertexInput.idPointer());
-            }
-            else {
-                long lid = (long)vertex.id().asObject();
-                messageIter = this.messageInput.iterator(lid);
-            }
-            if (messageIter.hasNext()) {
-                vertex.reactivate();
-            }
+        BlockingQueue<Vertex> vertexQueue =
+            new LinkedBlockingQueue<Vertex>(100);
+        BlockingQueue<Vertex> inputQueue = 
+            new LinkedBlockingQueue<Vertex>(100);
+        BlockingQueue<Pair<Id, List>> messageQueue = 
+                        new LinkedBlockingQueue<Pair<Id, List>>(100);
+        
+        UnSerializeConsumerProducer unSerializeConsumerProducer =
+                new  UnSerializeConsumerProducer (
+                                    inputQueue, vertexQueue,
+                                    this.edgesInput);
 
-            /*
-             * If the vertex is inactive, it's edges will be skipped
-             * automatically at the next vertex.
-             */
-            if (vertex.active()) {
-                Edges edges = this.edgesInput.edges(
-                              this.vertexInput.idPointer());
-                vertex.edges(edges);
-                computation.compute(context, vertex, messageIter);
-            }
+        ComputeConsumer computeConsumer = 
+                        new ComputeConsumer(context, computation, 
+                                curValueOutput, curStatusOutput,
+                                vertexQueue, messageQueue,
+                                this.vertexCount);
+                                
+        MessageProducer messageProducer = 
+                        new MessageProducer(this.messageInput, 
+                                            messageQueue,
+                                            computeConsumer);
 
-            // The vertex status may be changed after computation
-            if (vertex.active()) {
-                activeVertexCount++;
-            }
+        Thread t0 = new Thread(computeConsumer);
+        t0.start();
+    
+        Thread t1 = new Thread(unSerializeConsumerProducer);
+        t1.start();
 
+        Thread t2 = new Thread(messageProducer);
+        t2.start();
+    
+        while (true) {
             try {
-                this.saveVertex(vertex);
-            } catch (IOException e) {
-                throw new ComputerException(
-                          "Error occurred when saveVertex", e);
+                byte[] data = this.edgesInput.getOneVertexBuffer();
+                if (data == null) {
+                    break;
+                }
+    
+                Vertex rawVertex = this.context.graphFactory().
+                                                  createVertex();
+                rawVertex.data(data);
+                Value<?> result = this.context.config().createObject(
+                    ComputerOptions.ALGORITHM_RESULT_CLASS);
+                this.readVertexStatusAndValue(rawVertex, result);
+    
+                inputQueue.put(rawVertex);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
+        activeVertexCount = computeConsumer.getActiveVertexCount();
+        
         try {
             this.afterCompute(superstep);
         } catch (Exception e) {
@@ -368,6 +451,10 @@ public class FileGraphPartition<M extends Value<M>> {
                       "Error occurred when afterCompute at superstep %s",
                       e, superstep);
         }
+
+        LOG.info("partition compute end {} {} {}", 
+            this.partition, this.vertexCount, activeVertexCount);
+
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount,
                                  this.vertexCount - activeVertexCount);
@@ -418,11 +505,11 @@ public class FileGraphPartition<M extends Value<M>> {
     protected void messages(PeekableIterator<KvEntry> messages, 
                                               boolean inCompute) {
         if (!inCompute) {
-            this.messageInput = new MessageInput<>(this.context,
+            this.messageInput = new MessageInputFast<>(this.context,
                                                    messages, false);
         }
         else {
-            this.messageInput = new MessageInput<>(this.context, 
+            this.messageInput = new MessageInputFast<>(this.context, 
                                                    messages, true);
         }
     }
@@ -451,13 +538,6 @@ public class FileGraphPartition<M extends Value<M>> {
             throw new ComputerException(
                       "Failed to read value of vertex %s", e, vertex);
         }
-    }
-
-    private void saveVertex(Vertex vertex) throws IOException {
-        this.curStatusOutput.writeBoolean(vertex.active());
-        Value<?> value = vertex.value();
-        E.checkNotNull(value, "Vertex's value can't be null");
-        value.write(this.curValueOutput);
     }
 
     private void writeVertex(Pointer key, Pointer value,
@@ -520,10 +600,13 @@ public class FileGraphPartition<M extends Value<M>> {
     private void beforeCompute(int superstep) throws IOException {
 
         if (this.useVariableLengthOnly) {
-            LOG.info("{} workerservice use variable length id", this);
+            //LOG.info("{} workerservice use variable length id", this);
             this.vertexInput = new VertexInput(this.context, 
                                         this.vertexFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, this.edgeFile);
+            this.edgesInput = new EdgesInputFast(this.context, 
+                                                 this.edgeFile,
+                                                 this.vertexFile);
+            
             this.vertexInput.init();
             this.edgesInput.init();
         }
@@ -531,8 +614,9 @@ public class FileGraphPartition<M extends Value<M>> {
             LOG.info("{} workerservice use fix length id", this);
             this.vertexInput = new VertexInput(this.context, 
                                     this.vertexComputeFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, 
-                                    this.edgeComputeFile);
+            this.edgesInput = new EdgesInputFast(this.context, 
+                                    this.edgeComputeFile,
+                                    this.vertexFile);
             this.vertexInput.init();
             this.edgesInput.init();
             this.vertexInput.switchToFixLength();
@@ -582,7 +666,9 @@ public class FileGraphPartition<M extends Value<M>> {
         if (this.useVariableLengthOnly) {
             this.vertexInput = new VertexInput(this.context, 
                                      this.vertexFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, this.edgeFile);
+            this.edgesInput = new EdgesInputFast(this.context, 
+                                                this.edgeFile,
+                                                this.vertexFile);
 
             this.vertexInput.init();
             this.edgesInput.init();
@@ -592,8 +678,9 @@ public class FileGraphPartition<M extends Value<M>> {
                                      this.vertexFile, this.vertexCount);
             this.vertexInput = new VertexInput(this.context, 
                                      this.vertexComputeFile, this.vertexCount);
-            this.edgesInput = new EdgesInput(this.context, 
-                                     this.edgeComputeFile);
+            this.edgesInput = new EdgesInputFast(this.context, 
+                                     this.edgeComputeFile,
+                                     this.vertexComputeFile);
             this.vertexOriginInput.init();
             this.vertexInput.init();
             this.edgesInput.init();
@@ -623,8 +710,10 @@ public class FileGraphPartition<M extends Value<M>> {
         this.preStatusFile.delete();
         this.preValueFile.delete();
 
-        this.vertexFile.delete();
-        this.edgeFile.delete();
+        if (this.useMode.equals("all")) {
+            this.vertexFile.delete();
+            this.edgeFile.delete();
+        }
 
         this.vertexComputeFile.delete();
         this.edgeComputeFile.delete();
@@ -632,6 +721,211 @@ public class FileGraphPartition<M extends Value<M>> {
 
     private static void createFile(File file) throws IOException {
         file.getParentFile().mkdirs();
+        if (file.exists()) {
+            file.delete();
+        }
         E.checkArgument(file.createNewFile(), "Already exists file: %s", file);
+    }
+ 
+    private class UnSerializeConsumerProducer implements Runnable {
+   
+        protected BlockingQueue vertexQueue = null;
+        protected BlockingQueue inputQueue = null;
+        protected EdgesInputFast edgesInput = null;
+
+        public UnSerializeConsumerProducer(
+                               BlockingQueue inputQueue,
+                               BlockingQueue vertexQueue, 
+                               EdgesInputFast edgesInput) {
+            this.inputQueue = inputQueue;
+            this.vertexQueue = vertexQueue;
+            this.edgesInput = edgesInput;
+        }
+        
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Vertex rawVertex = (Vertex)this.inputQueue.take();
+
+                    Value<?> value = rawVertex.value();                    
+                    boolean active = rawVertex.active();
+                    Vertex vertex = this.edgesInput.
+                            composeVertex(rawVertex.data(), active);
+                    if (value != null) {
+                        vertex.value(rawVertex.value());
+                    }
+                    if (active) {
+                        vertex.reactivate();
+                    }
+                    else {
+                        vertex.inactivate();
+                    }
+                    this.vertexQueue.put(vertex); 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
+        }
+    }
+
+    private class MessageProducer implements Runnable {
+        protected MessageInputFast messageInput;
+        protected BlockingQueue messageQueue;
+        protected ComputeConsumer computeConsumer;
+
+        public MessageProducer(MessageInputFast messageInput,
+                               BlockingQueue messageQueue,
+                               ComputeConsumer computeConsumer) {
+            this.messageInput = messageInput;
+            this.messageQueue = messageQueue;
+            this.computeConsumer = computeConsumer;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    Pair<Id, List> message = 
+                        this.messageInput.readOneVertexMessage();
+                    if (message.getKey() == null) {
+                        this.computeConsumer.nomoreMessage();
+                        break;
+                    }
+                    this.messageQueue.put(message);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } 
+        }
+    }
+
+    private class ComputeConsumer implements Runnable {
+        protected ComputationContext context;
+        protected Computation<M> computation;
+        protected MessageInputFast messageInput;
+        protected BlockingQueue vertexQueue = null;
+        protected BlockingQueue messageQueue = null;
+        protected BufferedFileOutput curValueOutput;
+        protected BufferedFileOutput curStatusOutput;
+        protected long activeVertexCount;
+        long vertexcount;
+        long consumecount = 0;
+        boolean expectMessage = true;
+    
+        public ComputeConsumer(ComputationContext context,
+                               Computation<M> computation, 
+                               BufferedFileOutput curValueOutput, 
+                               BufferedFileOutput curStatusOutput, 
+                               BlockingQueue vertexQueue,
+                               BlockingQueue messageQueue,
+                               long vertexcount) {
+            this.computation = computation;
+            this.context = context;
+            this.curValueOutput = curValueOutput;
+            this.curStatusOutput = curStatusOutput;
+            this.vertexQueue = vertexQueue;
+            this.messageQueue = messageQueue;
+            this.vertexcount = vertexcount;
+            activeVertexCount = 0;
+        }
+        
+        @Override
+        public void run() {
+            Pair<Id, List> message = null;
+            while (true) {           
+                try {
+                    Vertex vertex = (Vertex)this.vertexQueue.take();
+                    Id idv = vertex.id();
+                    if (this.messageQueue == null) {
+                        //compute 0, no message
+                        this.computation.compute0(context, vertex);
+                    }
+                    else {
+                        // compute, possible with message
+                        int status = -1;
+                        Iterator messageIter = Collections.emptyIterator();
+                        
+                        if (message == null) {
+                            while (this.expectMessage) {
+                                message = (Pair<Id, List>)this.messageQueue.
+                                        poll(100, TimeUnit.MILLISECONDS);  
+                                if (message != null) {
+                                    break;
+                                } 
+                            }
+                        }
+
+                        if (message != null) {
+                            Id messageId = message.getKey();
+                            List messagelist = message.getValue();
+                            messageIter = messagelist.iterator();
+                            status = idv.compareTo(messageId);
+                        }
+
+                        if (status < 0) {
+                            //has no message and algorithm determin active
+                            if (vertex.active()) {
+                                this.computation.compute(context, vertex, 
+                                        Collections.emptyIterator());
+                            }
+                            //keep the message
+                        }
+                        else if (status == 0) {
+                            //has message and reactivate vertex
+                            vertex.reactivate();
+                            this.computation.compute(context, vertex, 
+                                    messageIter);
+                            //consume the message
+                            message = null;
+                        }
+                        else {
+                            //something wrong
+                            messageQueue.take();
+                            message = null;
+                        }                       
+                    }
+                    if (vertex.active()) {
+                        activeVertexCount++;
+                    }
+                    this.saveVertex(vertex);
+                    this.consumecount++;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+       
+        public void nomoreMessage() {
+            while (this.messageQueue.size() != 0) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
+            this.expectMessage = false;
+        }
+
+        public long getActiveVertexCount() {
+            while (this.consumecount < this.vertexcount) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
+            this.consumecount = 0;
+            return this.activeVertexCount;
+        }
+        
+        private void saveVertex(Vertex vertex) throws IOException {
+            this.curStatusOutput.writeBoolean(vertex.active());
+            Value<?> value = vertex.value();
+            value.write(this.curValueOutput);
+        }
     }
 }

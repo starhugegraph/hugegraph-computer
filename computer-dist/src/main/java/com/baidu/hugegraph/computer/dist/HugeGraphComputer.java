@@ -18,16 +18,9 @@
 
 package com.baidu.hugegraph.computer.dist;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Properties;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.master.MasterService;
@@ -37,6 +30,18 @@ import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+
+
 
 public class HugeGraphComputer {
 
@@ -44,7 +49,7 @@ public class HugeGraphComputer {
 
     private static final String ROLE_MASTER = "master";
     private static final String ROLE_WORKER = "worker";
-
+    private static final String ROLE_WORKERS = "workers";
     /**
      *  Some class must be load first, in order to invoke static method to init;
      */
@@ -56,16 +61,19 @@ public class HugeGraphComputer {
 
     public static void main(String[] args) throws IOException,
                                                   ClassNotFoundException {
-        E.checkArgument(ArrayUtils.getLength(args) == 3,
+        E.checkArgument(ArrayUtils.getLength(args) == 4,
                         "Argument count must be three, " +
                         "the first is conf path;" +
                         "the second is role type;" +
-                        "the third is drive type.");
+                        "the third is drive type;" +
+                        "the forth is do which step");
+                        
         String role = args[1];
         E.checkArgument(!StringUtils.isEmpty(role),
                         "The role can't be null or emtpy, " +
                         "it must be either '%s' or '%s'",
-                        ROLE_MASTER, ROLE_WORKER);
+                        ROLE_MASTER, ROLE_WORKER, ROLE_WORKERS);
+        String useMode = args[3];
         setUncaughtExceptionHandler();
         loadClass();
         registerOptions();
@@ -75,7 +83,10 @@ public class HugeGraphComputer {
                 executeMasterService(context);
                 break;
             case ROLE_WORKER:
-                executeWorkerService(context);
+                executeWorkerService(context, useMode);
+                break;
+            case ROLE_WORKERS:
+                executeMulWorkerService(args[0], useMode);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -110,8 +121,52 @@ public class HugeGraphComputer {
         }
     }
 
-    private static void executeWorkerService(ComputerContext context) {
+    private static void executeMulWorkerService(String conf,             
+                                                String useMode) 
+                                                throws IOException {
+        Properties properties = new Properties();
+        BufferedReader bufferedReader = new BufferedReader(
+                                                   new FileReader(conf));
+        properties.load(bufferedReader);
+        Map<String, String> params = ComputerContextUtil.
+                                                convertToMap(properties);
+ 
+        int port0 = Integer.parseInt(params.get(ComputerOptions.
+                                       TRANSPORT_SERVER_PORT.name()));
+        int workerCount = Integer.parseInt(params.get(ComputerOptions.
+                                           JOB_WORKERS_COUNT.name()));
+        List<Thread> workers = new ArrayList<>(workerCount);
+        for (int i = 0; i < workerCount; i++) {
+            int port = port0 + i;
+            LOG.info("port = {}", port);
+            workers.add(new Thread(() -> {
+                String oldValue = params.put(ComputerOptions.
+                                                    TRANSPORT_SERVER_PORT.
+                                                    name(),
+                                                    String.valueOf(port));
+                LOG.info("oldvalue = {}", oldValue);
+                Config config = ComputerContextUtil.initContext(params);
+                WorkerService workerService = new WorkerService();
+                workerService.setUseMode(useMode);
+                workerService.init(config);
+                workerService.execute();
+            }));
+        }
+        for (Thread worker : workers) {
+            worker.start();
+        }
+        for (Thread worker : workers) {
+            try {
+                worker.join();
+            } catch (Exception e) {
+            }
+        }  
+    }
+
+    private static void executeWorkerService(ComputerContext context, 
+                                                 String useMode) {
         try (WorkerService workerService = new WorkerService()) {
+            workerService.setUseMode(useMode);
             workerService.init(context.config());
             workerService.execute();
         }

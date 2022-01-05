@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.closeness;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
@@ -30,6 +28,8 @@ import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+
 
 public class ClosenessMessage implements Value<ClosenessMessage> {
 
@@ -38,6 +38,7 @@ public class ClosenessMessage implements Value<ClosenessMessage> {
     private Id senderId;
     private Id startId;
     private DoubleValue distance;
+    private int shift = 0;
 
     public ClosenessMessage() {
         this(new BytesId(), new BytesId(), new DoubleValue(0.0D));
@@ -80,6 +81,32 @@ public class ClosenessMessage implements Value<ClosenessMessage> {
     @Override
     public Object value() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override   
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+        
+        this.senderId = this.graphFactory.createId();
+        this.senderId.parse(buffer, position);
+        this.shift += this.senderId.getShift();
+        position += this.senderId.getShift();
+
+        this.startId = this.graphFactory.createId();
+        this.startId.parse(buffer, position);
+        this.shift += this.startId.getShift();
+        position += this.startId.getShift();
+        
+        this.distance = (DoubleValue) this.graphFactory.createValue(
+            ValueType.DOUBLE);
+        this.distance.parse(buffer, position);
+        this.shift += this.distance.getShift();     
+    }
+   
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

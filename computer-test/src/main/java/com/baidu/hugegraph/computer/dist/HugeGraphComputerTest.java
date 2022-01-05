@@ -1,16 +1,16 @@
 package com.baidu.hugegraph.computer.dist;
 
+import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.util.Log;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.baidu.hugegraph.testutil.Assert;
-import com.baidu.hugegraph.util.Log;
+
 
 public class HugeGraphComputerTest {
 
@@ -28,7 +28,7 @@ public class HugeGraphComputerTest {
         pool.submit(() -> {
             try {
                 Thread.sleep(2000L);
-                String[] args = {work1ConfPath, "worker", "local"};
+                String[] args = {work1ConfPath, "worker", "local", "all"};
                 HugeGraphComputer.main(args);
             } catch (Throwable e) {
                 LOG.error("Failed to start worker", e);
@@ -40,7 +40,7 @@ public class HugeGraphComputerTest {
 
         pool.submit(() -> {
             try {
-                String[] args = {masterConfPath, "master", "local"};
+                String[] args = {masterConfPath, "master", "local", "all"};
                 HugeGraphComputer.main(args);
             } catch (Throwable e) {
                 LOG.error("Failed to start master", e);
@@ -64,7 +64,7 @@ public class HugeGraphComputerTest {
         Assert.assertThrows(IllegalArgumentException.class,
                             () -> {
                                 String[] args1 = {work1ConfPath, "worker111",
-                                                  "local"};
+                                                  "local", "all"};
                                 HugeGraphComputer.main(args1);
                             });
     }

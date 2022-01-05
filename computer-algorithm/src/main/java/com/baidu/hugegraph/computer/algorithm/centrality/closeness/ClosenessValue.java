@@ -19,10 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.closeness;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -31,12 +27,18 @@ import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+
 
 public class ClosenessValue implements Value<ClosenessValue> {
 
     private final GraphFactory graphFactory;
 
     private Map<Id, DoubleValue> map;
+
+    private int shift = 0;
 
     public ClosenessValue() {
         this.graphFactory = ComputerContext.instance().graphFactory();
@@ -71,8 +73,37 @@ public class ClosenessValue implements Value<ClosenessValue> {
     }
 
     @Override
-    public Object value() {
+    public Object value() { 
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+
+        int count = buffer[position];
+        position++;
+        this.shift++;
+
+        this.map = this.graphFactory.createMap();
+        for (int i = 0; i < count; i++) {
+            Id id = this.graphFactory.createId();
+            id.parse(buffer, position);
+            this.shift += id.getShift();
+            position += id.getShift();
+            
+            Value<?> value = this.graphFactory.createValue(ValueType.DOUBLE);
+            value.parse(buffer, position);
+            this.shift += value.getShift();
+            position += value.getShift();
+            this.map.put(id, (DoubleValue) value);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

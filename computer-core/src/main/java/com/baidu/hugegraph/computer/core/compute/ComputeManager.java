@@ -19,11 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.graph.partition.PartitionStat;
@@ -34,11 +29,21 @@ import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
+import com.baidu.hugegraph.computer.core.store.FileGenerator;
+import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
 import com.baidu.hugegraph.util.Log;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
 
 public class ComputeManager<M extends Value<M>> {
 
@@ -62,15 +67,50 @@ public class ComputeManager<M extends Value<M>> {
         this.sendManager = this.managers.get(MessageSendManager.NAME);
     }
 
-    public WorkerStat input() {
+    public WorkerStat input(String mode) {
         WorkerStat workerStat = new WorkerStat();
+
+        File infoFile;
+        FileGenerator fileGenerator = this.managers.get(FileManager.NAME);
+        String fileName = fileGenerator.fixDirectory(0, "info");
+        infoFile = new File(fileName);
+
+        if (mode == "compute") {
+            try {
+                List<String> partitions = FileUtils.readLines(infoFile, 
+                                                              "UTF-8");
+                for (String partline : partitions) {
+                    String[] partstr = partline.split(" ");
+                    int partition = Integer.valueOf(partstr[0]);
+                    long vCount = Long.valueOf(partstr[1]);
+                    long eCount = Long.valueOf(partstr[2]);
+                    FileGraphPartition<M> part;
+                    part = new FileGraphPartition<>(this.context,
+                                        this.managers, partition, mode);
+                    part.setVertexCount(vCount);
+                    part.setEdgeCount(eCount);
+                    PartitionStat partitionStat = 
+                            new PartitionStat(partition, 
+                                              vCount, eCount, 0L);
+                    workerStat.add(partitionStat);
+                    this.partitions.put(partition, part);
+                }
+            }
+            catch (IOException e) {
+                throw new ComputerException("Error in write partition info", e);
+            }
+            return workerStat;
+        }
+  
         this.recvManager.waitReceivedAllMessages();
 
         Map<Integer, PeekableIterator<KvEntry>> vertices =
                      this.recvManager.vertexPartitions();
         Map<Integer, PeekableIterator<KvEntry>> edges =
                      this.recvManager.edgePartitions();
+
         // TODO: parallel input process
+        List<String> partRecords = new ArrayList<String>();
         for (Map.Entry<Integer, PeekableIterator<KvEntry>> entry :
              vertices.entrySet()) {
             int partition = entry.getKey();
@@ -81,8 +121,7 @@ public class ComputeManager<M extends Value<M>> {
                                             PeekableIterator.emptyIterator());
 
             FileGraphPartition<M> part = new FileGraphPartition<>(this.context,
-                                                                  this.managers,
-                                                                  partition);
+                                                this.managers, partition, mode);
             PartitionStat partitionStat = null;
             ComputerException inputException = null;
             try {
@@ -111,6 +150,14 @@ public class ComputeManager<M extends Value<M>> {
 
             workerStat.add(partitionStat);
             this.partitions.put(partition, part);
+            long vertexCount = part.getVertexCount();
+            long edgeCount = part.getEdgeCount();
+            partRecords.add(partition + " " + vertexCount + " " + edgeCount);
+        }
+        try {
+            FileUtils.writeLines(infoFile, partRecords, false);
+        } catch (IOException e) {
+            throw new ComputerException("Error in write partition info", e);
         }
         return workerStat;
     }

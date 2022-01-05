@@ -19,15 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.compute.input;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Iterator;
-import java.util.function.Consumer;
-
-import org.junit.After;
-import org.junit.Test;
-
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.compute.FileGraphPartition;
@@ -65,6 +56,15 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutputImpl;
 import com.baidu.hugegraph.computer.suite.unit.UnitTestBase;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.testutil.Whitebox;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Iterator;
+import java.util.function.Consumer;
+import org.junit.After;
+import org.junit.Test;
+
+
 
 public class EdgesInputTest extends UnitTestBase {
 
@@ -144,7 +144,7 @@ public class EdgesInputTest extends UnitTestBase {
                                                      "localhost", 8081),
                                                      0);
         FileGraphPartition<?> partition = new FileGraphPartition<>(
-                                          context(), this.managers, 0);
+                                          context(), this.managers, 0, "all");
         receiveManager.onStarted(connectionId);
         add200VertexBuffer((ManagedBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 0, buffer);
@@ -250,6 +250,7 @@ public class EdgesInputTest extends UnitTestBase {
             Edges edges = edgesInput.edges(idPointer);
             Iterator<Edge> edgesIt = edges.iterator();
             Assert.assertEquals(i, edges.size());
+
             for (int j = 0; j < edges.size(); j++) {
                 Assert.assertTrue(edgesIt.hasNext());
                 Edge edge = edgesIt.next();

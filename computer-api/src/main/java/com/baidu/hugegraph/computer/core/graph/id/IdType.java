@@ -38,7 +38,18 @@ public enum IdType implements SerialEnum {
         this.code = (byte) code;
     }
 
+    @Override
     public byte code() {
         return this.code;
+    }
+
+    public static IdType getIdTypeByCode(byte code) {
+        if (code == 1) {
+            return IdType.LONG;
+        } else if (code == 2) {
+            return IdType.UTF8;
+        } else {
+            return IdType.UUID;
+        }
     }
 }

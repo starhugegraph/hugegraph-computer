@@ -58,7 +58,17 @@ public class NullValue implements Value<NullValue> {
     public void write(RandomAccessOutput out) throws IOException {
         // pass
     }
+    
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        //pass
+    }
 
+    @Override
+    public int getShift() {
+        return 0;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         // pass

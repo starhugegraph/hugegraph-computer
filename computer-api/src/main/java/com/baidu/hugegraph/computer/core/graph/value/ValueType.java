@@ -21,6 +21,7 @@
 package com.baidu.hugegraph.computer.core.graph.value;
 
 import com.baidu.hugegraph.computer.core.common.SerialEnum;
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 
 public enum ValueType implements SerialEnum {
 
@@ -67,5 +68,40 @@ public enum ValueType implements SerialEnum {
 
     public String string() {
         return this.name;
+    }
+
+    public static ValueType getValueTypeByCode(byte code) {
+        switch (code) {
+            case -1:
+                return ValueType.UNKNOWN;
+            case 1:
+                return ValueType.NULL;
+            case 2:
+                return ValueType.BOOLEAN;
+            case 3:
+                return ValueType.INT;
+            case 4:
+                return ValueType.LONG;
+            case 5:
+                return ValueType.FLOAT;
+            case 6:
+                return ValueType.DOUBLE;
+            case 7:
+                return ValueType.STRING;
+            case 20:
+                return ValueType.ID;
+            case 21:
+                return ValueType.ID_LIST;
+            case 22:
+                return ValueType.ID_LIST_LIST;
+            case 30:
+                return ValueType.LIST_VALUE;
+            case 31:
+                return ValueType.ID_SET;
+            case 35:
+                return ValueType.MAP_VALUE;
+            default:
+                throw new ComputerException("invalide code %d", code);
+        }
     }
 }
