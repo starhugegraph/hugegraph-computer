@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import java.util.Properties;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -67,13 +68,14 @@ public class HugeGraphComputer {
                         "the second is role type;" +
                         "the third is drive type;" +
                         "the forth is do which step");
-                        
+      
         String role = args[1];
         E.checkArgument(!StringUtils.isEmpty(role),
                         "The role can't be null or emtpy, " +
                         "it must be either '%s' or '%s'",
                         ROLE_MASTER, ROLE_WORKER, ROLE_WORKERS);
         String useMode = args[3];
+
         setUncaughtExceptionHandler();
         loadClass();
         registerOptions();
@@ -186,6 +188,7 @@ public class HugeGraphComputer {
                                             new FileReader(conf));
         properties.load(bufferedReader);
         ComputerContextUtil.initContext(properties);
+        
         return ComputerContext.instance();
     }
 

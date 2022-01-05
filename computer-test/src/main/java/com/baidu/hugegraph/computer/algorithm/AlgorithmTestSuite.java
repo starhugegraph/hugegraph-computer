@@ -27,6 +27,7 @@ import com.baidu.hugegraph.computer.algorithm.centrality.betweenness.Betweenness
 import com.baidu.hugegraph.computer.algorithm.centrality.closeness.ClosenessCentralityTest;
 import com.baidu.hugegraph.computer.algorithm.centrality.degree.DegreeCentralityTest;
 import com.baidu.hugegraph.computer.algorithm.centrality.pagerank.PageRankTest;
+import com.baidu.hugegraph.computer.algorithm.community.kcore.KCoreTest;
 import com.baidu.hugegraph.computer.algorithm.community.lpa.LpaTest;
 import com.baidu.hugegraph.computer.algorithm.community.trianglecount.TriangleCountTest;
 import com.baidu.hugegraph.computer.algorithm.community.wcc.WccTest;
@@ -35,6 +36,7 @@ import com.baidu.hugegraph.computer.algorithm.path.rings.RingsDetectionTest;
 import com.baidu.hugegraph.computer.algorithm.path.rings.RingsDetectionWithFilterTest;
 import com.baidu.hugegraph.computer.algorithm.community.cc.ClusteringCoefficientTest;
 import com.baidu.hugegraph.computer.algorithm.path.sssp.SsspTest;
+import com.baidu.hugegraph.computer.algorithm.path.subgraph.SubGraphMatchTest;
 import com.baidu.hugegraph.config.OptionSpace;
 
 @RunWith(Suite.class)
@@ -50,7 +52,9 @@ import com.baidu.hugegraph.config.OptionSpace;
     ClosenessCentralityTest.class,
     BetweennessCentralityTest.class,
     LinksTest.class,
-    SsspTest.class
+    SsspTest.class,
+    SubGraphMatchTest.class,
+    KCoreTest.class
 })
 public class AlgorithmTestSuite {
 

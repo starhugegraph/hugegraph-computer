@@ -24,9 +24,6 @@ import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
 import static com.baidu.hugegraph.config.OptionChecker.nonNegativeInt;
 import static com.baidu.hugegraph.config.OptionChecker.positiveInt;
 
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 import com.baidu.hugegraph.computer.core.combiner.OverwriteCombiner;
 import com.baidu.hugegraph.computer.core.graph.partition.HashPartitioner;
 import com.baidu.hugegraph.computer.core.input.filter.DefaultInputFilter;
@@ -42,6 +39,9 @@ import com.baidu.hugegraph.structure.constant.Direction;
 import com.baidu.hugegraph.util.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 
 public class ComputerOptions extends OptionHolder {
 
@@ -90,7 +90,7 @@ public class ComputerOptions extends OptionHolder {
             new ConfigOption<>(
                     "input.source_type",
                     "The source type to load input data",
-                    allowValues("hugegraph"),
+                    allowValues("hugegraph", "loader"),
                     "hugegraph"
             );
 
@@ -185,6 +185,22 @@ public class ComputerOptions extends OptionHolder {
                     -1
             );
 
+    public static final ConfigOption<String> INPUT_LOADER_STRUCT_PATH =
+            new ConfigOption<>(
+                    "input.loader_struct_path",
+                    "The struct path of input",
+                    null,
+                    ""
+            );
+
+    public static final ConfigOption<String> INPUT_LOADER_SCHEMA_PATH =
+            new ConfigOption<>(
+                    "input.loader_schema_path",
+                    "The schema path of input",
+                    null,
+                    ""
+            );
+
     public static final ConfigOption<Integer> SORT_THREAD_NUMS =
             new ConfigOption<>(
                     "sort.thread_nums",
@@ -200,6 +216,15 @@ public class ComputerOptions extends OptionHolder {
                     "vertex. Be called after iteration computation.",
                     disallowEmpty(),
                     LogOutput.class
+            );
+
+    public static final ConfigOption<String> OUTPUT_PROPERTY_NAME =
+            new ConfigOption<>(
+                    "output.output_property_name",
+                    "The name to output the computation result for each " +
+                    "vertex.",
+                    null,
+                    ""
             );
 
     public static final ConfigOption<String> OUTPUT_RESULT_NAME =
@@ -284,6 +309,38 @@ public class ComputerOptions extends OptionHolder {
                     10
             );
 
+    public static final ConfigOption<String> OUTPUT_HDFS_URL =
+            new ConfigOption<>(
+                    "output.hdfs_url",
+                    "The hdfs url of output.",
+                    disallowEmpty(),
+                    "hdfs://127.0.0.1:9000"
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_USER =
+            new ConfigOption<>(
+                    "output.hdfs_user",
+                    "The hdfs user of output.",
+                    disallowEmpty(),
+                    "hadoop"
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_CORE_SITE_PATH =
+            new ConfigOption<>(
+                    "output.hdfs_core_site_path",
+                    "The hdfs core site path.",
+                    null,
+                    ""
+            );
+
+    public static final ConfigOption<String> OUTPUT_HDFS_SITE_PATH =
+            new ConfigOption<>(
+                    "output.hdfs_site_path",
+                    "The hdfs site path.",
+                    null,
+                    ""
+            );
+
     public static final ConfigOption<Short> OUTPUT_HDFS_REPLICATION =
             new ConfigOption<>(
                     "output.hdfs_replication",
@@ -316,49 +373,33 @@ public class ComputerOptions extends OptionHolder {
                     true
             );
 
-    public static final ConfigOption<String> HDFS_URL =
+    public static final ConfigOption<Boolean> OUTPUT_HDFS_KERBEROS_ENABLE =
             new ConfigOption<>(
-                    "hdfs.url",
-                    "The hdfs url of output.",
-                    disallowEmpty(),
-                    "hdfs://127.0.0.1:9000"
-            );
-
-    public static final ConfigOption<String> HDFS_USER =
-            new ConfigOption<>(
-                    "hdfs.user",
-                    "The user of hdfs.",
-                    disallowEmpty(),
-                    "hadoop"
-            );
-
-    public static final ConfigOption<Boolean> HDFS_KERBEROS_ENABLE =
-            new ConfigOption<>(
-                    "hdfs.kerberos_enable",
+                    "output.hdfs_kerberos_enable",
                     "Is Kerberos authentication enabled for Hdfs.",
                     allowValues(true, false),
                     false
             );
 
-    public static final ConfigOption<String> HDFS_KRB5_CONF =
+    public static final ConfigOption<String> OUTPUT_HDFS_KRB5_CONF =
             new ConfigOption<>(
-                    "hdfs.krb5_conf",
+                    "output.hdfs_krb5_conf",
                     "Kerberos configuration file.",
                     disallowEmpty(),
                     "/etc/krb5.conf"
             );
 
-    public static final ConfigOption<String> HDFS_KERBEROS_PRINCIPAL =
+    public static final ConfigOption<String> OUTPUT_HDFS_KERBEROS_PRINCIPAL =
             new ConfigOption<>(
-                    "hdfs.kerberos_principal",
+                    "output.hdfs_kerberos_principal",
                     "The Hdfs's principal for kerberos authentication.",
                     null,
                     ""
             );
 
-    public static final ConfigOption<String> HDFS_KERBEROS_KEYTAB =
+    public static final ConfigOption<String> OUTPUT_HDFS_KERBEROS_KEYTAB =
             new ConfigOption<>(
-                    "hdfs.kerberos_keytab",
+                    "output.hdfs_kerberos_keytab",
                     "The Hdfs's key tab file for kerberos authentication.",
                     null,
                     ""
@@ -861,7 +902,7 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(true, false),
                     false
             );
-    public static final ConfigOption<Integer> ID_FIXLENGTH_BYTES = 
+    public static final ConfigOption<Integer> ID_FIXLENGTH_BYTES =
             new ConfigOption<>(
                     "input.id_fixlength_bytes",
                     "how long the id is if its fixed length",
