@@ -73,6 +73,7 @@ public class DegreeCentrality implements Computation<NullValue> {
                 Edge edge = edges.next();
                 double weight = weightValue(edge.property(this.weightProperty));
 
+                
                 totalWeight += weight;
                 if (Double.isInfinite(totalWeight)) {
                     throw new ComputerException("Calculate weight overflow, " +

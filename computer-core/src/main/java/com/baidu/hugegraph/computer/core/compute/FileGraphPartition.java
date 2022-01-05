@@ -926,6 +926,7 @@ public class FileGraphPartition<M extends Value<M>> {
         private void saveVertex(Vertex vertex) throws IOException {
             this.curStatusOutput.writeBoolean(vertex.active());
             Value<?> value = vertex.value();
+            
             LOG.info("!!!!! value = {}", value);
             value.write(this.curValueOutput);
         }
