@@ -483,6 +483,9 @@ public class FileGraphPartition<M extends Value<M>> {
                 }
             }
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
+            if (edges.size() > 30 && edges.size() < 50) {
+                LOG.info("!!!!! before write edges size {}", edges.size());
+            }
             vertex.edges(edges);
             output.write(vertex);
         }
