@@ -72,7 +72,6 @@ public class DegreeCentrality implements Computation<NullValue> {
             while (edges.hasNext()) {
                 Edge edge = edges.next();
                 double weight = weightValue(edge.property(this.weightProperty));
-                LOG.info("!!!!! weight = {}", weight);
 
                 totalWeight += weight;
                 if (Double.isInfinite(totalWeight)) {
@@ -82,7 +81,6 @@ public class DegreeCentrality implements Computation<NullValue> {
                                                 totalWeight, edge, weight);
                 }
             }
-            LOG.info("!!!!! totalWeight = {}", totalWeight);
             vertex.value(new DoubleValue(totalWeight));
         }
         vertex.inactivate();

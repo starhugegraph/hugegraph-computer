@@ -103,7 +103,7 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
                                         }
                                     }).reduce(Double::sum).orElse(0.0);
                 LOG.info("!!!!! edges is {}  totoal value is {}", 
-                                    vertex.numEdges(), totalValue);
+                                    vertex.numEdges(), value.value());
                 Assert.assertEquals(totalValue, value.value(), 0.000001);
             }
         }
