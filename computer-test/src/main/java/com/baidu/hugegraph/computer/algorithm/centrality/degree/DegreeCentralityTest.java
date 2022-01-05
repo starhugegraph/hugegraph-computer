@@ -82,6 +82,7 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
 
         @Override
         public void write(Vertex vertex) {
+            LOG.info("!!!!! value is {}", vertex.value().value());
             super.write(vertex);
             isRun = true;
             DoubleValue value = vertex.value();
