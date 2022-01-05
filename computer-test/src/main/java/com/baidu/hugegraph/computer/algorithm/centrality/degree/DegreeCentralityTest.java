@@ -86,11 +86,11 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
             isRun = true;
             DoubleValue value = vertex.value();
             if (StringUtils.isEmpty(this.weight)) {
-                LOG.info("expect is {}  result is {}", 
+                LOG.info("!!!!! expect is {}  result is {}", 
                          vertex.numEdges(), value.value());
                 Assert.assertEquals(vertex.numEdges(), value.value(), 0.000001);
             } else {
-                LOG.info("weight not empty");
+                LOG.info("!!!!! weight not empty");
                 Iterator<Edge> edges = vertex.edges().iterator();
                 double totalValue = Streams.stream(edges).map(
                                     (edge) -> {
