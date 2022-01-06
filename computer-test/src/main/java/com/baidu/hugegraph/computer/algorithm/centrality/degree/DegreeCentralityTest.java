@@ -82,16 +82,12 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
 
         @Override
         public void write(Vertex vertex) {
-            LOG.info("!!!!! value is {}", vertex.value().value());
             super.write(vertex);
             isRun = true;
             DoubleValue value = vertex.value();
             if (StringUtils.isEmpty(this.weight)) {
-                LOG.info("!!!!! expect is {}  result is {}", 
-                         vertex.numEdges(), value.value());
                 Assert.assertEquals(vertex.numEdges(), value.value(), 0.000001);
             } else {
-                LOG.info("!!!!! weight not empty {}", vertex.id());
                 Iterator<Edge> edges = vertex.edges().iterator();
                 double totalValue = Streams.stream(edges).map(
                                     (edge) -> {
@@ -103,8 +99,6 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
                                             return weightValue.value();
                                         }
                                     }).reduce(Double::sum).orElse(0.0);
-                LOG.info("!!!!! edges is {}  {} totoal value is {}", 
-                        vertex.numEdges(), totalValue, value.value());
                 Assert.assertEquals(totalValue, value.value(), 0.000001);
             }
         }
