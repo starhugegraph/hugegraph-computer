@@ -280,10 +280,6 @@ public class EdgesInputFast {
             vertex.properties(propsv);
         }
 
-        if (!active) {
-            return vertex;
-        }
-
         position += 4; 
         int count = DataParser.byte2int(data, position);
         Edges edges = this.graphFactory.createEdges(count);
@@ -330,32 +326,32 @@ public class EdgesInputFast {
             shift = vint[1];
             position += shift;
 
-            if (num != 0) {
-                Properties props = this.graphFactory.createProperties();
-                for (int j = 0; j < num; j++) {
-                    vint = DataParser.parseVInt(data, position);
-                    length = vint[0];
-                    shift = vint[1];
-                    position += shift;
-                    String key = CoderUtil.
-                                    decode(data, position, length);
-                    position += length;
+            Properties props = this.graphFactory.createProperties();
+            for (int j = 0; j < num; j++) {
+                vint = DataParser.parseVInt(data, position);
+                length = vint[0];
+                shift = vint[1];
+                position += shift;
+                String key = CoderUtil.
+                                decode(data, position, length);
+                position += length;
 
-                    ValueType valueType = ValueType.
-                                getValueTypeByCode(data[position]);
-                    position += 1;     
-                    Value<?> value = this.graphFactory.
-                                            createValue(valueType);       
-                    value.parse(data, position);
-                    shift = value.getShift();
+                ValueType valueType = ValueType.
+                            getValueTypeByCode(data[position]);
+                position += 1;     
+                Value<?> value = this.graphFactory.
+                                        createValue(valueType);       
+                value.parse(data, position);
+                shift = value.getShift();
 
-                    //System.out.printf("shift = %d\n", shift);
-                    position += shift;
-
-                    props.put(key, value);
-                }
-                edge.properties(props);
+                //System.out.printf("shift = %d\n", shift);
+                position += shift;
+                props.put(key, value);
             }
+            if (inv == 1) {
+                props.put("inv", new BooleanValue(true));
+            }  
+            edge.properties(props);
             edges.add(edge);
         }
         vertex.edges(edges);
@@ -412,10 +408,6 @@ public class EdgesInputFast {
                 propsv.put(key, value);
             }
             vertex.properties(propsv);
-        }
-
-        if (!active) {
-            return vertex;
         }
 
         position += 4; 
@@ -484,9 +476,11 @@ public class EdgesInputFast {
                 position += shift;
 
                 props.put(key, value);
-                edge.properties(props);
             }
-
+            if (inv == 1) {
+                props.put("inv", new BooleanValue(true));
+            }  
+            edge.properties(props);
             edges.add(edge);
         }
         vertex.edges(edges);
@@ -543,10 +537,6 @@ public class EdgesInputFast {
                 propsv.put(key, value);
             }
             vertex.properties(propsv);
-        }
-
-        if (!active) {
-            return vertex;
         }
 
         position += 4; 
@@ -623,9 +613,11 @@ public class EdgesInputFast {
                 position += shift;
 
                 props.put(key, value);
-                edge.properties(props);
             }
-
+            if (inv == 1) {
+                props.put("inv", new BooleanValue(true));
+            }  
+            edge.properties(props);
             edges.add(edge);
         }
         vertex.edges(edges);

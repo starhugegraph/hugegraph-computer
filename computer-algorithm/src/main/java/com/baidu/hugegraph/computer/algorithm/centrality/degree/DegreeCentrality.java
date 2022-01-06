@@ -82,9 +82,6 @@ public class DegreeCentrality implements Computation<NullValue> {
                                                 totalWeight, edge, weight);
                 }
             }
-            if (vertex.numEdges() > 0.0) {
-                LOG.info("!!!!! {} {}", totalWeight, vertex.numEdges());
-            }
             vertex.value(new DoubleValue(totalWeight));
         }
         vertex.inactivate();
