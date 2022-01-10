@@ -58,7 +58,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -177,9 +177,9 @@ public class FileGraphPartition<M extends Value<M>> {
         }
 
         BlockingQueue<Vertex> vertexQueue =
-                                new LinkedBlockingQueue<Vertex>(100);
+                                new ArrayBlockingQueue<Vertex>(100);
         BlockingQueue<Vertex> inputQueue = 
-                                new LinkedBlockingQueue<Vertex>(100);
+                                new ArrayBlockingQueue<Vertex>(100);
         
         ComputeConsumer computeConsumer = 
                         new ComputeConsumer(context, computation, 
@@ -386,11 +386,11 @@ public class FileGraphPartition<M extends Value<M>> {
 
         long activeVertexCount = 0L;
         BlockingQueue<Vertex> vertexQueue =
-            new LinkedBlockingQueue<Vertex>(100);
+            new ArrayBlockingQueue<Vertex>(100);
         BlockingQueue<Vertex> inputQueue = 
-            new LinkedBlockingQueue<Vertex>(100);
+            new ArrayBlockingQueue<Vertex>(100);
         BlockingQueue<Pair<Id, List>> messageQueue = 
-                        new LinkedBlockingQueue<Pair<Id, List>>(100);
+                        new ArrayBlockingQueue<Pair<Id, List>>(100);
         
         UnSerializeConsumerProducer unSerializeConsumerProducer =
                 new  UnSerializeConsumerProducer(this.context,
@@ -885,7 +885,7 @@ public class FileGraphPartition<M extends Value<M>> {
                         if (message == null) {
                             while (this.expectMessage) {
                                 message = (Pair<Id, List>)this.messageQueue.
-                                        poll(100, TimeUnit.MILLISECONDS);  
+                                        poll(10, TimeUnit.MILLISECONDS);  
                                 if (message != null) {
                                     break;
                                 } 
