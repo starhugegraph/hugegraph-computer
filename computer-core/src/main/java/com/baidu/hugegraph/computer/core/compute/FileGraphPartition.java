@@ -795,7 +795,7 @@ public class FileGraphPartition<M extends Value<M>> {
         public void run() {
             String fastComposer = this.context.config().
                 get(ComputerOptions.USE_FASTER_COMPOSER);
-            if (fastComposer.equals("normal")) {
+            if (fastComposer.equals("full")) {
                 this.runFullSchema();
             } else {
                 assert fastComposer.equals("targetidonlly");
@@ -885,7 +885,7 @@ public class FileGraphPartition<M extends Value<M>> {
                         if (message == null) {
                             while (this.expectMessage) {
                                 message = (Pair<Id, List>)this.messageQueue.
-                                        poll(100, TimeUnit.MILLISECONDS);  
+                                        poll(10, TimeUnit.MILLISECONDS);  
                                 if (message != null) {
                                     break;
                                 } 
