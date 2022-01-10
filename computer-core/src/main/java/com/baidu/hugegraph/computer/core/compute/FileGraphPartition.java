@@ -63,7 +63,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
-
 public class FileGraphPartition<M extends Value<M>> {
 
     private static final Logger LOG = Log.logger("partition");
@@ -189,7 +188,7 @@ public class FileGraphPartition<M extends Value<M>> {
                                 this.vertexCount);
                                                             
         UnSerializeConsumerProducer unSerializeConsumerProducer =
-                        new  UnSerializeConsumerProducer (
+                        new  UnSerializeConsumerProducer (this.context,
                                 inputQueue, vertexQueue, 
                                 this.edgesInput);
                                     
@@ -385,11 +384,6 @@ public class FileGraphPartition<M extends Value<M>> {
                       e, superstep);
         }
 
-        long startTime =  System.currentTimeMillis();
-        /*if (this.partition == 0) {
-            System.out.printf("start computing 0\n");
-        }*/
-
         long activeVertexCount = 0L;
         BlockingQueue<Vertex> vertexQueue =
             new LinkedBlockingQueue<Vertex>(100);
@@ -399,7 +393,7 @@ public class FileGraphPartition<M extends Value<M>> {
                         new LinkedBlockingQueue<Pair<Id, List>>(100);
         
         UnSerializeConsumerProducer unSerializeConsumerProducer =
-                new  UnSerializeConsumerProducer (
+                new  UnSerializeConsumerProducer(this.context,
                                     inputQueue, vertexQueue,
                                     this.edgesInput);
 
@@ -732,18 +726,21 @@ public class FileGraphPartition<M extends Value<M>> {
         protected BlockingQueue vertexQueue = null;
         protected BlockingQueue inputQueue = null;
         protected EdgesInputFast edgesInput = null;
-
+        protected ComputerContext context = null;
+ 
         public UnSerializeConsumerProducer(
-                               BlockingQueue inputQueue,
-                               BlockingQueue vertexQueue, 
-                               EdgesInputFast edgesInput) {
+                        ComputerContext context,
+                        BlockingQueue inputQueue,
+                        BlockingQueue vertexQueue, 
+                        EdgesInputFast edgesInput) {
+            this.context = context;
             this.inputQueue = inputQueue;
             this.vertexQueue = vertexQueue;
             this.edgesInput = edgesInput;
         }
         
-        @Override
-        public void run() {
+        //parse vertex id, edge target id only
+        public void runShortSchema() {
             while (true) {
                 try {
                     Vertex rawVertex = (Vertex)this.inputQueue.take();
@@ -751,15 +748,14 @@ public class FileGraphPartition<M extends Value<M>> {
                     Value<?> value = rawVertex.value();                    
                     boolean active = rawVertex.active();
                     Vertex vertex = this.edgesInput.
-                            composeVertex(rawVertex.data(), active);
-                    
+                        composeVertexMultipleFast(rawVertex.data(), active);
+        
                     if (value != null) {
                         vertex.value(rawVertex.value());
                     }
                     if (active) {
                         vertex.reactivate();
-                    }
-                    else {
+                    } else {
                         vertex.inactivate();
                     }
                     this.vertexQueue.put(vertex); 
@@ -767,6 +763,45 @@ public class FileGraphPartition<M extends Value<M>> {
                     e.printStackTrace();
                 } 
             }
+        }
+
+        //parse all data structure
+        public void runFullSchema() {
+            while (true) {
+                try {
+                    Vertex rawVertex = (Vertex)this.inputQueue.take();
+
+                    Value<?> value = rawVertex.value();                    
+                    boolean active = rawVertex.active();
+                    Vertex vertex = this.edgesInput.
+                        composeVertex(rawVertex.data(), active);
+        
+                    if (value != null) {
+                        vertex.value(rawVertex.value());
+                    }
+                    if (active) {
+                        vertex.reactivate();
+                    } else {
+                        vertex.inactivate();
+                    }
+                    this.vertexQueue.put(vertex); 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
+        }
+
+        @Override
+        public void run() {
+            String fastComposer = this.context.config().
+                get(ComputerOptions.USE_FASTER_COMPOSER);
+            if (fastComposer.equals("normal")) {
+                this.runFullSchema();
+            } else {
+                assert fastComposer.equals("targetidonlly");
+                this.runShortSchema();
+            }
+     
         }
     }
 

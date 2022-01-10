@@ -47,9 +47,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
-
-
-
+import com.baidu.hugegraph.computer.core.graph.edge.DefaultEdge;
 
 public class EdgesInputFast {
 
@@ -228,6 +226,12 @@ public class EdgesInputFast {
         }
     }
     
+    public Vertex composeVertexFast(byte[] data, boolean active) {
+        assert this.frequency == EdgeFrequency.MULTIPLE;
+        return composeVertexMultiple(data, active);
+    }
+    
+
     public Vertex composeVertexSingle(byte[] data, boolean active) {        
         Vertex vertex = context.graphFactory().createVertex();
         
@@ -624,6 +628,71 @@ public class EdgesInputFast {
         return vertex;
     }
     
+    public Vertex composeVertexMultipleFast(byte[] data, boolean active) {
+        Vertex vertex = context.graphFactory().createVertex();
+        
+        int position = 4;
+        byte code = data[position];
+        IdType idType = IdType.getIdTypeByCode(code);
+        position += 1;
+        int idLen = data[position];
+        position += 1;
+        byte[] idData = new byte[idLen];
+        System.arraycopy(data, position, idData, 0, idLen);    
+        Id id = new BytesId(idType, idData, idLen);
+        position += idLen;
+        vertex.id(id);
+      
+        //label
+        position += 4;
+        int[] vint = DataParser.parseVInt(data, position);
+        position += vint[0];
+        position += vint[1];
+
+        //property assume num = 0
+        vint = DataParser.parseVInt(data, position);
+        position += vint[1];
+
+        //
+        position += 4; 
+        int count = DataParser.byte2int(data, position);
+        Edges edges = this.graphFactory.createEdges(count);
+        position += 4;
+        
+        for (int i = 0; i < count; i++) {
+            position++;
+            
+            IdType idT = IdType.getIdTypeByCode(data[position]);
+            position++;
+            int idL = data[position];
+            position++;
+            byte[] idd = new byte[idL];
+            System.arraycopy(data, position, idd, 0, idL);   
+            Id idTarget = new BytesId(idT, idd, idL);
+            Edge edge = new DefaultEdge(idTarget);
+            position += idL;
+            
+            vint = DataParser.parseVInt(data, position);
+            position += vint[0];
+            position += vint[1];
+            
+            vint = DataParser.parseVInt(data, position);
+            position += vint[0];
+            position += vint[1];
+
+            position++;
+            idL = data[position];
+            position += 1 + idL;
+
+            vint = DataParser.parseVInt(data, position);
+            position += vint[1];
+
+            edges.add(edge);
+        }
+        vertex.edges(edges);
+        return vertex;
+    }
+
     public void readAllEdges() {
         RandomAccessInput in = this.input;
         try {
