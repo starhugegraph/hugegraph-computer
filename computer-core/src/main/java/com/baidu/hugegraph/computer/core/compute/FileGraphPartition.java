@@ -319,8 +319,7 @@ public class FileGraphPartition {
         }
     }
 
-    protected PartitionStat compute(WorkerContext context,
-                                    int superstep) {
+    protected PartitionStat compute(WorkerContext context, int superstep) {
         this.computation.beforeSuperstep(context);
 
         try {
