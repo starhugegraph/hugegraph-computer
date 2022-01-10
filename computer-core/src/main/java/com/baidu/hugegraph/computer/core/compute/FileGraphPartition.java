@@ -885,7 +885,7 @@ public class FileGraphPartition<M extends Value<M>> {
                         if (message == null) {
                             while (this.expectMessage) {
                                 message = (Pair<Id, List>)this.messageQueue.
-                                        poll(10, TimeUnit.MILLISECONDS);  
+                                        poll(100, TimeUnit.MILLISECONDS);  
                                 if (message != null) {
                                     break;
                                 } 
