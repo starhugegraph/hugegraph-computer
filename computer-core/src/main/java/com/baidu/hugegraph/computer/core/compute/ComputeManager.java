@@ -21,11 +21,9 @@ package com.baidu.hugegraph.computer.core.compute;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 
@@ -41,6 +39,7 @@ import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.util.Consumers;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
@@ -166,53 +165,42 @@ public class ComputeManager {
     }
 
     public WorkerStat compute(WorkerContext context, int superstep) {
-        CountDownLatch latch = new CountDownLatch(this.partitions.size());
-
         this.sendManager.startSend(MessageType.MSG);
-        WorkerStat workerStat = new WorkerStat();
+        /*
+         * Remark: The main thread can perceive the partition compute exception
+         * only after all partition compute completed, and only record the last
+         * exception.
+         */
         Map<Integer, PartitionStat> stats = new ConcurrentHashMap<>();
-        Thread thread = Thread.currentThread();
-        AtomicReference<Throwable> exception = new AtomicReference<>();
+        Consumer<FileGraphPartition> consumer;
         if (superstep == 0) {
-            for (FileGraphPartition partition : this.partitions.values()) {
-                CompletableFuture.supplyAsync(
-                                  () -> partition.compute0(context),
-                                  computeExecutor)
-                                 .whenComplete((stat, t) -> {
-                                     if (t != null) {
-                                         exception.compareAndSet(null, t);
-                                         thread.interrupt();
-                                     }
-                                     stats.put(stat.partitionId(), stat);
-                                     latch.countDown();
-                                 });
-            }
+            consumer = partition -> {
+                PartitionStat stat = partition.compute0(context);
+                stats.put(stat.partitionId(), stat);
+            };
         } else {
-            for (FileGraphPartition partition : this.partitions.values()) {
-                CompletableFuture.supplyAsync(
-                                  () -> partition.compute(context, superstep),
-                                  computeExecutor)
-                                 .whenComplete((stat, t) -> {
-                                     if (t != null) {
-                                         exception.compareAndSet(null, t);
-                                         thread.interrupt();
-                                     }
-                                     stats.put(stat.partitionId(), stat);
-                                     latch.countDown();
-                                 });
-            }
+            consumer = partition -> {
+                PartitionStat stat = partition.compute(context, superstep);
+                stats.put(stat.partitionId(), stat);
+            };
         }
+        Consumers<FileGraphPartition> consumers =
+                new Consumers<>(this.computeExecutor, consumer);
+        consumers.start("partition-compute");
 
         try {
-            latch.await();
-        } catch (InterruptedException e) {
-            assert exception.get() != null;
-            throw new ComputerException("Partition compute error: ",
-                                        exception.get());
+            for (FileGraphPartition partition : this.partitions.values()) {
+                consumers.provide(partition);
+            }
+            consumers.await();
+        } catch (Throwable t) {
+            throw new ComputerException("An exception occurred when " +
+                                        "partition parallel compute", t);
         }
-
         this.sendManager.finishSend(MessageType.MSG);
+
         // After compute and send finish signal.
+        WorkerStat workerStat = new WorkerStat();
         Map<Integer, MessageStat> recvStats = this.recvManager.messageStats();
         for (Map.Entry<Integer, PartitionStat> entry :
                                                stats.entrySet()) {
