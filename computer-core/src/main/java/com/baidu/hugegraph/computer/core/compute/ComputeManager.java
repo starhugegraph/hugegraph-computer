@@ -57,7 +57,7 @@ public class ComputeManager {
     private final Map<Integer, FileGraphPartition> partitions;
     private final MessageRecvManager recvManager;
     private final MessageSendManager sendManager;
-    private final ExecutorService computeExecutor;
+    private final ExecutorService partitionExecutor;
 
     public ComputeManager(ComputerContext context, Managers managers) {
         this.context = context;
@@ -65,7 +65,7 @@ public class ComputeManager {
         this.partitions = new HashMap<>();
         this.recvManager = this.managers.get(MessageRecvManager.NAME);
         this.sendManager = this.managers.get(MessageSendManager.NAME);
-        this.computeExecutor = ExecutorUtil.newFixedThreadPool(
+        this.partitionExecutor = ExecutorUtil.newFixedThreadPool(
                                this.threadNum(context.config()), PREFIX);
     }
 
@@ -78,9 +78,9 @@ public class ComputeManager {
         this.recvManager.waitReceivedAllMessages();
 
         Map<Integer, PeekableIterator<KvEntry>> vertices =
-                     this.recvManager.vertexPartitions();
+                     this.recvManager.vertexPartitions(this.partitionExecutor);
         Map<Integer, PeekableIterator<KvEntry>> edges =
-                     this.recvManager.edgePartitions();
+                     this.recvManager.edgePartitions(this.partitionExecutor);
         // TODO: parallel input process
         for (Map.Entry<Integer, PeekableIterator<KvEntry>> entry :
              vertices.entrySet()) {
@@ -154,10 +154,12 @@ public class ComputeManager {
     public void takeRecvedMessages(boolean inCompute) {
         Map<Integer, PeekableIterator<KvEntry>> messages;
         if (!inCompute) {
-            messages = this.recvManager.hashIdMessagePartitions();
+            messages = this.recvManager.hashIdMessagePartitions(
+                                        this.partitionExecutor);
         }
         else {
-            messages = this.recvManager.messagePartitions();
+            messages = this.recvManager.messagePartitions(
+                                        this.partitionExecutor);
         }
         for (FileGraphPartition partition : this.partitions.values()) {
             partition.messages(messages.get(partition.partition()), inCompute);
@@ -185,8 +187,8 @@ public class ComputeManager {
             };
         }
         Consumers<FileGraphPartition> consumers =
-                new Consumers<>(this.computeExecutor, consumer);
-        consumers.start("partition-compute");
+                new Consumers<>(this.partitionExecutor, consumer);
+        consumers.start("partitions-compute");
 
         try {
             for (FileGraphPartition partition : this.partitions.values()) {
