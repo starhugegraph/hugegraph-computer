@@ -65,8 +65,11 @@ public class ComputeManager {
         this.partitions = new HashMap<>();
         this.recvManager = this.managers.get(MessageRecvManager.NAME);
         this.sendManager = this.managers.get(MessageSendManager.NAME);
-        this.partitionExecutor = ExecutorUtil.newFixedThreadPool(
-                               this.threadNum(context.config()), PREFIX);
+        int threadNum = this.threadNum(context.config());
+        this.partitionExecutor = ExecutorUtil.newFixedThreadPool(threadNum,
+                                                                 PREFIX);
+        LOG.info("Created parallel partition executor for thread number: {}",
+                 threadNum);
     }
 
     private Integer threadNum(Config config) {

@@ -174,7 +174,7 @@ public abstract class MessageRecvPartition {
         if (this.outputFiles.size() <= 1) {
             return;
         }
-
+        LOG.info("Merge {} files to one file", this.outputFiles.size());
         /*
          * TODO Restore genOutputFileNames(sqrt(outputFiles.size()))
          *  after add Sorter#iterator() of subkv
