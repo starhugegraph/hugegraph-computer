@@ -66,7 +66,8 @@ public final class TaskManager {
         String passwd = config.get(ComputerOptions.AUTH_PASSWD);
 
         // Use token first, then try passwd mode
-        HugeClientBuilder clientBuilder = new HugeClientBuilder(url, graph);
+        HugeClientBuilder clientBuilder = new HugeClientBuilder(url, "DEFAULT",
+                graph);
         if (token != null && token.length() != 0) {
             this.client = clientBuilder.configToken(token).build();
         } else if (usrname != null && usrname.length() != 0) {
