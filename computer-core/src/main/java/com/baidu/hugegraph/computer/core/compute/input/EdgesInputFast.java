@@ -40,6 +40,8 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.StreamGraphInput;
 import com.baidu.hugegraph.computer.core.util.CoderUtil;
 import com.baidu.hugegraph.util.Log;
+import java.util.List;
+import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -190,10 +192,51 @@ public class EdgesInputFast {
                     byte[] dataEdges = this.input.
                            readBytes(valueEdgeLength + 4);
 
-                    byte[] data = new byte[length + valueEdgeLength + 4];
+                    //only for superedges
+                    int count = DataParser.byte2int(dataEdges, 4);
+                    int bufferlength = valueEdgeLength + 4;
+                    List bufferList = null;
+                    long sp = this.input.position();
+                    while (this.input.available() > 0) {
+                        this.idPointerEdges.read(this.input);
+                        if (this.idPointerVertex.
+                            compareTo(this.idPointerEdges) != 0) {
+                            break;
+                        } 
+                        if (bufferList == null) {
+                            bufferList = new ArrayList();
+                        }
+                        int lengthNext = this.input.readFixedInt();
+                        byte[] nextEdges = this.input.
+                                            readBytes(lengthNext);
+                        count += DataParser.byte2int(nextEdges, 0);
+                        bufferlength += lengthNext;
+                        bufferList.add(nextEdges);
+                        
+                    }
+                    this.input.seek(sp);
+                    //end superedges
+
+                    //copy vertex and first edge
+                    byte[] data = new byte[length + bufferlength];
                     System.arraycopy(dataVertex, 0, data, 0, length);
                     System.arraycopy(dataEdges, 0, data, length, 
                                            valueEdgeLength + 4);
+
+                    //copy more edges into  superedges
+                    if (bufferList != null) {
+                        int position = length + valueEdgeLength + 4;
+                        for (Object b : bufferList) {
+                            byte[] buffer = (byte[])b;
+                            int copylength = buffer.length - 4;
+                            System.arraycopy(buffer, 4,
+                                   data, position, copylength);
+                            position += buffer.length;
+                        }
+                        byte[] countbyte = DataParser.int2byte(count);
+                        System.arraycopy(countbyte, 0,
+                                data, length + 4, 4);
+                    }
                     return data;
                 } else {
                     //skip edge
@@ -231,7 +274,6 @@ public class EdgesInputFast {
         return composeVertexMultiple(data, active);
     }
     
-
     public Vertex composeVertexSingle(byte[] data, boolean active) {        
         Vertex vertex = context.graphFactory().createVertex();
         
@@ -658,7 +700,7 @@ public class EdgesInputFast {
         int count = DataParser.byte2int(data, position);
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
-        
+
         for (int i = 0; i < count; i++) {
             position++;
             

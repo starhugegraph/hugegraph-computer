@@ -11,6 +11,14 @@ public class DataParser {
         return b[offset] == 1;
     }
 
+    public static byte[] int2byte(int value) {
+        return new byte[] {
+                (byte)value,
+                (byte)(value >>> 8),
+                (byte)(value >>> 16),
+                (byte)(value >>> 24)};
+    }
+
     public static int byte2int(byte[] b, int offset) {  
         return   b[offset] & 0xFF |  
                     (b[offset + 1] & 0xFF) << 8 |  
