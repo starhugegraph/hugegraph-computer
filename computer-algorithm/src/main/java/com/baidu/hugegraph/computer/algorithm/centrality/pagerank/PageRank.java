@@ -53,7 +53,7 @@ public class PageRank implements Computation<DoubleValue> {
 
     @Override
     public String name() {
-        return "page_rank";
+        return "olap_page_rank";
     }
 
     @Override

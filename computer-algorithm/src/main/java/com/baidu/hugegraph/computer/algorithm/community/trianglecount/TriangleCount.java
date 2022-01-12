@@ -36,7 +36,7 @@ public class TriangleCount implements Computation<IdList> {
 
     @Override
     public String name() {
-        return ALGORITHM_NAME;
+        return "olap_"+ALGORITHM_NAME;
     }
 
     @Override

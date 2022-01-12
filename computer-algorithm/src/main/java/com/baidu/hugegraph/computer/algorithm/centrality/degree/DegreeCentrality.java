@@ -45,7 +45,7 @@ public class DegreeCentrality implements Computation<NullValue> {
 
     @Override
     public String name() {
-        return "degree_centrality";
+        return "olap_degree_centrality";
     }
 
     @Override
