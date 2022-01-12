@@ -37,7 +37,7 @@ public final class Consumers<V> {
     private static final int CPU_CORE_NUM =
                              Runtime.getRuntime().availableProcessors();
     public static final int THREADS = 4 + CPU_CORE_NUM / 4;
-    public static final int QUEUE_WORKER_SIZE = 1000;
+    public static final int QUEUE_WORKER_SIZE = 100;
     public static final long CONSUMER_WAKE_PERIOD = 1;
 
     private static final Logger LOG = Log.logger(Consumers.class);
