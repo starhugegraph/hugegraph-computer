@@ -35,7 +35,7 @@ public class Links implements Computation<LinksMessage> {
 
     @Override
     public String name() {
-        return "links";
+        return "olap_links";
     }
 
     @Override

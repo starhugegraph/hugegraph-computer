@@ -62,7 +62,7 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
 
     @Override
     public String name() {
-        return "subgraph_match";
+        return "olap_subgraph_match";
     }
 
     @Override

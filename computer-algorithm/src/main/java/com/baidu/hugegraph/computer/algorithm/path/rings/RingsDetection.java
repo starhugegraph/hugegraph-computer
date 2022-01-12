@@ -37,7 +37,7 @@ public class RingsDetection implements Computation<IdList> {
 
     @Override
     public String name() {
-        return "rings";
+        return "olap_rings";
     }
 
     @Override
