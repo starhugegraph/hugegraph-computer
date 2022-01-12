@@ -6,7 +6,7 @@
 
     <groupId>com.baidu.hugegraph</groupId>
     <artifactId>hugegraph-common</artifactId>
-    <version>1.8.9</version>
+    <version>1.8.10</version>
 
     <name>hugegraph-common</name>
     <url>https://github.com/hugegraph/hugegraph-common</url>
@@ -56,7 +56,7 @@
         <top.level.dir>${project.basedir}/..</top.level.dir>
         <compiler.source>1.8</compiler.source>
         <compiler.target>1.8</compiler.target>
-        <log4j2.version>2.13.3</log4j2.version>
+        <log4j2.version>2.16.0</log4j2.version>
         <commons.configuration.version>1.10</commons.configuration.version>
         <commons.configuration2.version>2.1.1</commons.configuration2.version>
         <commons.collections.version>3.2.2</commons.collections.version>
@@ -287,7 +287,7 @@
                         <manifestEntries>
                             <!-- Must be on one line, otherwise the automatic
                                  upgrade script cannot replace the version number -->
-                            <Implementation-Version>1.8.9.0</Implementation-Version>
+                            <Implementation-Version>1.8.10.0</Implementation-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
