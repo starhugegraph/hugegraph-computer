@@ -66,7 +66,7 @@
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-common</artifactId>
-                <version>1.8.9</version>
+                <version>1.8.10</version>
             </dependency>
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
@@ -83,7 +83,7 @@
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-client</artifactId>
-                <version>1.9.7</version>
+                <version>3.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
