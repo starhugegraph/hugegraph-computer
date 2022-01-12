@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
@@ -45,6 +46,7 @@ import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
+import com.baidu.hugegraph.util.TimeUtil;
 
 public class ComputeManager {
 
@@ -170,6 +172,9 @@ public class ComputeManager {
     }
 
     public WorkerStat compute(WorkerContext context, int superstep) {
+        StopWatch watcher = new StopWatch();
+        watcher.start();
+        LOG.info("partition parallel compute started");
         this.sendManager.startSend(MessageType.MSG);
         /*
          * Remark: The main thread can perceive the partition compute exception
@@ -203,6 +208,10 @@ public class ComputeManager {
                                         "partition parallel compute", t);
         }
         this.sendManager.finishSend(MessageType.MSG);
+
+        watcher.stop();
+        LOG.info("partition parallel compute finished cost time:{}",
+                 TimeUtil.readableTime(watcher.getTime()));
 
         // After compute and send finish signal.
         WorkerStat workerStat = new WorkerStat();
