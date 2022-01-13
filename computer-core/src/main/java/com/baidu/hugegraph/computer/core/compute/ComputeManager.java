@@ -242,4 +242,8 @@ public class ComputeManager {
                      partition.partition(), stat);
         }
     }
+
+    public void close() {
+        this.partitionExecutor.shutdown();
+    }
 }

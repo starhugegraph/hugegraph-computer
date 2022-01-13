@@ -171,7 +171,7 @@ public class WorkerService implements Closeable {
             LOG.info("{} WorkerService had closed before", this);
             return;
         }
-
+        this.computeManager.close();
         /*
          * Seems managers.closeAll() would do the following actions:
          * TODO: close the connection to other workers.
