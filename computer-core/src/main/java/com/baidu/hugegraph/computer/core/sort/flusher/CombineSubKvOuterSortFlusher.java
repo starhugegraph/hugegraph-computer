@@ -44,8 +44,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
     public CombineSubKvOuterSortFlusher(Combiner<Pointer> combiner,
                                         int subKvFlushThreshold) {
         this.combiner = combiner;
-        this.output = IOFactory.createBytesOutput(
-                      Constants.BIG_BUF_SIZE);
+        this.output = IOFactory.createBytesOutput(Constants.BIG_BUF_SIZE);
         this.subKvFlushThreshold = subKvFlushThreshold;
     }
 
@@ -106,7 +105,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
                     // Write kvEntry to file.
                     RandomAccessInput input = EntriesUtil.inputFromOutput(
                                                           this.output);
-                    writer.write(EntriesUtil.kvEntryFromInput(input, true,
+                    writer.write(EntriesUtil.kvEntryFromInput(input, false,
                                                               true));
                     this.output.seek(0);
 

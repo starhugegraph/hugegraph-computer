@@ -73,7 +73,14 @@ public class OptimizedBytesInput implements BytesInput {
     @Override
     public int compare(long offset, long length, RandomAccessInput other,
                        long otherOffset, long otherLength) throws IOException {
-        return this.in.compare(offset, length, other, otherOffset, otherLength);
+        if (other.getClass() == OptimizedBytesInput.class) {
+            return this.in.compare(offset, length,
+                                   ((OptimizedBytesInput) other).in,
+                                   otherOffset, otherLength);
+        } else {
+            return this.in.compare(offset, length,
+                                   other, otherOffset, otherLength);
+        }
     }
 
     @Override

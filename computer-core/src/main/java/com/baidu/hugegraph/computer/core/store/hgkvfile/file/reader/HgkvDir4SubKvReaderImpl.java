@@ -34,7 +34,7 @@ public class HgkvDir4SubKvReaderImpl implements HgkvDirReader {
     }
 
     public HgkvDir4SubKvReaderImpl(String path) {
-        this(path, true);
+        this(path, false);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class HgkvDir4SubKvReaderImpl implements HgkvDirReader {
         private final CIter<KvEntry> entries;
 
         public KvEntryWithFirstSubKvIter(HgkvDirReader reader) {
-            this.entries = new MapperIterator<>(reader.iterator(), entry -> {
-                return EntriesUtil.kvEntryWithFirstSubKv(entry);
-            });
+            this.entries = new MapperIterator<>(
+                               reader.iterator(),
+                               EntriesUtil::kvEntryWithFirstSubKv);
         }
 
         @Override
