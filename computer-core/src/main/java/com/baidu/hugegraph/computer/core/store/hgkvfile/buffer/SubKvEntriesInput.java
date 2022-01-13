@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import com.baidu.hugegraph.computer.core.io.IOFactory;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntriesUtil;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
 
 public class SubKvEntriesInput implements EntryIterator {
 
@@ -37,7 +37,9 @@ public class SubKvEntriesInput implements EntryIterator {
 
     public SubKvEntriesInput(KvEntry kvEntry, boolean useInlinePointer) {
         try {
-            this.input = IOFactory.createBytesInput(kvEntry.value().bytes());
+            Pointer value = kvEntry.value();
+            this.input = value.input().duplicate();
+            this.input.seek(value.offset());
             this.useAccessInput = this.input.duplicate();
             this.size = this.input.readFixedInt();
             this.useInlinePointer = useInlinePointer;
@@ -47,7 +49,7 @@ public class SubKvEntriesInput implements EntryIterator {
     }
 
     public SubKvEntriesInput(KvEntry kvEntry) {
-        this(kvEntry, true);
+        this(kvEntry, false);
     }
 
     @Override

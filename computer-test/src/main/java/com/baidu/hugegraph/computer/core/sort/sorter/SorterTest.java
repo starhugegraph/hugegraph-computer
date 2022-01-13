@@ -342,7 +342,7 @@ public class SorterTest {
     @Test
     public void testMergeSubKvFiles() throws Exception {
         Config config = UnitTestBase.updateWithRequiredOptions(
-                ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX, "2"
+            ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX, "2"
         );
         int flushThreshold = config.get(
                              ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX);
