@@ -141,6 +141,8 @@ public class QueuedMessageSender implements MessageSender {
                             // Only consume the message after it is sent
                             channel.queue.take();
                         } else {
+                            LOG.info("Trigger flow control {}",
+                                     busyClientCount);
                             ++busyClientCount;
                         }
                     }

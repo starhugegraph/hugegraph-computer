@@ -279,4 +279,12 @@ public class ClientSession extends TransportSession {
             this.lock.unlock();
         }
     }
+
+    public int maxAckId() {
+        return super.maxAckId;
+    }
+
+    public int maxRequestId() {
+        return super.maxRequestId;
+    }
 }
