@@ -44,8 +44,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
     public CombineSubKvOuterSortFlusher(Combiner<Pointer> combiner,
                                         int subKvFlushThreshold) {
         this.combiner = combiner;
-        this.output = IOFactory.createBytesOutput(
-                      Constants.BIG_BUF_SIZE);
+        this.output = IOFactory.createBytesOutput(Constants.BIG_BUF_SIZE);
         this.subKvFlushThreshold = subKvFlushThreshold;
     }
 
@@ -57,6 +56,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
     @Override
     public void flush(EntryIterator entries, HgkvDirBuilder writer)
                       throws IOException {
+        int i = 0;
         E.checkArgument(entries.hasNext(), "Parameter entries can't be empty");
 
         PeekableIterator<KvEntry> kvEntries = PeekableIteratorAdaptor.of(
@@ -74,11 +74,13 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
             int writtenCount = 0;
 
             // Iterate subKv of currentKv
+            i++;
             KvEntry lastSubKv = sorter.next();
             Pointer lastSubValue = lastSubKv.value();
             while (true) {
                 KvEntry current = null;
                 if (sorter.hasNext()) {
+                    i++;
                     current = sorter.next();
                     if (lastSubKv.compareTo(current) == 0) {
                         lastSubValue = this.combiner.combine(lastSubValue,
@@ -106,7 +108,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
                     // Write kvEntry to file.
                     RandomAccessInput input = EntriesUtil.inputFromOutput(
                                                           this.output);
-                    writer.write(EntriesUtil.kvEntryFromInput(input, true,
+                    writer.write(EntriesUtil.kvEntryFromInput(input, false,
                                                               true));
                     this.output.seek(0);
 
