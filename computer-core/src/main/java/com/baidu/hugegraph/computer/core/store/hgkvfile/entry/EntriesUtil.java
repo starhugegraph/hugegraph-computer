@@ -146,11 +146,11 @@ public final class EntriesUtil {
 
     public static KvEntryWithFirstSubKv kvEntryWithFirstSubKv(KvEntry entry) {
         try {
-            BytesInput input = IOFactory.createBytesInput(entry.value()
-                                                               .bytes());
+            RandomAccessInput input = entry.value().input();
+            input.seek(entry.value().offset());
             // Read sub-entry size
             long subKvNum = input.readFixedInt();
-            KvEntry firstSubKv = EntriesUtil.subKvEntryFromInput(input, true);
+            KvEntry firstSubKv = EntriesUtil.subKvEntryFromInput(input, false);
 
             return new KvEntryWithFirstSubKv(entry.key(), entry.value(),
                                              subKvNum, firstSubKv);

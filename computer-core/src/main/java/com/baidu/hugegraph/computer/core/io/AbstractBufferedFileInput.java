@@ -103,39 +103,54 @@ public abstract class AbstractBufferedFileInput extends UnsafeBytesInput {
         byte[] bytes1, bytes2;
         int compareOffset1, compareOffset2;
 
-        /*
-         * Set the compare information of the current object.
-         * Ture: The compare range of the current object is within the buffer.
-         */
-        if (rangeInBuffer(this, offset, length)) {
-            bytes1 = this.buffer();
-            compareOffset1 = (int) (offset - bufferStartPosition(this));
-        } else {
-            long oldPosition = this.position();
+        if (this == other) {
+            long position = this.position();
+
             this.seek(offset);
             bytes1 = this.readBytes((int) length);
             compareOffset1 = 0;
-            this.seek(oldPosition);
-        }
-
-        /*
-         * Set the compare information of the compared object.
-         * Ture: The compare range of the compared object is within the buffer
-         * and compared object instance of AbstractBufferedFileInput.
-         */
-        AbstractBufferedFileInput otherInput;
-        if (other instanceof AbstractBufferedFileInput &&
-            rangeInBuffer(otherInput = (AbstractBufferedFileInput) other,
-                          otherOffset, otherLength)) {
-            bytes2 = otherInput.buffer();
-            long otherBufferStart = bufferStartPosition(otherInput);
-            compareOffset2 = (int) (otherOffset - otherBufferStart);
-        } else {
-            long oldPosition = other.position();
-            other.seek(otherOffset);
-            bytes2 = other.readBytes((int) otherLength);
+            this.seek(otherOffset);
+            bytes2 = this.readBytes((int) otherLength);
             compareOffset2 = 0;
-            other.seek(oldPosition);
+
+            this.seek(position);
+        } else {
+            /*
+             * Set the compare information of the current object.
+             * Ture: The compare range of the current object is within
+             * the buffer.
+             */
+            if (rangeInBuffer(this, offset, length)) {
+                bytes1 = this.buffer();
+                compareOffset1 = (int) (offset - bufferStartPosition(this));
+            } else {
+                long oldPosition = this.position();
+                this.seek(offset);
+                bytes1 = this.readBytes((int) length);
+                compareOffset1 = 0;
+                this.seek(oldPosition);
+            }
+
+            /*
+             * Set the compare information of the compared object.
+             * Ture: The compare range of the compared object is within
+             * the buffer and compared object instance of
+             * AbstractBufferedFileInput.
+             */
+            AbstractBufferedFileInput otherInput;
+            if (other instanceof AbstractBufferedFileInput &&
+                rangeInBuffer(otherInput = (AbstractBufferedFileInput) other,
+                              otherOffset, otherLength)) {
+                bytes2 = otherInput.buffer();
+                long otherBufferStart = bufferStartPosition(otherInput);
+                compareOffset2 = (int) (otherOffset - otherBufferStart);
+            } else {
+                long oldPosition = other.position();
+                other.seek(otherOffset);
+                bytes2 = other.readBytes((int) otherLength);
+                compareOffset2 = 0;
+                other.seek(oldPosition);
+            }
         }
 
         return BytesUtil.compare(bytes1, compareOffset1, (int) length,
@@ -149,7 +164,7 @@ public abstract class AbstractBufferedFileInput extends UnsafeBytesInput {
     private static boolean rangeInBuffer(AbstractBufferedFileInput input,
                                          long offset, long length) {
         long bufferStart = bufferStartPosition(input);
-        return bufferStart <= offset && offset <= input.fileOffset &&
+        return bufferStart <= offset && offset < input.fileOffset &&
                input.limit() >= length;
     }
 

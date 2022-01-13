@@ -58,7 +58,7 @@ public class KvEntriesInput implements EntryIterator {
     @Override
     public KvEntry next() {
         return EntriesUtil.kvEntryFromInput(this.input, this.userAccessInput,
-                                            true, this.withSubKv);
+                                            false, this.withSubKv);
     }
 
     @Override

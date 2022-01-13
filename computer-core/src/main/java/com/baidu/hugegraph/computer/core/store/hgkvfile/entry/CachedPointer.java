@@ -24,7 +24,6 @@ import java.io.IOException;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
-import com.baidu.hugegraph.computer.core.util.BytesUtil;
 
 public class CachedPointer implements Pointer {
 
@@ -67,13 +66,14 @@ public class CachedPointer implements Pointer {
     @Override
     public void write(RandomAccessOutput output) throws IOException {
         output.writeFixedInt((int) this.length);
-        output.write(this.bytes());
+        output.write(this.input, this.offset, this.length);
     }
 
     @Override
     public int compareTo(Pointer other) {
         try {
-            return BytesUtil.compare(this.bytes(), other.bytes());
+            return this.input.compare(this.offset, this.length, other.input(),
+                                      other.offset(), other.length());
         } catch (IOException e) {
             throw new ComputerException(e.getMessage(), e);
         }
