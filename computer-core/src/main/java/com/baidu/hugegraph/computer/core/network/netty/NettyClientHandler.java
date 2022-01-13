@@ -30,7 +30,6 @@ import com.baidu.hugegraph.computer.core.network.message.FinishMessage;
 import com.baidu.hugegraph.computer.core.network.message.Message;
 import com.baidu.hugegraph.computer.core.network.message.StartMessage;
 import com.baidu.hugegraph.computer.core.network.session.ClientSession;
-import com.google.common.base.Throwables;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -116,11 +115,6 @@ public class NettyClientHandler extends AbstractNettyHandler {
                         cause, cause.getMessage(),
                         TransportUtil.remoteAddress(ctx.channel()));
         }
-
-        // Respond fail message to requester
-        this.ackFailMessage(ctx, AbstractMessage.UNKNOWN_SEQ,
-                            exception.errorCode(),
-                            Throwables.getStackTraceAsString(exception));
 
         this.client.clientHandler().exceptionCaught(exception,
                                                     this.client.connectionId());

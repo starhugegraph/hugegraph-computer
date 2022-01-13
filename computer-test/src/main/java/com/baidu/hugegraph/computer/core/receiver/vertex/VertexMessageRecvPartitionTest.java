@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.combiner.MergeNewPropertiesCombiner;
 import com.baidu.hugegraph.computer.core.common.Constants;
@@ -40,7 +41,7 @@ import com.baidu.hugegraph.computer.core.graph.value.LongValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.io.BytesOutput;
 import com.baidu.hugegraph.computer.core.io.IOFactory;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.ReceiverUtil;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
@@ -53,9 +54,7 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutputImpl;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.suite.unit.UnitTestBase;
 import com.baidu.hugegraph.testutil.Assert;
-
 import com.baidu.hugegraph.util.Log;
-import org.slf4j.Logger;
 
 public class VertexMessageRecvPartitionTest extends UnitTestBase {
 
@@ -186,7 +185,7 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
         Assert.assertFalse(it.hasNext());
     }
 
-    public static void addTenVertexBuffer(Consumer<ManagedBuffer> consumer)
+    public static void addTenVertexBuffer(Consumer<NetworkBuffer> consumer)
                                           throws IOException {
         for (long i = 0L; i < 10L; i++) {
             Vertex vertex = graphFactory().createVertex();
@@ -197,7 +196,7 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
     }
 
     private static void addTwentyDuplicateVertexBuffer(
-                        Consumer<ManagedBuffer> consumer)
+                        Consumer<NetworkBuffer> consumer)
                         throws IOException {
         for (long i = 0L; i < 10L; i++) {
             Vertex vertex = graphFactory().createVertex();
@@ -220,7 +219,7 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
         }
     }
 
-    private static void addTwoEmptyBuffer(Consumer<ManagedBuffer> consumer) {
+    private static void addTwoEmptyBuffer(Consumer<NetworkBuffer> consumer) {
         for (int i = 0; i < 2; i++) {
             ReceiverUtil.consumeBuffer(new byte[2], consumer);
         }

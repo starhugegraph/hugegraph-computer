@@ -35,7 +35,7 @@ import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.manager.Manager;
 import com.baidu.hugegraph.computer.core.network.ConnectionId;
 import com.baidu.hugegraph.computer.core.network.MessageHandler;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.edge.EdgeMessageRecvPartitions;
 import com.baidu.hugegraph.computer.core.receiver.message.ComputeMessageRecvPartitions;
@@ -148,7 +148,7 @@ public class MessageRecvManager implements Manager, MessageHandler {
     public void exceptionCaught(TransportException cause,
                                 ConnectionId connectionId) {
         // TODO: implement failover
-        LOG.warn("Exception caught for connection:{}, root cause:{}",
+        LOG.warn("Exception caught for connection:{}, root cause:",
                  connectionId, cause);
         WorkerService.setThrowable(cause);
     }
@@ -182,7 +182,7 @@ public class MessageRecvManager implements Manager, MessageHandler {
 
     @Override
     public void handle(MessageType messageType, int partition,
-                       ManagedBuffer buffer) {
+                       NetworkBuffer buffer) {
         switch (messageType) {
             case VERTEX:
                 this.vertexPartitions.addBuffer(partition, buffer);
@@ -201,8 +201,24 @@ public class MessageRecvManager implements Manager, MessageHandler {
                 break;
             default:
                 throw new ComputerException(
-                          "Unable handle ManagedBuffer with type '%s'",
+                          "Unable handle NetworkBuffer with type '%s'",
                           messageType.name());
+        }
+    }
+
+    @Override
+    public String genOutputPath(MessageType messageType, int partition) {
+        switch (messageType) {
+            case VERTEX:
+                return this.vertexPartitions.genOutputPath(partition);
+            case EDGE:
+                return this.edgePartitions.genOutputPath(partition);
+            case MSG:
+                return this.messagePartitions.genOutputPath(partition);
+            default:
+                throw new ComputerException(
+                      "Unable generator output path with type '%s'",
+                      messageType.name());
         }
     }
 

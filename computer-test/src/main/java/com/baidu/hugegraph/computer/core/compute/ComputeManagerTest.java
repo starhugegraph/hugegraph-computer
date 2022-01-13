@@ -19,6 +19,15 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Random;
+import java.util.function.Consumer;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
@@ -39,7 +48,7 @@ import com.baidu.hugegraph.computer.core.io.IOFactory;
 import com.baidu.hugegraph.computer.core.io.StreamGraphOutput;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.ConnectionId;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.receiver.ReceiverUtil;
@@ -51,13 +60,6 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutputImpl;
 import com.baidu.hugegraph.computer.suite.unit.UnitTestBase;
 import com.baidu.hugegraph.testutil.Whitebox;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Random;
-import java.util.function.Consumer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 
 
@@ -124,16 +126,16 @@ public class ComputeManagerTest extends UnitTestBase {
         MessageRecvManager receiveManager = this.managers.get(
                                             MessageRecvManager.NAME);
         receiveManager.onStarted(this.connectionId);
-        add200VertexBuffer((ManagedBuffer buffer) -> {
+        add200VertexBuffer((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 0, buffer);
         });
         // Partition 1 only has vertex.
-        add200VertexBuffer((ManagedBuffer buffer) -> {
+        add200VertexBuffer((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 1, buffer);
         });
         receiveManager.onFinished(this.connectionId);
         receiveManager.onStarted(this.connectionId);
-        addSingleFreqEdgeBuffer((ManagedBuffer buffer) -> {
+        addSingleFreqEdgeBuffer((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.EDGE, 0, buffer);
         });
         receiveManager.onFinished(this.connectionId);
@@ -142,7 +144,7 @@ public class ComputeManagerTest extends UnitTestBase {
         // Superstep 0
         receiveManager.beforeSuperstep(this.config, 0);
         receiveManager.onStarted(this.connectionId);
-        addMessages((ManagedBuffer buffer) -> {
+        addMessages((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.MSG, 0, buffer);
         });
         receiveManager.onFinished(this.connectionId);
@@ -164,7 +166,7 @@ public class ComputeManagerTest extends UnitTestBase {
         this.computeManager.output();
     }
 
-    private static void add200VertexBuffer(Consumer<ManagedBuffer> consumer)
+    private static void add200VertexBuffer(Consumer<NetworkBuffer> consumer)
                                            throws IOException {
         for (long i = 0L; i < 200L; i += 2) {
             Vertex vertex = graphFactory().createVertex();
@@ -185,7 +187,7 @@ public class ComputeManagerTest extends UnitTestBase {
     }
 
     private static void addSingleFreqEdgeBuffer(
-                        Consumer<ManagedBuffer> consumer) throws IOException {
+                        Consumer<NetworkBuffer> consumer) throws IOException {
         for (long i = 0L; i < 200L; i++) {
             Vertex vertex = graphFactory().createVertex();
             vertex.id(BytesId.of(i));
@@ -221,7 +223,7 @@ public class ComputeManagerTest extends UnitTestBase {
         return bytesOutput.toByteArray();
     }
 
-    private static void addMessages(Consumer<ManagedBuffer> consumer)
+    private static void addMessages(Consumer<NetworkBuffer> consumer)
                                     throws IOException {
         for (long i = 0L; i < 200L; i++) {
             int count = RANDOM.nextInt(5);

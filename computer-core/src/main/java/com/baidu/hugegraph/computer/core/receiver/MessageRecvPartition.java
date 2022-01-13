@@ -31,7 +31,8 @@ import org.slf4j.Logger;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.FileRegionBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.sort.flusher.OuterSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
@@ -91,8 +92,13 @@ public abstract class MessageRecvPartition {
     /**
      * Only one thread can call this method.
      */
-    public synchronized void addBuffer(ManagedBuffer buffer) {
+    public synchronized void addBuffer(NetworkBuffer buffer) {
         this.totalBytes += buffer.length();
+        if (buffer instanceof FileRegionBuffer) {
+            String path = ((FileRegionBuffer) buffer).path();
+            this.outputFiles.add(path);
+            return;
+        }
         this.recvBuffers.addBuffer(buffer);
         if (this.recvBuffers.full()) {
             this.sortBuffers.waitSorted();
@@ -133,13 +139,13 @@ public abstract class MessageRecvPartition {
      * Flush the receive buffers to file, and wait both recvBuffers and
      * sortBuffers to finish sorting.
      * After this method be called, can not call
-     * {@link #addBuffer(ManagedBuffer)} any more.
+     * {@link #addBuffer(NetworkBuffer)} any more.
      */
     private void flushAllBuffersAndWaitSorted() {
         this.sortBuffers.waitSorted();
         if (this.recvBuffers.totalBytes() > 0) {
-            String path = this.fileGenerator.nextPath(this.type());
-            this.mergeBuffers(this.recvBuffers, path);
+            String path = this.genOutputPath();
+            this.mergeBuffers(this.recvBuffers, this.genOutputPath());
             this.outputFiles.add(path);
         }
         this.recvBuffers.waitSorted();
@@ -208,10 +214,14 @@ public abstract class MessageRecvPartition {
                  this.type(), superstep, outputFilesSize);
     }
 
+    public String genOutputPath() {
+        return this.fileGenerator.nextPath(this.type());
+    }
+
     private List<String> genOutputFileNames(int targetSize) {
         List<String> files = new ArrayList<>(targetSize);
         for (int i = 0; i < targetSize; i++) {
-            files.add(this.fileGenerator.nextPath(this.type()));
+            files.add(this.genOutputPath());
         }
         return files;
     }
