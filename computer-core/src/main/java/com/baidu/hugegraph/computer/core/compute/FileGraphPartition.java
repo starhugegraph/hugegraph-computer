@@ -216,6 +216,9 @@ public class FileGraphPartition<M extends Value<M>> {
 
         activeVertexCount = computeConsumer.getActiveVertexCount();
 
+        unSerializeConsumerProducer.stop();
+        computeConsumer.stop();
+ 
         try {
             this.afterCompute(0);
         } catch (Exception e) {
@@ -446,8 +449,9 @@ public class FileGraphPartition<M extends Value<M>> {
                       e, superstep);
         }
 
-        LOG.info("partition compute end {} {} {}", 
-            this.partition, this.vertexCount, activeVertexCount);
+        messageProducer.stop();
+        unSerializeConsumerProducer.stop();
+        computeConsumer.stop();
 
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount,
@@ -727,6 +731,8 @@ public class FileGraphPartition<M extends Value<M>> {
         protected BlockingQueue inputQueue = null;
         protected EdgesInputFast edgesInput = null;
         protected ComputerContext context = null;
+        protected boolean stop = false;
+        protected boolean stoped = false;
  
         public UnSerializeConsumerProducer(
                         ComputerContext context,
@@ -738,18 +744,33 @@ public class FileGraphPartition<M extends Value<M>> {
             this.vertexQueue = vertexQueue;
             this.edgesInput = edgesInput;
         }
-        
+
+        public void stop() {
+            this.stop = true;
+            while (!this.stoped) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
+        }
+
         //parse vertex id, edge target id only
         public void runShortSchema() {
-            while (true) {
+            while (!this.stop) {
                 try {
-                    Vertex rawVertex = (Vertex)this.inputQueue.take();
+                    Vertex rawVertex = (Vertex)this.inputQueue
+                                    .poll(50, TimeUnit.MILLISECONDS);  
+                    if (rawVertex == null) {
+                        continue;
+                    }
 
                     Value<?> value = rawVertex.value();                    
                     boolean active = rawVertex.active();
                     Vertex vertex = this.edgesInput.
                         composeVertexMultipleFast(rawVertex.data(), active);
-        
+                    
                     if (value != null) {
                         vertex.value(rawVertex.value());
                     }
@@ -763,13 +784,18 @@ public class FileGraphPartition<M extends Value<M>> {
                     e.printStackTrace();
                 } 
             }
+            this.stoped = true;
         }
 
         //parse all data structure
         public void runFullSchema() {
-            while (true) {
+            while (!this.stop) {
                 try {
-                    Vertex rawVertex = (Vertex)this.inputQueue.take();
+                    Vertex rawVertex = (Vertex)this.inputQueue
+                                    .poll(50, TimeUnit.MILLISECONDS);  
+                    if (rawVertex == null) {
+                        continue;
+                    }
 
                     Value<?> value = rawVertex.value();                    
                     boolean active = rawVertex.active();
@@ -789,6 +815,7 @@ public class FileGraphPartition<M extends Value<M>> {
                     e.printStackTrace();
                 } 
             }
+            this.stoped = true;
         }
 
         @Override
@@ -809,6 +836,8 @@ public class FileGraphPartition<M extends Value<M>> {
         protected MessageInputFast messageInput;
         protected BlockingQueue messageQueue;
         protected ComputeConsumer computeConsumer;
+        protected boolean stop = false;
+        protected boolean stoped = false;
 
         public MessageProducer(MessageInputFast messageInput,
                                BlockingQueue messageQueue,
@@ -821,7 +850,7 @@ public class FileGraphPartition<M extends Value<M>> {
         @Override
         public void run() {
             try {
-                while (true) {
+                while (!this.stop) {
                     Pair<Id, List> message = 
                         this.messageInput.readOneVertexMessage();
                     if (message.getKey() == null) {
@@ -833,6 +862,18 @@ public class FileGraphPartition<M extends Value<M>> {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } 
+            this.stoped = true;
+        }
+
+        public void stop() {
+            this.stop = true;
+            while (!this.stoped) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+            }
         }
     }
 
@@ -848,6 +889,8 @@ public class FileGraphPartition<M extends Value<M>> {
         long vertexcount;
         long consumecount = 0;
         boolean expectMessage = true;
+        protected boolean stop = false;
+        protected boolean stoped = false;
     
         public ComputeConsumer(ComputationContext context,
                                Computation<M> computation, 
@@ -869,9 +912,13 @@ public class FileGraphPartition<M extends Value<M>> {
         @Override
         public void run() {
             Pair<Id, List> message = null;
-            while (true) {           
+            while (!this.stop) {           
                 try {
-                    Vertex vertex = (Vertex)this.vertexQueue.take();
+                    Vertex vertex = (Vertex)this.vertexQueue.
+                                  poll(50, TimeUnit.MILLISECONDS);  
+                    if (vertex == null) {
+                        continue;
+                    }
                     Id idv = vertex.id();
                     if (this.messageQueue == null) {
                         //compute 0, no message
@@ -932,6 +979,18 @@ public class FileGraphPartition<M extends Value<M>> {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+            this.stoped = true;
+        }
+
+        public void stop() {
+            this.stop = true;
+            while (!this.stoped) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
             }
         }
        

@@ -165,12 +165,17 @@ public class EdgesInputFast {
             int keylength = (int)this.idPointerVertex.length();
             int valuelength = (int)this.valuePointerVertex.
                                                       length();
+
+            Id id = StreamGraphInput.
+                readId(this.idPointerVertex.input());
+            
             while (this.input.available() > 0) {             
                 long startposition = this.input.position();
                 this.idPointerEdges.read(this.input);
                 int status = idPointerVertex.
                             compareTo(this.idPointerEdges);
-                //System.out.printf("status = %d\n", status);
+
+                //System.out.printf("status = %s %d\n", id, status);
                 if (status < 0) {
                     //vertex++, return vertex
                     this.input.seek(startposition);
@@ -196,11 +201,12 @@ public class EdgesInputFast {
                     int count = DataParser.byte2int(dataEdges, 4);
                     int bufferlength = valueEdgeLength + 4;
                     List bufferList = null;
-                    long sp = this.input.position();
                     while (this.input.available() > 0) {
+                        long sp = this.input.position();
                         this.idPointerEdges.read(this.input);
                         if (this.idPointerVertex.
                             compareTo(this.idPointerEdges) != 0) {
+                            this.input.seek(sp);
                             break;
                         } 
                         if (bufferList == null) {
@@ -212,9 +218,7 @@ public class EdgesInputFast {
                         count += DataParser.byte2int(nextEdges, 0);
                         bufferlength += lengthNext;
                         bufferList.add(nextEdges);
-                        
                     }
-                    this.input.seek(sp);
                     //end superedges
 
                     //copy vertex and first edge
@@ -226,12 +230,14 @@ public class EdgesInputFast {
                     //copy more edges into  superedges
                     if (bufferList != null) {
                         int position = length + valueEdgeLength + 4;
+                        int ctest = 0;
                         for (Object b : bufferList) {
                             byte[] buffer = (byte[])b;
                             int copylength = buffer.length - 4;
                             System.arraycopy(buffer, 4,
                                    data, position, copylength);
-                            position += buffer.length;
+                            position += copylength;
+                            ctest++;
                         }
                         byte[] countbyte = DataParser.int2byte(count);
                         System.arraycopy(countbyte, 0,
