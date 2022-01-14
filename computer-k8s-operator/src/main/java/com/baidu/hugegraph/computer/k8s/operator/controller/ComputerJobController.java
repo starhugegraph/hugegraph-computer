@@ -145,6 +145,10 @@ public class ComputerJobController
         }
 
         String crName = computerJob.getMetadata().getName();
+
+        LOG.warn("ComputerJob {} reconcile failed reach {} times",
+                 crName, request.retryTimes());
+
         this.recordEvent(computerJob, EventType.WARNING,
                          KubeUtil.failedEventName(crName),
                          String.format("ComputerJob %s reconcile failed\n",
