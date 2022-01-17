@@ -19,6 +19,7 @@
 package com.baidu.hugegraph.computer.dist;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.master.MasterService;
@@ -73,13 +74,19 @@ public class HugeGraphComputer {
         loadClass();
         registerOptions();
         ComputerContext context = parseContext(args[0]);
+        String algorithm = context.config().getString(
+                ComputerOptions.ALGORITHM_PARAMS_CLASS.name(),"");
+        System.out.println("algorithm:" + algorithm);
         switch (role) {
             case ROLE_MASTER:
-                //executeMasterService(context); //todo
+                if (!algorithm.contains("louvain"))
+                    executeMasterService(context); //todo
                 break;
             case ROLE_WORKER:
-                //executeWorkerService(context);  //todo
-                executeWorkerServiceLouvain(context);
+                if (algorithm.contains("louvain"))
+                    executeWorkerServiceLouvain(context);
+                else
+                    executeWorkerService(context);  //todo
                 break;
             default:
                 throw new IllegalArgumentException(
