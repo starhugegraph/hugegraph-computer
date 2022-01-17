@@ -25,6 +25,7 @@ import com.baidu.hugegraph.computer.core.master.MasterService;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.util.ComputerContextUtil;
 import com.baidu.hugegraph.computer.core.worker.WorkerService;
+import com.baidu.hugegraph.computer.core.worker.WorkerServiceLouvain;
 import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
@@ -74,10 +75,11 @@ public class HugeGraphComputer {
         ComputerContext context = parseContext(args[0]);
         switch (role) {
             case ROLE_MASTER:
-                executeMasterService(context);
+                //executeMasterService(context); //todo
                 break;
             case ROLE_WORKER:
-                executeWorkerService(context);
+                //executeWorkerService(context);  //todo
+                executeWorkerServiceLouvain(context);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -114,6 +116,13 @@ public class HugeGraphComputer {
 
     private static void executeWorkerService(ComputerContext context) {
         try (WorkerService workerService = new WorkerService()) {
+            workerService.init(context.config());
+            workerService.execute();
+        }
+    }
+
+    private static void executeWorkerServiceLouvain(ComputerContext context) {
+        try (WorkerServiceLouvain workerService = new WorkerServiceLouvain()) {
             workerService.init(context.config());
             workerService.execute();
         }
