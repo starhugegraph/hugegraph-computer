@@ -49,6 +49,7 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.util.E;
 
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -60,7 +61,7 @@ import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 import com.baidu.hugegraph.util.Log;
 import org.slf4j.Logger;
 
-public class FileGraphPartition<M extends Value<M>> {
+public class FileGraphPartition {
 
     private static final Logger LOG = Log.logger("partition");
 
@@ -70,6 +71,7 @@ public class FileGraphPartition<M extends Value<M>> {
     private static final String VALUE = "value";
 
     private final ComputerContext context;
+    private final Computation<Value<?>> computation;
     private final FileGenerator fileGenerator;
     private final int partition;
 
@@ -95,7 +97,7 @@ public class FileGraphPartition<M extends Value<M>> {
     private VertexInput vertexInput;
     private EdgesInput edgesInput;
     private VertexInput vertexOriginInput;
-    private MessageInput<M> messageInput;
+    private MessageInput<Value<?>> messageInput;
 
     private final MessageSendManager sendManager;
     private boolean useVariableLengthOnly;
@@ -104,6 +106,10 @@ public class FileGraphPartition<M extends Value<M>> {
                               Managers managers,
                               int partition) {
         this.context = context;
+        this.computation = context.config()
+                                  .createObject(
+                                   ComputerOptions.WORKER_COMPUTATION_CLASS);
+        this.computation.init(context.config());
         this.fileGenerator = managers.get(FileManager.NAME);
         this.partition = partition;
         this.vertexFile = new File(this.fileGenerator.randomDirectory(VERTEX));
@@ -148,8 +154,9 @@ public class FileGraphPartition<M extends Value<M>> {
                                  this.edgeCount, 0L);
     }
 
-    protected PartitionStat compute0(ComputationContext context,
-                                     Computation<M> computation) {
+    protected PartitionStat compute0(WorkerContext context) {
+        this.computation.beforeSuperstep(context);
+
         long activeVertexCount = 0L;
         try {
             this.beforeCompute(0);
@@ -162,7 +169,7 @@ public class FileGraphPartition<M extends Value<M>> {
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
             vertex.edges(edges);
             vertex.reactivate();
-            computation.compute0(context, vertex);
+            this.computation.compute0(context, vertex);
             if (vertex.active()) {
                 activeVertexCount++;
             }
@@ -178,6 +185,9 @@ public class FileGraphPartition<M extends Value<M>> {
         } catch (Exception e) {
             throw new ComputerException("Error occurred when afterCompute", e);
         }
+
+        this.computation.afterSuperstep(context);
+
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount,
                                  this.vertexCount - activeVertexCount);
@@ -197,7 +207,6 @@ public class FileGraphPartition<M extends Value<M>> {
                       e, -1);
         }
         int selfIncreaseID = 0;
-        int partitionID = this.partition;
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
             Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
@@ -209,8 +218,8 @@ public class FileGraphPartition<M extends Value<M>> {
                 }
 
                 Id targetId = edge.targetId();
-                long nid = (((long)partitionID) << 32) | 
-                            (selfIncreaseID & 0xffffffffL);
+                long nid = (((long) this.partition) << 32) |
+                           (selfIncreaseID & 0xffffffffL);
                 Id id = this.context.graphFactory().createId(nid);
                 IdList path = new IdList();
                 path.add(vertex.id());
@@ -271,7 +280,7 @@ public class FileGraphPartition<M extends Value<M>> {
             vertex.id(id);
             vertexOutput.writeVertex(vertex);
 
-            Iterator<M> messageIter = this.messageInput.iterator(
+            Iterator<Value<?>> messageIter = this.messageInput.iterator(
                                       this.vertexInput.idPointer());
  
             Edges edges = this.edgesInput.edges(
@@ -310,9 +319,9 @@ public class FileGraphPartition<M extends Value<M>> {
         }
     }
 
-    protected PartitionStat compute(ComputationContext context,
-                                    Computation<M> computation,
-                                    int superstep) {
+    protected PartitionStat compute(WorkerContext context, int superstep) {
+        this.computation.beforeSuperstep(context);
+
         try {
             this.beforeCompute(superstep);
         } catch (IOException e) {
@@ -326,7 +335,7 @@ public class FileGraphPartition<M extends Value<M>> {
         while (this.vertexInput.hasNext()) {
             Vertex vertex = this.vertexInput.next();
             this.readVertexStatusAndValue(vertex, result);
-            Iterator<M> messageIter;
+            Iterator<Value<?>> messageIter;
             if (this.useVariableLengthOnly) {
                 messageIter = this.messageInput.iterator(
                                             this.vertexInput.idPointer());
@@ -347,7 +356,7 @@ public class FileGraphPartition<M extends Value<M>> {
                 Edges edges = this.edgesInput.edges(
                               this.vertexInput.idPointer());
                 vertex.edges(edges);
-                computation.compute(context, vertex, messageIter);
+                this.computation.compute(context, vertex, messageIter);
             }
 
             // The vertex status may be changed after computation
@@ -369,6 +378,9 @@ public class FileGraphPartition<M extends Value<M>> {
                       "Error occurred when afterCompute at superstep %s",
                       e, superstep);
         }
+
+        this.computation.afterSuperstep(context);
+
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount,
                                  this.vertexCount - activeVertexCount);
@@ -490,7 +502,6 @@ public class FileGraphPartition<M extends Value<M>> {
                 // Skip stale edges
                 continue;
             }
-            assert matched == 0;
             edgeOut.writeFixedInt(vidBytes.length);
             edgeOut.write(vidBytes);
 

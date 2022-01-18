@@ -60,7 +60,7 @@ jobs:
       - name: Build images
         env:
           TRAVIS_DIR: computer-dist/src/assembly/travis
-        run: $TRAVIS_DIR/build-images.sh ${{ github.event.inputs.framework_image_url }} ${{ github.event.inputs.algorithm_image_url }} ${{ github.event.inputs.operator_image_url }} -Dhadoop-version=2.7.2
+        run: $TRAVIS_DIR/build-images-gh.sh ${{ github.event.inputs.framework_image_url }} ${{ github.event.inputs.algorithm_image_url }} ${{ github.event.inputs.operator_image_url }} -Dhadoop-version=2.7.2
 
       - name: Docker images
         run: docker images

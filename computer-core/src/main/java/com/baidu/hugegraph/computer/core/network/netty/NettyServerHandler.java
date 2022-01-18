@@ -38,6 +38,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.ScheduledFuture;
 
+import org.slf4j.Logger;
+import com.baidu.hugegraph.util.Log;
+
 public class NettyServerHandler extends AbstractNettyHandler {
 
     private static final long INITIAL_DELAY = 0L;
@@ -46,6 +49,8 @@ public class NettyServerHandler extends AbstractNettyHandler {
     private final ServerSession serverSession;
     private final ChannelFutureListenerOnWrite listenerOnWrite;
     private ScheduledFuture<?> respondAckTask;
+
+    private static final Logger LOG = Log.logger("netty server");
 
     public NettyServerHandler(ServerSession serverSession,
                               MessageHandler handler) {
@@ -99,9 +104,11 @@ public class NettyServerHandler extends AbstractNettyHandler {
     }
 
     private void ackStartMessage(ChannelHandlerContext ctx) {
+        LOG.info("{} act start message begin", this);
         AckMessage startAck = new AckMessage(AbstractMessage.START_SEQ);
         ctx.writeAndFlush(startAck).addListener(this.listenerOnWrite);
         this.serverSession.completeStateStart();
+        LOG.info("{} act start message complete", this);
 
         Channel channel = ctx.channel();
         this.handler.onStarted(TransportUtil.remoteConnectionId(channel));

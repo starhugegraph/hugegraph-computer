@@ -71,7 +71,7 @@ public class WorkerService implements Closeable {
     private volatile boolean closed;
     private Config config;
     private Bsp4Worker bsp4Worker;
-    private ComputeManager<?> computeManager;
+    private ComputeManager computeManager;
     private MessageSendManager sendManager;
     private ContainerInfo workerInfo;
 
@@ -144,11 +144,7 @@ public class WorkerService implements Closeable {
             dm.connect(worker.id(), worker.hostname(), worker.dataPort());
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        ComputeManager<?> computeManager = new ComputeManager(this.context,
-                                                              this.managers,
-                                                              this.computation);
-        this.computeManager = computeManager;
+        this.computeManager = new ComputeManager(this.context, this.managers);
         this.managers.initedAll(this.config);
         LOG.info("{} WorkerService initialized", this);
 
@@ -175,9 +171,7 @@ public class WorkerService implements Closeable {
             LOG.info("{} WorkerService had closed before", this);
             return;
         }
-
-        this.computation.close(this.config);
-
+        this.computeManager.close();
         /*
          * Seems managers.closeAll() would do the following actions:
          * TODO: close the connection to other workers.
@@ -288,7 +282,6 @@ public class WorkerService implements Closeable {
              * managers.beforeSuperstep().
              */
             this.managers.beforeSuperstep(this.config, superstep);
-            this.computation.beforeSuperstep(context);
 
             /*
              * Notify master by each worker, when the master received all
@@ -315,7 +308,6 @@ public class WorkerService implements Closeable {
              * computation, like WorkerAggrManager send aggregators to master
              * after called aggregateValue(String name, V value) in computation.
              */
-            this.computation.afterSuperstep(context);
             this.managers.afterSuperstep(this.config, superstep);
 
             this.bsp4Worker.workerStepDone(superstep, workerStat);

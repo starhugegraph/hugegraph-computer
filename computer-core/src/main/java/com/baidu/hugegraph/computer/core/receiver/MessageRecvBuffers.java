@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
+import com.baidu.hugegraph.computer.core.io.OptimizedBytesInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
-import com.baidu.hugegraph.computer.core.io.UnsafeBytesInput;
 import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
 import com.baidu.hugegraph.concurrent.BarrierEvent;
 
@@ -68,7 +68,7 @@ public class MessageRecvBuffers {
     public List<RandomAccessInput> buffers() {
         List<RandomAccessInput> inputs = new ArrayList<>(this.buffers.size());
         for (byte[] buffer : this.buffers) {
-            inputs.add(new UnsafeBytesInput(buffer));
+            inputs.add(new OptimizedBytesInput(buffer));
         }
         return inputs;
     }

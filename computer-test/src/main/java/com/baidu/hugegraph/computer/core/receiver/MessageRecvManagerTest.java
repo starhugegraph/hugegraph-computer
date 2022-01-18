@@ -22,6 +22,8 @@ package com.baidu.hugegraph.computer.core.receiver;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.After;
 import org.junit.Before;
@@ -89,6 +91,7 @@ public class MessageRecvManagerTest extends UnitTestBase {
 
     @Test
     public void testVertexAndEdgeMessage() throws IOException {
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         // Send vertex message
         this.receiveManager.onStarted(this.connectionId);
         this.receiveManager.onFinished(this.connectionId);
@@ -107,18 +110,20 @@ public class MessageRecvManagerTest extends UnitTestBase {
 
         this.receiveManager.waitReceivedAllMessages();
         Map<Integer, PeekableIterator<KvEntry>> vertexPartitions =
-                     this.receiveManager.vertexPartitions();
+                     this.receiveManager.vertexPartitions(executor);
         Map<Integer, PeekableIterator<KvEntry>> edgePartitions =
-                     this.receiveManager.edgePartitions();
+                     this.receiveManager.edgePartitions(executor);
         Assert.assertEquals(1, vertexPartitions.size());
         Assert.assertEquals(1, edgePartitions.size());
         VertexMessageRecvPartitionTest.checkPartitionIterator(
                                        vertexPartitions.get(0));
         EdgeMessageRecvPartitionTest.checkTenEdges(edgePartitions.get(0));
+        executor.shutdown();
     }
 
     @Test
     public void testComputeMessage() throws IOException {
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         // Superstep 0
         this.receiveManager.beforeSuperstep(this.config, 0);
         ComputeMessageRecvPartitionTest.addTwentyCombineMessageBuffer(
@@ -131,10 +136,11 @@ public class MessageRecvManagerTest extends UnitTestBase {
         this.receiveManager.afterSuperstep(this.config, 0);
 
         Map<Integer, PeekableIterator<KvEntry>> messagePartitions =
-        this.receiveManager.messagePartitions();
+        this.receiveManager.messagePartitions(executor);
         Assert.assertEquals(1, messagePartitions.size());
         ComputeMessageRecvPartitionTest.checkTenCombineMessages(
                                         messagePartitions.get(0));
+        executor.shutdown();
     }
 
     @Test
