@@ -74,8 +74,8 @@ public class HugeGraphComputer {
         loadClass();
         registerOptions();
         ComputerContext context = parseContext(args[0]);
-        String algorithm = context.config().getString(
-                ComputerOptions.ALGORITHM_PARAMS_CLASS.name(),"");
+
+        String algorithm = getAlgorithmParam(args[0]);
         System.out.println("algorithm:" + algorithm);
         switch (role) {
             case ROLE_MASTER:
@@ -151,6 +151,17 @@ public class HugeGraphComputer {
         ComputerContextUtil.initContext(properties);
         
         return ComputerContext.instance();
+    }
+
+    private static String getAlgorithmParam(String conf)
+            throws IOException {
+        Properties properties = new Properties();
+        BufferedReader bufferedReader = new BufferedReader(
+                new FileReader(conf));
+        properties.load(bufferedReader);
+
+        return properties.getProperty(
+                ComputerOptions.ALGORITHM_PARAMS_CLASS.name());
     }
 
     private static void registerOptions() {
