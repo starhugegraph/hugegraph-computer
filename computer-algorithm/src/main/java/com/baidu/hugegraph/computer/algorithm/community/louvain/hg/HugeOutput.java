@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.core.worker.louvain.hg;
+package com.baidu.hugegraph.computer.algorithm.community.louvain.hg;
 
 import java.io.Closeable;
 import java.util.ArrayList;

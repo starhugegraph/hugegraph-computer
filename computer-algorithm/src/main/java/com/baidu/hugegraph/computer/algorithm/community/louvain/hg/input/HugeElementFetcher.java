@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.core.worker.louvain.hg.input;
+package com.baidu.hugegraph.computer.algorithm.community.louvain.hg.input;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

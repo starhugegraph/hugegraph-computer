@@ -21,7 +21,7 @@
  * Support load data and output result from hugegraph
  */
 
-package com.baidu.hugegraph.computer.core.worker.louvain;
+package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -43,8 +43,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
 //import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.core.worker.louvain.hg.input.GraphFetcher;
-import com.baidu.hugegraph.computer.core.worker.louvain.hg.HugeOutput;
+import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.input.GraphFetcher;
+import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.HugeOutput;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.structure.graph.Edge;
 import com.baidu.hugegraph.util.E;

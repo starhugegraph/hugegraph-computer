@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.core.worker.louvain;
+package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

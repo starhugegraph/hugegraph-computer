@@ -21,11 +21,11 @@ package com.baidu.hugegraph.computer.core.worker;
 
 import java.io.Closeable;
 
+import com.baidu.hugegraph.computer.core.graph.value.Value;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
-import com.baidu.hugegraph.computer.core.worker.louvain.HGModularityOptimizer;
-//import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.util.ShutdownHook;
 import com.baidu.hugegraph.util.E;
@@ -46,6 +46,7 @@ public class WorkerServiceLouvain implements Closeable {
 
     private WorkerStat inputWorkerStat;
     private boolean useIdFixLength;
+    private Computation<Value<?>> computation;
 
     public WorkerServiceLouvain() {
         this.context = ComputerContext.instance();
@@ -64,14 +65,6 @@ public class WorkerServiceLouvain implements Closeable {
         this.registerShutdownHook();
 
         this.config = config;
-
-        /*
-        this.computation = this.config.createObject(
-                           ComputerOptions.WORKER_COMPUTATION_CLASS);
-        this.computation.init(this.config);
-        LOG.info("Loading computation '{}' in category '{}'",
-                 this.computation.name(), this.computation.category());
-        */
 
         this.inited = true;
     }
@@ -122,11 +115,12 @@ public class WorkerServiceLouvain implements Closeable {
 
         LOG.info("{} WorkerService execute", this);
 
-        HGModularityOptimizer optimizer = new HGModularityOptimizer(config);
-        try {
-            optimizer.runAlgorithm();
-        } catch (Throwable ignore) {
-        }
+        this.computation = this.config.createObject(
+                ComputerOptions.WORKER_COMPUTATION_CLASS);
+        LOG.info("Loading computation '{}' in category '{}'",
+                this.computation.name(), this.computation.category());
+
+        this.computation.init(this.config);
     }
 
     @Override
