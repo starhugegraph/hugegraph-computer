@@ -88,8 +88,8 @@ public class HGModularityOptimizer {
         int algorithm = ALGORITHM;
         int modularityFunction = config.getInt(OPTION_MODULARITY,1);
         double resolution = config.getDouble(OPTION_RESOLUTION,1.0);
-        int nRandomStarts = config.getInt(OPTION_RANDOMSTART,10);
-        int nIterations = config.getInt(OPTION_ITERATIONS,100);
+        int nRandomStarts = config.getInt(OPTION_RANDOMSTART,1);
+        int nIterations = config.getInt(OPTION_ITERATIONS,10);
         long randomSeed = config.getLong(OPTION_RANDOMSEED,100);
 
         VOSClusteringTechnique vOSClusteringTechnique;
