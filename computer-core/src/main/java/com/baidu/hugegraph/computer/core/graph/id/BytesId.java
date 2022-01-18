@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import com.baidu.hugegraph.computer.core.common.SerialEnum;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
@@ -156,8 +155,10 @@ public class BytesId implements Id {
 
     @Override
     public void read(RandomAccessInput in) throws IOException {
-        this.idType = SerialEnum.fromCode(IdType.class, in.readByte());
-        int len = (int)(in.readByte());
+        byte type = in.readByte();
+        this.idType = (type == 1 ? IdType.LONG : (type == 2 ?
+                                                  IdType.UTF8 : IdType.UUID));
+        int len = in.readByte();
         //int len = in.readInt();
         this.bytes = BytesUtil.ensureCapacityWithoutCopy(this.bytes, len);
         in.readFully(this.bytes, 0, len);

@@ -38,6 +38,7 @@ public enum IdType implements SerialEnum {
         this.code = (byte) code;
     }
 
+    @Override
     public byte code() {
         return this.code;
     }

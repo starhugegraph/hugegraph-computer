@@ -67,6 +67,7 @@ public class DefaultProperties implements Properties {
         this.keyValues.putIfAbsent(key, value);
     }
 
+    @Override
     public int size() {
         return this.keyValues.size();
     }

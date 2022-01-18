@@ -83,7 +83,8 @@ public class StreamGraphInput implements GraphComputeInput {
                     edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));
-                    edge.label(readLabel(in));
+                    //edge.label(readLabel(in));
+                    in.skipBytes(in.readInt());
                     edge.properties(readProperties(in));
                 });
                 if (inv.value()) {
@@ -102,7 +103,8 @@ public class StreamGraphInput implements GraphComputeInput {
                     boolean inv_ = (in.readByte() == 1) ? true : false;
                     inv.value(inv_);
                     edge.targetId(readId(in));
-                    edge.label(readLabel(in));
+                    //edge.label(readLabel(in));
+                    in.skipBytes(in.readInt());
                     //edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));
@@ -128,8 +130,10 @@ public class StreamGraphInput implements GraphComputeInput {
                     boolean inv_ = (in.readByte() == 1) ? true : false;
                     inv.value(inv_);
                     edge.targetId(readId(in));
-                    edge.label(readLabel(in));
-                    edge.name(readLabel(in));
+                    //edge.label(readLabel(in));
+                    //edge.name(readLabel(in));
+                    in.skipBytes(in.readInt());
+                    in.skipBytes(in.readInt());
                     //edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));
