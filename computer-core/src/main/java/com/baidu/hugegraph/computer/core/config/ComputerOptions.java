@@ -621,7 +621,7 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph.url",
                     "The hugegraph url to load data and write results back.",
                     disallowEmpty(),
-                    "http://yq02-sys-rpm765.yq02:8080"
+                    "http://127.0.0.1:8080"
             );
 
     public static final ConfigOption<String> HUGEGRAPH_GRAPH_NAME =
@@ -629,7 +629,7 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph.name",
                     "The graph name to load data and write results back.",
                     disallowEmpty(),
-                    "datagen80"
+                    "hugegraph"
             );
 
     public static final ConfigOption<String> TRANSPORT_SERVER_HOST =
