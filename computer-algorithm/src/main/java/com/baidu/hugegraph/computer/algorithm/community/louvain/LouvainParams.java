@@ -29,8 +29,8 @@ public class LouvainParams implements AlgorithmParams {
 
     @Override
     public void setAlgorithmParameters(Map<String, String> params) {
-        this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
-                "olap_louvain");
+        //this.setIfAbsent(params, ComputerOptions.WORKER_COMPUTATION_CLASS,
+        //        "olap_louvain");
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_RESULT_CLASS,
                          BytesId.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,

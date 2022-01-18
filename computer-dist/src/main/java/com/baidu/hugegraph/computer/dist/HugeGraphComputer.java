@@ -79,11 +79,11 @@ public class HugeGraphComputer {
         System.out.println("algorithm:" + algorithm);
         switch (role) {
             case ROLE_MASTER:
-                if (!algorithm.contains("louvain"))
+                if (!algorithm.contains("LouvainParams"))
                     executeMasterService(context); //todo
                 break;
             case ROLE_WORKER:
-                if (algorithm.contains("louvain"))
+                if (algorithm.contains("LouvainParams"))
                     executeWorkerServiceLouvain(context);
                 else
                     executeWorkerService(context);  //todo
