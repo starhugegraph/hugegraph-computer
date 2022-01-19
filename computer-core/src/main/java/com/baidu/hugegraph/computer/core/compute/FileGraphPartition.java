@@ -350,7 +350,6 @@ public class FileGraphPartition {
                     edgesOutput.writeEdge(edge);
                 }
                 else {
-                    LOG.info("{} no hash id, may drop edge", this);
                 }
             }
             edgesOutput.finishWriteEdge();
@@ -449,6 +448,7 @@ public class FileGraphPartition {
                 e.printStackTrace();
             }
         }
+        computeConsumer.normoreVertex();
         activeVertexCount = computeConsumer.getActiveVertexCount();
         
         try {
@@ -463,8 +463,8 @@ public class FileGraphPartition {
         unSerializeConsumerProducer.stop();
         computeConsumer.stop();
       
-        this.computation.afterSuperstep(context);
 
+        this.computation.afterSuperstep(context);
         return new PartitionStat(this.partition, this.vertexCount,
                                  this.edgeCount,
                                  this.vertexCount - activeVertexCount);
@@ -780,7 +780,7 @@ public class FileGraphPartition {
                     Value<?> value = rawVertex.value();                    
                     boolean active = rawVertex.active();
                     Vertex vertex = this.edgesInput.
-                        composeVertexMultipleFast(rawVertex.data(), active);
+                        composeVertexFast(rawVertex.data(), active);
                     
                     if (value != null) {
                         vertex.value(rawVertex.value());
@@ -900,6 +900,7 @@ public class FileGraphPartition {
         long vertexcount;
         long consumecount = 0;
         boolean expectMessage = true;
+        boolean expectVertex = true;
         protected boolean stop = false;
         protected boolean stoped = false;
     
@@ -928,6 +929,14 @@ public class FileGraphPartition {
                     Vertex vertex = (Vertex)this.vertexQueue.
                                   poll(50, TimeUnit.MILLISECONDS);  
                     if (vertex == null) {
+                        //in case there are wild message 
+                        //belongs to nobody
+                        //consume all messages
+                        if (!this.expectVertex) {
+                            while (this.messageQueue.size() != 0) {
+                                this.messageQueue.take();
+                            }
+                        }
                         continue;
                     }
                     Id idv = vertex.id();
@@ -958,7 +967,9 @@ public class FileGraphPartition {
                         }
 
                         if (status < 0) {
-                            //has no message and algorithm determin active
+                            //has no message
+                            //either message belongs to next vertex
+                            //or no more expect message
                             if (vertex.active()) {
                                 this.computation.compute(context, vertex, 
                                         Collections.emptyIterator());
@@ -974,10 +985,10 @@ public class FileGraphPartition {
                             message = null;
                         }
                         else {
-                            //something wrong
-                            messageQueue.take();
+                            //something wrong 
+                            messageQueue.poll(100, TimeUnit.MILLISECONDS); 
                             message = null;
-                        }                       
+                        }
                     }
                     if (vertex.active()) {
                         activeVertexCount++;
@@ -1003,6 +1014,10 @@ public class FileGraphPartition {
                     e.printStackTrace();
                 } 
             }
+        }
+
+        public void normoreVertex() {
+            this.expectVertex = false;
         }
        
         public void nomoreMessage() {

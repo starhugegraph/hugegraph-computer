@@ -275,11 +275,6 @@ public class EdgesInputFast {
         }
     }
     
-    public Vertex composeVertexFast(byte[] data, boolean active) {
-        assert this.frequency == EdgeFrequency.MULTIPLE;
-        return composeVertexMultiple(data, active);
-    }
-    
     public Vertex composeVertexSingle(byte[] data, boolean active) {        
         Vertex vertex = context.graphFactory().createVertex();
         
@@ -539,6 +534,14 @@ public class EdgesInputFast {
         return vertex;
     }
    
+    public Vertex composeVertexFast(byte[] data, boolean active) {
+        if (this.useFixLength) {
+            return composeVertexMultipleFastFixedLength(data, active);
+        } else {
+            return composeVertexMultipleFast(data, active);
+        }
+    }
+
     public Vertex composeVertexMultiple(byte[] data, boolean active) {
         Vertex vertex = context.graphFactory().createVertex();
         
@@ -676,6 +679,99 @@ public class EdgesInputFast {
         return vertex;
     }
     
+    public Vertex composeVertexMultipleFastFixedLength
+                               (byte[] data, boolean active) {
+        Vertex vertex = context.graphFactory().createVertex();
+        
+        int position = 4;
+        byte[] blId = new byte[8];
+        for (int j = 0; j < this.idBytes; j++) {
+            int j_ = j + Long.BYTES - this.idBytes;
+            blId[j_] = data[position + j];
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(blId, 0, Long.BYTES);
+        buffer.flip();
+        Long lId = buffer.getLong();
+        Id id = BytesId.of(lId);
+        position += 8;
+        vertex.id(id);
+      
+        //label
+        position += 4;
+        int[] vint = DataParser.parseVInt(data, position);
+        position += vint[0];
+        position += vint[1];
+
+        //property 
+        vint = DataParser.parseVInt(data, position);
+        position += vint[1];
+
+        for (int j = 0; j < vint[0]; j++) {
+            int[] vintj = DataParser.parseVInt(data, position);
+            position += vintj[0];
+            position += vintj[1];
+            ValueType valueType = ValueType.
+                        getValueTypeByCode(data[position]);
+            position += 1;     
+            Value<?> value = this.graphFactory.
+                                    createValue(valueType);       
+            value.parse(data, position);
+            position +=  value.getShift();
+        }
+
+        //
+        position += 4; 
+        int count = DataParser.byte2int(data, position);
+        Edges edges = this.graphFactory.createEdges(count);
+        position += 4;
+
+        for (int i = 0; i < count; i++) {
+            position++;
+            
+            byte[] blIde = new byte[8];
+            for (int j = 0; j < this.idBytes; j++) {
+                int j_ = j + Long.BYTES - this.idBytes;
+                blIde[j_] = data[position + j];
+            }
+            ByteBuffer buffere = ByteBuffer.allocate(Long.BYTES);
+            buffere.put(blIde, 0, Long.BYTES);
+            buffere.flip();
+            Long lIde = buffere.getLong();
+            Id idTarget = BytesId.of(lIde);
+            position += 8;
+            Edge edge = new DefaultEdge(idTarget);
+
+            vint = DataParser.parseVInt(data, position);
+            position += vint[0];
+            position += vint[1];
+            
+            vint = DataParser.parseVInt(data, position);
+            position += vint[0];
+            position += vint[1];
+
+            vint = DataParser.parseVInt(data, position);
+            position += vint[1];
+
+            for (int j = 0; j < vint[0]; j++) {
+                int[] vintj = DataParser.parseVInt(data, position);
+                position += vintj[0];
+                position += vintj[1];
+                ValueType valueType = ValueType.
+                            getValueTypeByCode(data[position]);
+                position += 1;     
+                Value<?> value = this.graphFactory.
+                                        createValue(valueType);       
+                value.parse(data, position);
+                position +=  value.getShift();
+            }
+            edges.add(edge);
+        }
+        vertex.edges(edges);
+        return vertex;
+    }
+
+
     public Vertex composeVertexMultipleFast(byte[] data, boolean active) {
         Vertex vertex = context.graphFactory().createVertex();
         
@@ -697,9 +793,22 @@ public class EdgesInputFast {
         position += vint[0];
         position += vint[1];
 
-        //property assume num = 0
+        //property 
         vint = DataParser.parseVInt(data, position);
         position += vint[1];
+
+        for (int j = 0; j < vint[0]; j++) {
+            int[] vintj = DataParser.parseVInt(data, position);
+            position += vintj[0];
+            position += vintj[1];
+            ValueType valueType = ValueType.
+                        getValueTypeByCode(data[position]);
+            position += 1;     
+            Value<?> value = this.graphFactory.
+                                    createValue(valueType);       
+            value.parse(data, position);
+            position +=  value.getShift();
+        }
 
         //
         position += 4; 
@@ -735,6 +844,18 @@ public class EdgesInputFast {
             vint = DataParser.parseVInt(data, position);
             position += vint[1];
 
+            for (int j = 0; j < vint[0]; j++) {
+                int[] vintj = DataParser.parseVInt(data, position);
+                position += vintj[0];
+                position += vintj[1];
+                ValueType valueType = ValueType.
+                            getValueTypeByCode(data[position]);
+                position += 1;     
+                Value<?> value = this.graphFactory.
+                                        createValue(valueType);       
+                value.parse(data, position);
+                position +=  value.getShift();
+            }
             edges.add(edge);
         }
         vertex.edges(edges);
