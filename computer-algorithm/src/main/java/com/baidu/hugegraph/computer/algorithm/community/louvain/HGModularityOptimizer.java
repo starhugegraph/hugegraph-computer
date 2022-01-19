@@ -73,6 +73,10 @@ public class HGModularityOptimizer {
     public static final String OPTION_RANDOMSTART = "louvain.randomstart";
     public static final String OPTION_ITERATIONS = "louvain.iterations";
     public static final String OPTION_RANDOMSEED = "louvain.randomseed";
+    public static final String OPTION_INPUTTYPE = "louvain.inputtype";
+    public static final String OPTION_INPUTPATH = "louvain.inputpath";
+    public static final String OPTION_OUTPUTTYPE = "louvain.outputtype";
+    public static final String OPTION_OUTPUTPATH = "louvain.outputpath";
 
     public HGModularityOptimizer(Config config) {
         this.config = config;
@@ -103,15 +107,14 @@ public class HGModularityOptimizer {
         StopWatch watcher = new StopWatch();
         watcher.start();
 
-        String inputType = "hugegraph";//config.get(ComputerOptions.INPUT_TYPE);
+        String inputType = config.getString(OPTION_INPUTTYPE,"hugegraph");
         Network network;
         switch (inputType) {
             case "hugegraph":
                 network = this.readFromHG(modularityFunction);
                 break;
             case "file":
-                String inputFilePath = "";
-                //config.get(ComputerOptions.INPUT_PATH);
+                String inputFilePath = config.getString(OPTION_INPUTPATH,"");
                 network = this.readInputFile(inputFilePath, modularityFunction);
                 break;
             default:
@@ -198,15 +201,13 @@ public class HGModularityOptimizer {
         LOG.info("Start output...");
         watcher.reset();
         watcher.start();
-        String outputType = "hugegraph";
-        //config.get(ComputerOptions.OUTPUT_TYPE);
+        String outputType = config.getString(OPTION_OUTPUTTYPE,"hugegraph");
         switch (outputType) {
             case "hugegraph":
                 this.writeOutputHg(clustering);
                 break;
             case "file":
-                String outputFilePath = "";
-                //config.get(ComputerOptions.OUTPUT_PATH);
+                String outputFilePath = config.getString(OPTION_OUTPUTPATH,"");
                 this.writeOutputFile(outputFilePath, clustering);
                 break;
             default:
