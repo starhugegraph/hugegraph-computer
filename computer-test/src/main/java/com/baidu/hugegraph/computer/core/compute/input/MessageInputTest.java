@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import org.junit.After;
@@ -105,6 +107,7 @@ public class MessageInputTest extends UnitTestBase {
 
     @Test
     public void testMessageInput() throws IOException {
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         MessageRecvManager receiveManager = this.managers.get(
                                             MessageRecvManager.NAME);
         receiveManager.onStarted(this.connectionId);
@@ -116,8 +119,9 @@ public class MessageInputTest extends UnitTestBase {
                     receiveManager.handle(MessageType.MSG, 0, buffer);
         });
         receiveManager.onFinished(this.connectionId);
-        PeekableIterator<KvEntry> it = receiveManager.messagePartitions()
-                                                     .get(0);
+        PeekableIterator<KvEntry> it =
+                                  receiveManager.messagePartitions(executor)
+                                                .get(0);
         MessageInput<IdList> input = new MessageInput<>(context(), it, true);
         Map<Id, List<IdList>> expectedMessages = expectedMessages();
         checkMessages(expectedMessages, input);

@@ -117,9 +117,12 @@ public class ClientSession extends TransportSession {
         E.checkArgument(success, "The startedFutureRef value must be null " +
                                  "at startAsync()");
 
+        LOG.info("startAsync begin");
+
         this.stateStartSent();
         try {
             this.sendFunction.apply(StartMessage.INSTANCE);
+            LOG.info("sendFunction appllied");
         } catch (Throwable e) {
             this.stateReady();
             startedFuture.cancel(false);

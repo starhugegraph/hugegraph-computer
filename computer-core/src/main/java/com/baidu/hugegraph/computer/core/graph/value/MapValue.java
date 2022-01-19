@@ -47,6 +47,10 @@ public class MapValue<T extends Value<?>> implements Value<MapValue<T>> {
         this(elemType, new HashMap<>());
     }
 
+    public MapValue(ValueType elemType, int capacity) {
+        this(elemType, new HashMap<>(capacity));
+    }
+
     public MapValue(ValueType elemType, Map<Id, T> map) {
         this.graphFactory = ComputerContext.instance().graphFactory();
         this.elemType = elemType;
@@ -76,6 +80,14 @@ public class MapValue<T extends Value<?>> implements Value<MapValue<T>> {
 
     public Set<Map.Entry<Id, T>> entrySet() {
         return this.map.entrySet();
+    }
+
+    public int size() {
+        return this.map.size();
+    }
+
+    public boolean containsKey(Id id) {
+        return this.map.containsKey(id);
     }
 
     @Override

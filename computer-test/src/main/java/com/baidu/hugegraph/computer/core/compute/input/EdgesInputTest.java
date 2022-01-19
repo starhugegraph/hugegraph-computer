@@ -19,6 +19,17 @@
 
 package com.baidu.hugegraph.computer.core.compute.input;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+
+import org.junit.After;
+import org.junit.Test;
+
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.compute.FileGraphPartition;
@@ -56,15 +67,6 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutputImpl;
 import com.baidu.hugegraph.computer.suite.unit.UnitTestBase;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.testutil.Whitebox;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Iterator;
-import java.util.function.Consumer;
-import org.junit.After;
-import org.junit.Test;
-
-
 
 public class EdgesInputTest extends UnitTestBase {
 
@@ -125,6 +127,7 @@ public class EdgesInputTest extends UnitTestBase {
             ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX, "10",
             ComputerOptions.INPUT_EDGE_FREQ, freq.name()
         );
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         this.managers = new Managers();
         FileManager fileManager = new FileManager();
         this.managers.add(fileManager);
@@ -145,6 +148,7 @@ public class EdgesInputTest extends UnitTestBase {
                                                      0);
         FileGraphPartition<?> partition = new FileGraphPartition<>(
                                           context(), this.managers, 0, "all");
+
         receiveManager.onStarted(connectionId);
         add200VertexBuffer((ManagedBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 0, buffer);
@@ -159,13 +163,14 @@ public class EdgesInputTest extends UnitTestBase {
         Whitebox.invoke(partition.getClass(), new Class<?>[] {
                         PeekableIterator.class, PeekableIterator.class},
                         "input", partition,
-                        receiveManager.vertexPartitions().get(0),
-                        receiveManager.edgePartitions().get(0));
+                        receiveManager.vertexPartitions(executor).get(0),
+                        receiveManager.edgePartitions(executor).get(0));
         File edgeFile = Whitebox.getInternalState(partition, "edgeFile");
         EdgesInput edgesInput = new EdgesInput(context(), edgeFile);
         edgesInput.init();
         this.checkEdgesInput(edgesInput, freq);
         edgesInput.close();
+        executor.shutdown();
     }
 
     private static void add200VertexBuffer(Consumer<ManagedBuffer> consumer)

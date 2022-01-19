@@ -66,7 +66,7 @@ public class ComputerOptions extends OptionHolder {
     public static final DriverConfigOption<String> INPUT_SOURCE_TYPE =
             new DriverConfigOption<>(
                     "input.source_type",
-                    allowValues("hugegraph"),
+                    allowValues("hugegraph", "loader"),
                     String.class
             );
 

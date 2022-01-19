@@ -67,7 +67,7 @@ public class DoubleValue extends Number implements Value<DoubleValue> {
         return this.value;
     }
 
-    /*
+    /**
      * This method is reserved for performance, otherwise it will create a new
      * DoubleValue object when change it's value.
      */

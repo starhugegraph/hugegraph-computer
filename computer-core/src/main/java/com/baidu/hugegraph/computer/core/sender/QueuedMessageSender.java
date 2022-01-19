@@ -136,6 +136,7 @@ public class QueuedMessageSender implements MessageSender {
                             ++emptyQueueCount;
                             continue;
                         }
+                        LOG.info("got message, try send\n");
                         if (channel.doSend(message)) {
                             QueuedMessageSender.this.bufferSentLog(message);
                             // Only consume the message after it is sent
@@ -274,10 +275,10 @@ public class QueuedMessageSender implements MessageSender {
                 assert future != null;
 
                 if (e != null) {
-                    LOG.debug("Failed to start session connected to {}", this);
+                    LOG.info("Failed to start session connected to {}", this);
                     future.completeExceptionally(e);
                 } else {
-                    LOG.debug("Start session connected to {}", this);
+                    LOG.info("Start session connected to {}", this);
                     future.complete(null);
                 }
             });

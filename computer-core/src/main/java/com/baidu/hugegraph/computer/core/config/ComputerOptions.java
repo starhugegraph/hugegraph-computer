@@ -24,6 +24,9 @@ import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
 import static com.baidu.hugegraph.config.OptionChecker.nonNegativeInt;
 import static com.baidu.hugegraph.config.OptionChecker.positiveInt;
 
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import com.baidu.hugegraph.computer.core.combiner.OverwriteCombiner;
 import com.baidu.hugegraph.computer.core.graph.partition.HashPartitioner;
 import com.baidu.hugegraph.computer.core.input.filter.DefaultInputFilter;
@@ -39,8 +42,6 @@ import com.baidu.hugegraph.structure.constant.Direction;
 import com.baidu.hugegraph.util.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 
 public class ComputerOptions extends OptionHolder {
@@ -362,7 +363,7 @@ public class ComputerOptions extends OptionHolder {
                     "output.hdfs_delimiter",
                     "The delimiter of hdfs output.",
                     disallowEmpty(),
-                    String.valueOf((char) 27)
+                    ","
             );
 
     public static final ConfigOption<Boolean> OUTPUT_HDFS_MERGE =
@@ -438,6 +439,14 @@ public class ComputerOptions extends OptionHolder {
                     "algorithm job.",
                     positiveInt(),
                     1
+            );
+
+    public static final ConfigOption<Integer> PARTITIONS_COMPUTE_THREAD_NUMS =
+            new ConfigOption<>(
+                    "job.partitions_thread_nums",
+                    "The number of threads for partition parallel compute.",
+                    positiveInt(),
+                    4
             );
 
     public static final ConfigOption<Integer> BSP_MAX_SUPER_STEP =
