@@ -33,9 +33,6 @@ import com.baidu.hugegraph.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import java.util.Properties;
 import org.apache.commons.lang.ArrayUtils;
@@ -92,7 +89,7 @@ public class HugeGraphComputer {
                 if (algorithm.contains("LouvainParams"))
                     executeWorkerServiceLouvain(context);
                 else
-                    executeWorkerService(context);  //todo
+                    executeWorkerService(context, useMode);  //todo
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -125,48 +122,6 @@ public class HugeGraphComputer {
                 this.handler.uncaughtException(t, e);
             }
         }
-    }
-
-    private static void executeMulWorkerService(String conf,             
-                                                String useMode) 
-                                                throws IOException {
-        Properties properties = new Properties();
-        BufferedReader bufferedReader = new BufferedReader(
-                                                   new FileReader(conf));
-        properties.load(bufferedReader);
-        Map<String, String> params = ComputerContextUtil.
-                                                convertToMap(properties);
- 
-        int port0 = Integer.parseInt(params.get(ComputerOptions.
-                                       TRANSPORT_SERVER_PORT.name()));
-        int workerCount = Integer.parseInt(params.get(ComputerOptions.
-                                           JOB_WORKERS_COUNT.name()));
-        List<Thread> workers = new ArrayList<>(workerCount);
-        for (int i = 0; i < workerCount; i++) {
-            int port = port0 + i;
-            LOG.info("port = {}", port);
-            workers.add(new Thread(() -> {
-                String oldValue = params.put(ComputerOptions.
-                                                    TRANSPORT_SERVER_PORT.
-                                                    name(),
-                                                    String.valueOf(port));
-                LOG.info("oldvalue = {}", oldValue);
-                Config config = ComputerContextUtil.initContext(params);
-                WorkerService workerService = new WorkerService();
-                workerService.setUseMode(useMode);
-                workerService.init(config);
-                workerService.execute();
-            }));
-        }
-        for (Thread worker : workers) {
-            worker.start();
-        }
-        for (Thread worker : workers) {
-            try {
-                worker.join();
-            } catch (Exception e) {
-            }
-        }  
     }
 
     private static void executeWorkerService(ComputerContext context, 
