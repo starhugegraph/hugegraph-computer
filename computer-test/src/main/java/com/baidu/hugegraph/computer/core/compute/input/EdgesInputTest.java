@@ -146,7 +146,7 @@ public class EdgesInputTest extends UnitTestBase {
         ConnectionId connectionId = new ConnectionId(new InetSocketAddress(
                                                      "localhost", 8081),
                                                      0);
-        FileGraphPartition<?> partition = new FileGraphPartition<>(
+        FileGraphPartition partition = new FileGraphPartition(
                                           context(), this.managers, 0, "all");
 
         receiveManager.onStarted(connectionId);

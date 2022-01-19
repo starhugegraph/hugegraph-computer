@@ -190,7 +190,7 @@ public class FileGraphPartition {
                                 new ArrayBlockingQueue<Vertex>(100);
         
         ComputeConsumer computeConsumer = 
-                        new ComputeConsumer(context, computation, 
+                        new ComputeConsumer(context, this.computation, 
                                 curValueOutput, curStatusOutput,
                                 vertexQueue, null,
                                 this.vertexCount);
@@ -411,7 +411,7 @@ public class FileGraphPartition {
                                     this.edgesInput);
 
         ComputeConsumer computeConsumer = 
-                        new ComputeConsumer(context, computation, 
+                        new ComputeConsumer(context, this.computation, 
                                 curValueOutput, curStatusOutput,
                                 vertexQueue, messageQueue,
                                 this.vertexCount);
@@ -890,7 +890,7 @@ public class FileGraphPartition {
 
     private class ComputeConsumer implements Runnable {
         protected ComputationContext context;
-        protected Computation<M> computation;
+        protected Computation<Value<?>> computation;
         protected MessageInputFast messageInput;
         protected BlockingQueue vertexQueue = null;
         protected BlockingQueue messageQueue = null;
@@ -904,7 +904,7 @@ public class FileGraphPartition {
         protected boolean stoped = false;
     
         public ComputeConsumer(ComputationContext context,
-                               Computation<M> computation, 
+                               Computation<Value<?>> computation, 
                                BufferedFileOutput curValueOutput, 
                                BufferedFileOutput curStatusOutput, 
                                BlockingQueue vertexQueue,

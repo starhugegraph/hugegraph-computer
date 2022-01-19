@@ -19,15 +19,21 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.computer.core.store.FileManager;
+import com.baidu.hugegraph.computer.core.store.FileGenerator;
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
@@ -39,8 +45,6 @@ import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
-import com.baidu.hugegraph.computer.core.store.FileGenerator;
-import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.util.Consumers;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
@@ -48,8 +52,10 @@ import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
-
 import com.baidu.hugegraph.util.TimeUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ComputeManager {
 
@@ -98,8 +104,8 @@ public class ComputeManager {
                     int partition = Integer.valueOf(partstr[0]);
                     long vCount = Long.valueOf(partstr[1]);
                     long eCount = Long.valueOf(partstr[2]);
-                    FileGraphPartition<M> part;
-                    part = new FileGraphPartition<>(this.context,
+                    FileGraphPartition part;
+                    part = new FileGraphPartition(this.context,
                                         this.managers, partition, mode);
                     part.setVertexCount(vCount);
                     part.setEdgeCount(eCount);
@@ -134,7 +140,7 @@ public class ComputeManager {
                                             partition,
                                             PeekableIterator.emptyIterator());
 
-            FileGraphPartition<M> part = new FileGraphPartition<>(this.context,
+            FileGraphPartition part = new FileGraphPartition(this.context,
                                                 this.managers, partition, mode);
 
             PartitionStat partitionStat = null;
