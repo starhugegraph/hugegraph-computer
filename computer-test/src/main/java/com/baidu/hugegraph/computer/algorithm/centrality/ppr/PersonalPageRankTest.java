@@ -17,29 +17,19 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.computer.core.graph.id;
+package com.baidu.hugegraph.computer.algorithm.centrality.ppr;
 
-import com.baidu.hugegraph.computer.core.common.SerialEnum;
+import org.junit.Test;
 
-public enum IdType implements SerialEnum {
+import com.baidu.hugegraph.computer.algorithm.AlgorithmTestBase;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 
-    LONG(1),
-    UTF8(2),
-    UUID(3);
+public class PersonalPageRankTest extends AlgorithmTestBase {
 
-    static {
-        SerialEnum.register(IdType.class);
-    }
-
-    private final byte code;
-
-    IdType(int code) {
-        assert code >= -128 && code <= 127;
-        this.code = (byte) code;
-    }
-
-    @Override
-    public byte code() {
-        return this.code;
+    @Test
+    public void testRunAlgorithm() throws InterruptedException {
+       runAlgorithm(PersonalPageRankParams.class.getName(),
+                    ComputerOptions.BSP_LOG_INTERVAL.name(),
+                    "1000");
     }
 }

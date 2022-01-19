@@ -21,9 +21,12 @@ package com.baidu.hugegraph.computer.core.worker;
 
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
+import com.baidu.hugegraph.util.Log;
 
 /**
  * Computation is used to compute vertex. It is the most important algorithm
@@ -37,6 +40,7 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
  * @param <M>
  */
 public interface Computation<M extends Value<?>> {
+    Logger LOG = Log.logger(Computation.class);
 
     /**
      * @return the name of computation.
