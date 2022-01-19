@@ -22,77 +22,68 @@ package com.baidu.hugegraph.computer.core.input.hg;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
+
+import com.baidu.hugegraph.computer.core.config.Config;
+import com.baidu.hugegraph.pd.client.PDClient;
+import com.baidu.hugegraph.pd.client.PDConfig;
+import com.baidu.hugegraph.pd.common.PDException;
+import com.baidu.hugegraph.pd.grpc.Metapb;
 import com.baidu.hugegraph.util.Log;
 
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
 import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.driver.HugeClientBuilder;
-import com.baidu.hugegraph.structure.graph.Shard;
-import com.baidu.hugegraph.util.E;
 
 public class HugeInputSplitFetcher implements InputSplitFetcher {
 
     private static final Logger LOG = Log.logger("huge fetcher");
-   
+    private static final String GRAPH_SUFFIX = "/g";
+
     private final Config config;
-    private final HugeClient client;
+
+    private PDClient pdClient;
+    private List<Metapb.Partition> partitions;
 
     public HugeInputSplitFetcher(Config config) {
         this.config = config;
-        String url = config.get(ComputerOptions.HUGEGRAPH_URL);
-        String graph = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
-        String token = config.get(ComputerOptions.AUTH_TOKEN);
-        String usrname = config.get(ComputerOptions.AUTH_USRNAME);
-        String passwd = config.get(ComputerOptions.AUTH_PASSWD);
-        LOG.info("{} {}", usrname, token);
-
-        // Use token first, then try passwd mode
-        HugeClientBuilder clientBuilder = new HugeClientBuilder(url,"DEFAULT",
-                graph);
-        if (token != null && token.length() != 0) {
-            this.client = clientBuilder.configToken(token).build();
-        } else if (usrname != null && usrname.length() != 0) {
-            this.client = clientBuilder.configUser(usrname, passwd).build();
-        } else {
-            LOG.info("a0 {} {}", url, graph);
-            this.client = clientBuilder.build();
-            LOG.info("a1");
-        }
+        String pdPeers = this.config.get(ComputerOptions.INPUT_PD_PEERS);
+        this.pdClient = PDClient.create(
+                        PDConfig.of(pdPeers).setEnablePDNotify(true));
+        this.partitions = new ArrayList<>();
     }
 
     @Override
     public void close() {
-        this.client.close();
+        // pass
     }
 
     @Override
     public List<InputSplit> fetchVertexInputSplits() {
-        long splitSize = this.config.get(ComputerOptions.INPUT_SPLITS_SIZE);
-        int maxSplits = this.config.get(ComputerOptions.INPUT_MAX_SPLITS);
-        List<Shard> shards = this.client.traverser().vertexShards(splitSize);
-        E.checkArgument(shards.size() <= maxSplits,
-                        "Too many shards due to too small splitSize");
-        List<InputSplit> splits = new ArrayList<>();
-        for (Shard shard : shards) {
-            InputSplit split = new InputSplit(shard.start(), shard.end());
-            splits.add(split);
-        }
-        return splits;
+        return this.fetchInputSplits();
     }
 
     @Override
     public List<InputSplit> fetchEdgeInputSplits() {
-        long splitSize = this.config.get(ComputerOptions.INPUT_SPLITS_SIZE);
-        int maxSplits = this.config.get(ComputerOptions.INPUT_MAX_SPLITS);
-        List<Shard> shards = this.client.traverser().edgeShards(splitSize);
-        E.checkArgument(shards.size() <= maxSplits,
-                        "Too many shards due to too small splitSize");
+        return this.fetchInputSplits();
+    }
+
+    private List<InputSplit> fetchInputSplits() {
+        // Format is {graphspace}/{graph}
+        String graph = this.config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
+        graph = graph + GRAPH_SUFFIX;
+        try {
+            if (this.partitions == null || this.partitions.isEmpty()) {
+                this.partitions = this.pdClient.getPartitions(0, graph);
+            }
+        } catch (PDException e) {
+            e.printStackTrace();
+        }
+
         List<InputSplit> splits = new ArrayList<>();
-        for (Shard shard : shards) {
-            InputSplit split = new InputSplit(shard.start(), shard.end());
+        for (Metapb.Partition partition : this.partitions) {
+            InputSplit split = new InputSplit(
+                               String.valueOf(partition.getStartKey()),
+                               String.valueOf(partition.getEndKey()));
             splits.add(split);
         }
         return splits;

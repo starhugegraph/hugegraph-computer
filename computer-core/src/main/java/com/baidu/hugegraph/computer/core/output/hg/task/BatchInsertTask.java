@@ -22,24 +22,24 @@ package com.baidu.hugegraph.computer.core.output.hg.task;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.HugeException;
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.exception.ServerException;
 import com.baidu.hugegraph.rest.ClientException;
-import com.baidu.hugegraph.structure.graph.Vertex;
 import com.baidu.hugegraph.util.Log;
 
 public class BatchInsertTask extends InsertTask {
 
     private static final Logger LOG = Log.logger(TaskManager.class);
 
-    public BatchInsertTask(Config config, HugeClient client,
+    public BatchInsertTask(Config config, HugeGraph graph,
                            List<Vertex> batch, LoadSummary loadSummary) {
-        super(config, client, batch, loadSummary);
+        super(config, graph, batch, loadSummary);
     }
 
     @Override
@@ -60,12 +60,9 @@ public class BatchInsertTask extends InsertTask {
                     }
                 }
                 retryCount = this.waitThenRetry(retryCount, e);
-            } catch (ServerException e) {
+            } catch (HugeException e) {
                 String message = e.getMessage();
                 LOG.error("server exception: {}", message);
-                if (UNACCEPTABLE_EXCEPTIONS.contains(e.exception())) {
-                    throw e;
-                }
                 if (StringUtils.containsAny(message, UNACCEPTABLE_MESSAGES)) {
                     throw e;
                 }

@@ -21,12 +21,12 @@ package com.baidu.hugegraph.computer.core.output.hg.task;
 
 import java.util.List;
 
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.structure.graph.Vertex;
 import com.baidu.hugegraph.util.Log;
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +34,7 @@ public class SingleInsertTask extends InsertTask {
 
     private static final Logger LOG = Log.logger(TaskManager.class);
 
-    public SingleInsertTask(Config config, HugeClient client,
+    public SingleInsertTask(Config config, HugeGraph client,
                             List<Vertex> batch, LoadSummary loadSummary) {
         super(config, client, batch, loadSummary);
     }

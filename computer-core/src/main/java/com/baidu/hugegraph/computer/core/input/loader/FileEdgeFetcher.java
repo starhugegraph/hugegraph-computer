@@ -35,7 +35,7 @@ import com.baidu.hugegraph.structure.graph.Edge;
 import com.baidu.hugegraph.structure.schema.EdgeLabel;
 
 public class FileEdgeFetcher extends FileElementFetcher<Edge>
-                             implements EdgeFetcher {
+                             implements EdgeFetcher<Edge> {
 
     public FileEdgeFetcher(Config config) {
         super(config);
