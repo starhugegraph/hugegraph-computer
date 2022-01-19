@@ -43,7 +43,5 @@ public class DegreeCentralityParams implements AlgorithmParams {
                          DoubleValueSumCombiner.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
                          DegreeCentralityOutput.class.getName());
-        this.setIfAbsent(params, ComputerOptions.USE_FASTER_COMPOSER.name(),
-                         "targetidonlly");
     }
 }

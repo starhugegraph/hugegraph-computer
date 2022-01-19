@@ -482,8 +482,13 @@ public class FileGraphPartition {
 
         Value<?> result = this.context.config().createObject(
                           ComputerOptions.ALGORITHM_RESULT_CLASS);
-        while (this.vertexInput.hasNext()) {
-            Vertex vertex = this.vertexInput.next();
+        while (true) {
+            byte[] data = this.edgesInput.getOneVertexBuffer();
+            if (data == null) {
+                break;
+            }
+            Vertex vertex = this.edgesInput.
+                    composeVertex(data, true);
             this.readVertexStatusAndValue(vertex, result);
 
             if (!this.useVariableLengthOnly) {
@@ -492,8 +497,6 @@ public class FileGraphPartition {
                     vertex.id(vertex1.id());
                 }
             }
-            Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
-            vertex.edges(edges);
             output.write(vertex);
         }
 

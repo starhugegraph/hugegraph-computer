@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.degree;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -32,12 +33,9 @@ import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hdfs.HdfsOutput;
-import com.baidu.hugegraph.util.Log;
-import org.slf4j.Logger;
+import com.google.common.collect.Streams;
+
 public class DegreeCentralityTest extends AlgorithmTestBase {
-
-    private static final Logger LOG = Log.logger("DegreeCentralityTest");
-
     public static boolean isRun;
 
     @Test
@@ -86,18 +84,17 @@ public class DegreeCentralityTest extends AlgorithmTestBase {
             if (StringUtils.isEmpty(this.weight)) {
                 Assert.assertEquals(vertex.numEdges(), value.value(), 0.000001);
             } else {
-                double totalValue = 0.0;
-                for (Edge edge : vertex.edges()) {
-                    double edgevalue;
-                    DoubleValue weightValue =
-                        edge.property(this.weight);
-                    if (weightValue == null) {
-                        edgevalue = 1.0;
-                    } else {
-                        edgevalue = weightValue.value();
-                    }
-                    totalValue += edgevalue;
-                }
+                Iterator<Edge> edges = vertex.edges().iterator();
+                double totalValue = Streams.stream(edges).map(
+                                    (edge) -> {
+                                        DoubleValue weightValue =
+                                                    edge.property(this.weight);
+                                        if (weightValue == null) {
+                                            return 1.0;
+                                        } else {
+                                            return weightValue.value();
+                                        }
+                                    }).reduce(Double::sum).orElse(0.0);
                 Assert.assertEquals(totalValue, value.value(), 0.000001);
             }
         }
