@@ -136,7 +136,6 @@ public class QueuedMessageSender implements MessageSender {
                             ++emptyQueueCount;
                             continue;
                         }
-                        LOG.info("got message, try send\n");
                         if (channel.doSend(message)) {
                             QueuedMessageSender.this.bufferSentLog(message);
                             // Only consume the message after it is sent
