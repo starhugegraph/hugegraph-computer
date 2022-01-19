@@ -20,13 +20,13 @@ package com.baidu.hugegraph.computer.dist;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.master.MasterService;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.util.ComputerContextUtil;
 import com.baidu.hugegraph.computer.core.worker.WorkerService;
+import com.baidu.hugegraph.computer.core.worker.WorkerServiceLouvain;
 import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
@@ -80,15 +80,19 @@ public class HugeGraphComputer {
         loadClass();
         registerOptions();
         ComputerContext context = parseContext(args[0]);
+
+        String algorithm = getAlgorithmParam(args[0]);
+        System.out.println("algorithm:" + algorithm);
         switch (role) {
             case ROLE_MASTER:
-                executeMasterService(context);
+                if (!algorithm.contains("LouvainParams"))
+                    executeMasterService(context); //todo
                 break;
             case ROLE_WORKER:
-                executeWorkerService(context, useMode);
-                break;
-            case ROLE_WORKERS:
-                executeMulWorkerService(args[0], useMode);
+                if (algorithm.contains("LouvainParams"))
+                    executeWorkerServiceLouvain(context);
+                else
+                    executeWorkerService(context);  //todo
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -174,6 +178,13 @@ public class HugeGraphComputer {
         }
     }
 
+    private static void executeWorkerServiceLouvain(ComputerContext context) {
+        try (WorkerServiceLouvain workerService = new WorkerServiceLouvain()) {
+            workerService.init(context.config());
+            workerService.execute();
+        }
+    }
+
     private static void executeMasterService(ComputerContext context) {
         try (MasterService masterService = new MasterService()) {
             masterService.init(context.config());
@@ -190,6 +201,17 @@ public class HugeGraphComputer {
         ComputerContextUtil.initContext(properties);
         
         return ComputerContext.instance();
+    }
+
+    private static String getAlgorithmParam(String conf)
+            throws IOException {
+        Properties properties = new Properties();
+        BufferedReader bufferedReader = new BufferedReader(
+                new FileReader(conf));
+        properties.load(bufferedReader);
+
+        return properties.getProperty(
+                ComputerOptions.ALGORITHM_PARAMS_CLASS.name());
     }
 
     private static void registerOptions() {
