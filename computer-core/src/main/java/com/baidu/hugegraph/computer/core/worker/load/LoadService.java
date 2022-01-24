@@ -31,6 +31,7 @@ import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.properties.Properties;
+import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.DefaultVertex;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
@@ -43,7 +44,6 @@ import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.rpc.InputSplitRpcService;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
-import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 
 public class LoadService {
 
@@ -117,6 +117,7 @@ public class LoadService {
                     vertexFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
             }
             return true;
         }
