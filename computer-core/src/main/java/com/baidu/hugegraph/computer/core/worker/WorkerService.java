@@ -300,12 +300,11 @@ public class WorkerService implements Closeable {
                 this.computeManager.useVariableLengthOnly();
                 this.sendManager.useVariableLengthOnly();
             }
-            WorkerStat workerStat = this.inputWorkerStat;
-            workerStat = this.computeManager.compute(context, superstep);
+            WorkerStat workerStat = this.computeManager.compute(context,
+                                                                superstep);
 
             LOG.info("workerStat result {}", workerStat);
-            
-            
+
             this.bsp4Worker.workerStepComputeDone(superstep);
             this.bsp4Worker.waitMasterStepComputeDone(superstep);
 
