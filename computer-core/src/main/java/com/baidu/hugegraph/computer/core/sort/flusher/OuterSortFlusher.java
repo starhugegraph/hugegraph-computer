@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.sort.flusher;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.NotImplementedException;
 
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
@@ -52,5 +50,5 @@ public interface OuterSortFlusher {
      * method.
      */
     void flush(EntryIterator entries, HgkvDirBuilder writer)
-               throws IOException;
+               throws Exception;
 }

@@ -114,7 +114,7 @@ public class SorterImpl implements Sorter {
 
     private void sortBuffers(List<EntryIterator> entries,
                              OuterSortFlusher flusher, String output)
-                             throws IOException {
+                             throws Exception {
         InputsSorter sorter = new InputsSorterImpl();
         try (HgkvDirBuilder builder = new HgkvDirBuilderImpl(this.config,
                                                              output)) {

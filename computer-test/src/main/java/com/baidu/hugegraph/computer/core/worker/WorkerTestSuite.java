@@ -24,8 +24,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    WorkerStatTest.class,
-    WorkerServiceTest.class
+    WorkerStatTest.class
 })
 public class WorkerTestSuite {
 }
