@@ -24,17 +24,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.sort.sorting.LoserTreeInputsSorting;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.EntryIterator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntriesUtil;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.util.E;
 
-public class SubKvSorter implements Iterator<KvEntry> {
+public class SubKvSorter implements EntryIterator {
 
     private final PeekableIterator<KvEntry> entries;
     private final int subKvSortPathNum;
-    private final List<Iterator<KvEntry>> subKvMergeSources;
+    private final List<EntryIterator> subKvMergeSources;
     private Iterator<KvEntry> subKvSorting;
     private KvEntry currentEntry;
 
@@ -62,6 +64,14 @@ public class SubKvSorter implements Iterator<KvEntry> {
         }
 
         return this.subKvSorting.next();
+    }
+
+
+    @Override
+    public void close() throws Exception {
+        for (EntryIterator mergePath : this.subKvMergeSources) {
+            mergePath.close();
+        }
     }
 
     public KvEntry currentKv() {
@@ -96,10 +106,10 @@ public class SubKvSorter implements Iterator<KvEntry> {
         this.reset();
     }
 
-    private static class MergePath implements Iterator<KvEntry> {
+    private static class MergePath implements EntryIterator {
 
         private final PeekableIterator<KvEntry> entries;
-        private Iterator<KvEntry> subKvIter;
+        private EntryIterator subKvIter;
         private KvEntry currentEntry;
 
         public MergePath(PeekableIterator<KvEntry> entries,
@@ -122,11 +132,22 @@ public class SubKvSorter implements Iterator<KvEntry> {
                 if (nextEntry != null &&
                     nextEntry.key().compareTo(this.currentEntry.key()) == 0) {
                     this.currentEntry = this.entries.next();
+                    try {
+                        this.subKvIter.close();
+                    } catch (Exception e) {
+                       throw new ComputerException("Close subKvIter error in " +
+                                                   "SubKvSorter", e);
+                    }
                     this.subKvIter = EntriesUtil.subKvIterFromEntry(
                                                  this.currentEntry);
                 }
             }
             return nextSubKvEntry;
+        }
+
+        @Override
+        public void close() throws Exception {
+            this.subKvIter.close();
         }
     }
 }
