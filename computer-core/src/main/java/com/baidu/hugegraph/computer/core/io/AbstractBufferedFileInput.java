@@ -164,8 +164,8 @@ public abstract class AbstractBufferedFileInput extends UnsafeBytesInput {
     private static boolean rangeInBuffer(AbstractBufferedFileInput input,
                                          long offset, long length) {
         long bufferStart = bufferStartPosition(input);
-        return bufferStart <= offset && offset < input.fileOffset &&
-               input.limit() >= length;
+        assert input.limit() == input.fileOffset - bufferStart;
+        return bufferStart <= offset && (offset + length) < input.fileOffset;
     }
 
     protected int bufferCapacity() {

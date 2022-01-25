@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.sort.flusher;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.io.BytesOutput;
@@ -55,7 +53,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
 
     @Override
     public void flush(EntryIterator entries, HgkvDirBuilder writer)
-                      throws IOException {
+                      throws Exception {
         E.checkArgument(entries.hasNext(), "Parameter entries can't be empty");
 
         PeekableIterator<KvEntry> kvEntries = PeekableIteratorAdaptor.of(
@@ -130,6 +128,7 @@ public class CombineSubKvOuterSortFlusher implements OuterSortFlusher {
                 break;
             }
         }
+        sorter.close();
         writer.finish();
     }
 }
