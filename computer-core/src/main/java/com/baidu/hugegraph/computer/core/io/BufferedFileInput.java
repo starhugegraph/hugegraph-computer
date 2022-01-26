@@ -108,4 +108,9 @@ public class BufferedFileInput extends AbstractBufferedFileInput {
         input.seek(this.position());
         return input;
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        this.file.close();
+    }
 }

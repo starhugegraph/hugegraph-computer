@@ -59,7 +59,7 @@ public class LinksTest extends AlgorithmTestBase {
 
     @BeforeClass
     public static void setup() {
-        //clearAll();
+        clearAll();
 
         HugeClient client = client();
         SchemaManager schema = client.schema();
@@ -110,7 +110,7 @@ public class LinksTest extends AlgorithmTestBase {
 
     @AfterClass
     public static void clear() {
-        //clearAll();
+        clearAll();
     }
 
     @Test

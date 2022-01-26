@@ -71,6 +71,7 @@ public abstract class SortManager implements Manager {
     private final Sorter sorter;
     private final int capacity;
     private final int flushThreshold;
+    private final int mergeInputSources;
 
     public SortManager(ComputerContext context) {
         this.context = context;
@@ -82,6 +83,8 @@ public abstract class SortManager implements Manager {
                         ComputerOptions.WORKER_WRITE_BUFFER_INIT_CAPACITY);
         this.flushThreshold = config.get(
                               ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX);
+        this.mergeInputSources = config.get(
+                                 ComputerOptions.HGKV_MERGE_FILES_NUM);
     }
 
     @Override
@@ -186,7 +189,7 @@ public abstract class SortManager implements Manager {
                                                 OuterSortFlusher flusher) {
         return CompletableFuture.runAsync(() -> {
             if (withSubKv) {
-                flusher.sources(inputs.size());
+                flusher.sources(this.mergeInputSources);
             }
             try {
                 this.sorter.mergeBuffers(inputs, flusher, path, withSubKv);
@@ -201,7 +204,7 @@ public abstract class SortManager implements Manager {
     public void mergeInputs(List<String> inputs, List<String> outputs,
                             boolean withSubKv, OuterSortFlusher flusher) {
         if (withSubKv) {
-            flusher.sources(inputs.size());
+            flusher.sources(this.mergeInputSources);
         }
         try {
             this.sorter.mergeInputs(inputs, flusher, outputs, withSubKv);
