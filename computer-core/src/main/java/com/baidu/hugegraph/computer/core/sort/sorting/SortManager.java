@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.core.sort.sorting;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +57,8 @@ import com.baidu.hugegraph.computer.core.sort.flusher.OuterSortFlusher;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
+import com.baidu.hugegraph.computer.core.util.BytesUtil;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
 
@@ -68,6 +71,7 @@ public abstract class SortManager implements Manager {
     private final Sorter sorter;
     private final int capacity;
     private final int flushThreshold;
+    private float tb = 0.0f;
 
     public SortManager(ComputerContext context) {
         this.context = context;
@@ -104,6 +108,56 @@ public abstract class SortManager implements Manager {
         } catch (InterruptedException e) {
             LOG.warn("Interrupted when waiting sort executor terminated");
         }
+    }
+   
+    private int readOneEntryLength(byte[] data, int offset) {
+        int length = 0;
+        int keylength = DataParser.byte2int(data, offset);
+        length += 4;
+        length += keylength;
+        offset += length;
+
+        int valuelength = DataParser.byte2int(data, offset);
+        length += 4;
+        length += valuelength;
+        return length;
+    }
+
+    public CompletableFuture<ByteBuffer> sortFast(MessageType type, 
+                            WriteBuffers buffer) {
+        //sort
+        return CompletableFuture.supplyAsync(() -> {
+            byte[] data = buffer.outputByteArray();
+            List<byte[]> dataList = new ArrayList<byte[]>();
+            int position = 0;
+            while (true) {
+                int length = this.readOneEntryLength(data, position);
+                byte[] dataEntry = new byte[length];
+                System.arraycopy(data, position, dataEntry, 0, length);
+                dataList.add(dataEntry);
+
+                position += length;
+                if (position >= data.length) {
+                    break;
+                }
+            }
+            dataList.sort(BytesUtil::compareKey);
+
+            //flush to output
+            BytesOutput output = IOFactory.createBytesOutput(this.capacity);
+            InnerSortFlusher flusher = this.createSortFlusher(
+                                        type, output,
+                                        this.flushThreshold);  
+            try {
+                flusher.flushBytes(dataList.iterator());
+            } catch (Exception e) {
+                throw new ComputerException("Failed to sort buffers of %s " +
+                                                "message", e, type.name());
+            }
+            ByteBuffer bytebuffer = ByteBuffer.wrap(output.buffer(), 0,
+                                (int) output.position());
+            return bytebuffer;
+        }, this.sortExecutor);
     }
 
     public CompletableFuture<ByteBuffer> sort(MessageType type,

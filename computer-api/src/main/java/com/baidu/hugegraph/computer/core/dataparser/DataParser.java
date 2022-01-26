@@ -132,4 +132,19 @@ public class DataParser {
         Pair<String, Integer> pair = new ImmutablePair<>(str, shift);
         return pair;
     }
+
+    public static byte[] parseKey(byte[] data) {
+        int keylength = DataParser.byte2int(data, 0);
+        byte[] result = new byte[keylength];
+        System.arraycopy(data, 4, result, 0, keylength);
+        return result;
+    }
+
+    public static byte[] parseValue(byte[] data) {
+        int keylength = DataParser.byte2int(data, 0);
+        int valuelength = DataParser.byte2int(data, keylength + 4);
+        byte[] result = new byte[valuelength];
+        System.arraycopy(data, keylength + 8, result, 0, valuelength);
+        return result;
+    }
 }

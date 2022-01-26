@@ -21,7 +21,7 @@ package com.baidu.hugegraph.computer.core.sender;
 
 import com.baidu.hugegraph.util.E;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 
 /**
@@ -37,7 +37,7 @@ class MessageQueue {
                                "The callback to notify that a queue is " +
                                "not empty can't be null");
         // TODO: replace with disruptor queue
-        this.queue = new LinkedBlockingQueue<>(128);
+        this.queue = new ArrayBlockingQueue<>(128);
         this.notEmptyNotifier = notEmptyNotifier;
     }
 

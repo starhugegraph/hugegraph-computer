@@ -27,6 +27,9 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.DefaultKvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
 import com.baidu.hugegraph.util.E;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
+import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.InlinePointer;
+import com.baidu.hugegraph.computer.core.util.BytesUtil;
 
 public abstract class CombinableSorterFlusher {
 
@@ -34,6 +37,36 @@ public abstract class CombinableSorterFlusher {
 
     public CombinableSorterFlusher(Combiner<Pointer> combiner) {
         this.combiner = combiner;
+    }
+
+    public void flushBytes(Iterator<byte[]> datas) throws IOException {
+        byte[] last = datas.next();
+        byte[] combineData = DataParser.parseValue(last);
+        Pointer combineValue = new InlinePointer(combineData);
+
+        while (true) {
+            byte[] current = null;
+            if (datas.hasNext()) {
+                current = datas.next();
+                if (BytesUtil.compareKey(last, current) == 0) {
+                    byte[] currentData = DataParser.parseValue(current);
+                    Pointer currentValue = new InlinePointer(currentData);
+                    this.combiner.combine(combineValue, currentValue);
+                    continue;
+                }
+            }
+            byte[] keyData = DataParser.parseKey(last);
+            Pointer lastKey = new InlinePointer(keyData);
+            this.writeKvEntry(new DefaultKvEntry(lastKey, combineValue));
+
+            if (current == null) {
+                break;
+            }
+
+            last = current;
+            combineData = DataParser.parseValue(last);
+            combineValue = new InlinePointer(combineData);
+        }
     }
 
     public void flush(Iterator<KvEntry> entries) throws IOException {

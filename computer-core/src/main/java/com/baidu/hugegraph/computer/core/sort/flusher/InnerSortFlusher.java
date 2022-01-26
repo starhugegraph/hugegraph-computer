@@ -50,4 +50,6 @@ public interface InnerSortFlusher {
      * results to output.
      */
     void flush(Iterator<KvEntry> entries) throws IOException;
+
+    void flushBytes(Iterator<byte[]> datas) throws IOException;
 }

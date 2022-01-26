@@ -50,6 +50,7 @@ import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.util.ShutdownHook;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
+import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -415,8 +416,26 @@ public class WorkerService implements Closeable {
     private SuperstepStat inputstep() {
         LOG.info("{} WorkerService inputstep started", this);
         WorkerInputManager manager = this.managers.get(WorkerInputManager.NAME);
+        
         if (this.useMode != "compute") {
-            manager.loadGraph();
+            //manager.loadGraph();
+            this.sendManager.startSend(MessageType.VERTEX);
+            this.bsp4Worker.workerInputVertexStarted();
+            manager.loadVertex();
+            this.bsp4Worker.workerInputVertexFinished();
+            this.sendManager.finishSend(MessageType.VERTEX);
+            this.sendManager.startSend(MessageType.EDGE);
+            this.bsp4Worker.workerInputEdgeStarted();
+            manager.loadEdge();
+            this.bsp4Worker.workerInputEdgeFinished();
+            this.sendManager.finishSend(MessageType.EDGE);
+        }
+        else { 
+            //do nothing and cheat master
+            this.bsp4Worker.workerInputVertexStarted();
+            this.bsp4Worker.workerInputVertexFinished();
+            this.bsp4Worker.workerInputEdgeStarted();
+            this.bsp4Worker.workerInputEdgeFinished();
         }
         this.bsp4Worker.workerInputDone();
         this.bsp4Worker.waitMasterInputDone();
@@ -483,6 +502,11 @@ public class WorkerService implements Closeable {
         @Override
         public void sendMessage(Id target, Value<?> value) {
             this.sendManager.sendMessage(target, value);
+        }
+
+        @Override
+        public void sendMessage(Id src, Id target, Value<?> value) {
+            this.sendManager.sendMessage(src, target, value);
         }
 
         @Override
