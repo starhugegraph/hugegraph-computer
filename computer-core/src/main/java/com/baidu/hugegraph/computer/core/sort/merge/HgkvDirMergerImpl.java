@@ -113,7 +113,7 @@ public class HgkvDirMergerImpl implements HgkvDirMerger {
         try (EntryIterator sortedKv = sorter.sort(entries);
              HgkvDirBuilder builder = new HgkvDirBuilderImpl(this.config,
                                                              output)) {
-            flusher.flush(sortedKv, builder);
+             flusher.flush(sortedKv, builder);
         }
     }
 

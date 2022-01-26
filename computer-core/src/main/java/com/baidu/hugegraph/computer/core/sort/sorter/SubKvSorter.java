@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.sort.sorting.LoserTreeInputsSorting;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.EntryIterator;
@@ -41,7 +40,7 @@ public class SubKvSorter implements EntryIterator {
     private KvEntry currentEntry;
 
     public SubKvSorter(PeekableIterator<KvEntry> entries,
-                       int subKvSortPathNum) {
+                       int subKvSortPathNum) throws Exception {
         E.checkArgument(entries.hasNext(),
                         "Parameter entries can't be empty");
         E.checkArgument(subKvSortPathNum > 0,
@@ -78,7 +77,7 @@ public class SubKvSorter implements EntryIterator {
         return this.currentEntry;
     }
 
-    public void reset() {
+    public void reset() throws Exception {
         if (!this.entries.hasNext()) {
             this.currentEntry = null;
             return;
@@ -102,7 +101,7 @@ public class SubKvSorter implements EntryIterator {
         this.currentEntry = entry;
     }
 
-    private void init() {
+    private void init() throws Exception {
         this.reset();
     }
 
@@ -121,33 +120,32 @@ public class SubKvSorter implements EntryIterator {
 
         @Override
         public boolean hasNext() {
-            return this.subKvIter.hasNext();
+            if (this.subKvIter.hasNext()) {
+                return true;
+            }
+
+            return this.fetchNextPath();
         }
 
         @Override
         public KvEntry next() {
-            KvEntry nextSubKvEntry = this.subKvIter.next();
-            if (!this.subKvIter.hasNext()) {
-                KvEntry nextEntry = this.entries.peek();
-                if (nextEntry != null &&
-                    nextEntry.key().compareTo(this.currentEntry.key()) == 0) {
-                    this.currentEntry = this.entries.next();
-                    try {
-                        this.subKvIter.close();
-                    } catch (Exception e) {
-                       throw new ComputerException("Close subKvIter error in " +
-                                                   "SubKvSorter", e);
-                    }
-                    this.subKvIter = EntriesUtil.subKvIterFromEntry(
-                                                 this.currentEntry);
-                }
-            }
-            return nextSubKvEntry;
+            return this.subKvIter.next();
         }
 
         @Override
         public void close() throws Exception {
             this.subKvIter.close();
+        }
+
+        private boolean fetchNextPath() {
+            KvEntry nextEntry = this.entries.peek();
+            if (nextEntry != null &&
+                nextEntry.key().compareTo(this.currentEntry.key()) == 0) {
+                this.currentEntry = this.entries.next();
+                this.subKvIter = EntriesUtil.subKvIterFromEntry(
+                                             this.currentEntry);
+            }
+            return this.subKvIter.hasNext();
         }
     }
 }
