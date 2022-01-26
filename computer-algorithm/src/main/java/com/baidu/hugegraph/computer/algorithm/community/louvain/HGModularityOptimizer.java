@@ -47,6 +47,7 @@ import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.input.GraphFe
 import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.HugeOutput;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.structure.graph.Edge;
+import com.baidu.hugegraph.structure.graph.Vertex;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.baidu.hugegraph.util.TimeUtil;
@@ -264,6 +265,13 @@ public class HGModularityOptimizer {
                 iterator2.remove();
             }
             originalNode2 = null;
+
+
+            Iterator<Vertex> iteratorV = hgFetcher.createIteratorFromVertex();
+            while (iteratorV.hasNext()) {
+                Vertex vertex = iteratorV.next();
+                this.covertId(vertex.id());
+            }
         }
         watcher.stop();
         LOG.info("Load data complete, cost: {}, nums: {}",

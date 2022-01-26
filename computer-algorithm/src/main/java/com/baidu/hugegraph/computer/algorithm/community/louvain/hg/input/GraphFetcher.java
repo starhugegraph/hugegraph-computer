@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.baidu.hugegraph.structure.graph.Vertex;
 import org.apache.commons.lang3.StringUtils;
 
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
@@ -39,6 +40,10 @@ public class GraphFetcher implements Closeable {
     private final List<Shard> shards;
     private final HugeEdgeFetcher hugeEdgeFetcher;
     private int shardPosition;
+
+    private final List<Shard> shardsVertex;
+    private final HugeVertexFetcher hugeVertexFetcher;
+    private int shardPositionVertex;
 
     public GraphFetcher(Config config) {
         String url = config.get(ComputerOptions.HUGEGRAPH_URL);
@@ -57,6 +62,11 @@ public class GraphFetcher implements Closeable {
             this.shards = this.client.traverser().edgeShards(splitsSize);
             this.hugeEdgeFetcher = new HugeEdgeFetcher(config, this.client);
             this.shardPosition = 0;
+
+            this.shardsVertex = this.client.traverser()
+                    .vertexShards(splitsSize);
+            this.hugeVertexFetcher = new HugeVertexFetcher(config, this.client);
+            this.shardPositionVertex = 0;
         } catch (Throwable e) {
             this.client.close();
             throw e;
@@ -105,6 +115,52 @@ public class GraphFetcher implements Closeable {
                 throw new NoSuchElementException();
             }
             return hugeEdgeFetcher.next();
+        }
+    }
+
+
+    public Shard nextVertexShard() {
+        if (shardPositionVertex < this.shardsVertex.size()) {
+            return this.shardsVertex.get(shardPositionVertex++);
+        } else {
+            return null;
+        }
+    }
+
+    public Iterator<Vertex> createIteratorFromVertex() {
+        return new IteratorFromVertex();
+    }
+
+    private class IteratorFromVertex implements Iterator<Vertex> {
+
+        private Shard currentShard;
+
+        public IteratorFromVertex() {
+            this.currentShard = null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            while (this.currentShard == null || !hugeVertexFetcher.hasNext()) {
+                /*
+                 * The first time or the current split is complete,
+                 * need to fetch next input split meta
+                 */
+                this.currentShard = GraphFetcher.this.nextVertexShard();
+                if (this.currentShard == null) {
+                    return false;
+                }
+                hugeVertexFetcher.prepareLoadShard(this.currentShard);
+            }
+            return true;
+        }
+
+        @Override
+        public Vertex next() {
+            if (!this.hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return hugeVertexFetcher.next();
         }
     }
 
