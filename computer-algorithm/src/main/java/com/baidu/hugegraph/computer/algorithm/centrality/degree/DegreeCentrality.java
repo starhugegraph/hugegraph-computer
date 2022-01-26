@@ -34,8 +34,12 @@ import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
 import com.baidu.hugegraph.util.NumericUtil;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 public class DegreeCentrality implements Computation<NullValue> {
+
+    private static final Logger LOG = Log.logger("DegreeCentralityTest");
 
     public static final String OPTION_WEIGHT_PROPERTY =
                                "degree_centrality.weight_property";
@@ -68,6 +72,8 @@ public class DegreeCentrality implements Computation<NullValue> {
             while (edges.hasNext()) {
                 Edge edge = edges.next();
                 double weight = weightValue(edge.property(this.weightProperty));
+
+
                 totalWeight += weight;
                 if (Double.isInfinite(totalWeight)) {
                     throw new ComputerException("Calculate weight overflow, " +

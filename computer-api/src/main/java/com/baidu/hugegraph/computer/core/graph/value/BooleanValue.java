@@ -19,8 +19,10 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import java.io.IOException;
 
+import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
@@ -64,6 +66,16 @@ public class BooleanValue implements Value<BooleanValue> {
     @Override
     public BooleanValue copy() {
         return new BooleanValue(this.value);
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.value = DataParser.byte2boolean(buffer, offset);
+    }
+
+    @Override
+    public int getShift() {
+        return Constants.BOOLEAN_LEN;
     }
 
     @Override

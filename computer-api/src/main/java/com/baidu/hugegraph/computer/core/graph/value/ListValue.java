@@ -19,6 +19,13 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
+import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.common.SerialEnum;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
+import com.baidu.hugegraph.computer.core.graph.GraphFactory;
+import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
+import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import com.baidu.hugegraph.util.E;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,22 +34,17 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 
-import com.baidu.hugegraph.computer.core.common.ComputerContext;
-import com.baidu.hugegraph.computer.core.common.SerialEnum;
-import com.baidu.hugegraph.computer.core.graph.GraphFactory;
-import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
-import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
-import com.baidu.hugegraph.util.E;
+
 
 public class ListValue<T extends Value<?>> implements Value<ListValue<T>> {
 
     private final GraphFactory graphFactory;
     private ValueType elemType;
     private List<T> values;
+    int shift = 0;
 
     public ListValue() {
         this(ValueType.UNKNOWN);
@@ -143,6 +145,46 @@ public class ListValue<T extends Value<?>> implements Value<ListValue<T>> {
         return new ListValue<>(this.elemType, values);
     }
 
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.parse(buffer, offset, true);
+    }
+
+    protected void parse(byte[] buffer, int offset, boolean readElemType) {
+        int size = DataParser.byte2int(buffer, offset);
+        offset += 4;
+        this.shift += 4;
+
+        if (readElemType) {
+            this.elemType = ValueType.
+                                getValueTypeByCode(buffer[offset]);
+            offset += 1;
+            this.shift += 1;
+        }
+        
+        if (size > this.values.size() || size < this.values.size() / 2) {
+            this.values = this.graphFactory.createList(size);
+        } else {
+            this.values.clear();
+        }
+
+        for (int i = 0; i < size; i++) {
+            @SuppressWarnings("unchecked")
+            T value = (T) this.graphFactory.createValue(this.elemType);
+            value.parse(buffer, offset);
+            int shift = value.getShift();
+            offset += shift;
+            this.shift += shift;
+            this.values.add(value);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.read(in, true);

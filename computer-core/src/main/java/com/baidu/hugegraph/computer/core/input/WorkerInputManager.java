@@ -87,6 +87,45 @@ public class WorkerInputManager implements Manager {
      * When this method finish, it means that all vertices and edges are sent,
      * but there is no guarantee that all of them has been received.
      */
+    public void loadVertex() {
+        Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
+        while (iterator.hasNext()) {
+            Vertex vertex = iterator.next();
+            this.sendManager.sendVertex(vertex);
+        }
+    }
+
+    public void loadEdge() {
+        Iterator<Vertex>  iterator = this.loadService.createIteratorFromEdge();
+        while (iterator.hasNext()) {
+            Vertex vertex = iterator.next();
+            this.sendManager.sendEdge(vertex);
+            //inverse edge here
+            if (!this.config.get(ComputerOptions.
+                                     USE_ID_FIXLENGTH)) {
+                if (!this.config.get(
+                       ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION)) {
+                    continue;
+                }
+            }
+            for (Edge edge:vertex.edges()) {
+                Id targetId = edge.targetId();
+                Id sourceId = vertex.id();
+
+                Vertex vertexInv = new DefaultVertex(graphFactory,
+                                                  targetId, null);
+                Edge edgeInv = graphFactory.
+                               createEdge(edge.label(), edge.name(), sourceId
+                );
+                Properties properties = edge.properties();
+                properties.put("inv", new BooleanValue(true));
+                edgeInv.properties(properties);
+                vertexInv.addEdge(edgeInv);
+                this.sendManager.sendEdge(vertexInv);
+           }
+        }
+    }
+
     public void loadGraph() {
         this.sendManager.startSend(MessageType.VERTEX);
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();

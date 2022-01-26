@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.value.IdList;
@@ -29,11 +27,14 @@ import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
+import java.io.IOException;
+
 
 public class BetweennessMessage implements Value<BetweennessMessage> {
 
     private final IdList sequence;
     private final DoubleValue vote;
+    private int shift;
 
     public BetweennessMessage() {
         this.sequence = new IdList();
@@ -78,6 +79,22 @@ public class BetweennessMessage implements Value<BetweennessMessage> {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        int position = offset;
+        this.shift = 0;
+        this.sequence.parse(buffer, position);
+        this.shift += this.sequence.getShift();
+        position += this.sequence.getShift();
+        this.vote.parse(buffer, position);
+        this.shift += this.vote.getShift();
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.sequence.read(in);

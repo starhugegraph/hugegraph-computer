@@ -41,6 +41,7 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
 
     private final DoubleValue contribRank;
     private Map<Id, DoubleValue> map;
+    private int shift = 0;
 
     public PersonalPageRankValue() {
         this.graphFactory = ComputerContext.instance().graphFactory();
@@ -103,6 +104,39 @@ public class PersonalPageRankValue implements Value<PersonalPageRankValue> {
     @Override
     public Object value() {
         throw new NotSupportedException();
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+
+        this.contribRank.parse(buffer, offset);
+        position += this.contribRank.getShift();
+        this.shift += this.contribRank.getShift();
+        
+        int size = buffer[position];
+        position++;
+        this.shift++;
+    
+        this.map = this.graphFactory.createMap();
+        for (int i = 0; i < size; i++) {
+            Id id = this.graphFactory.createId();
+            id.parse(buffer, position);
+            this.shift += id.getShift();
+            position += id.getShift();
+            
+            Value<?> value = this.graphFactory.createValue(ValueType.DOUBLE);
+            value.parse(buffer, position);
+            this.shift += value.getShift();
+            position += value.getShift();
+            this.map.put(id, (DoubleValue) value);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

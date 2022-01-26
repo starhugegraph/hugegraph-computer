@@ -33,6 +33,7 @@ import com.baidu.hugegraph.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+
 import java.util.Properties;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -46,7 +47,7 @@ public class HugeGraphComputer {
 
     private static final String ROLE_MASTER = "master";
     private static final String ROLE_WORKER = "worker";
-
+    private static final String ROLE_WORKERS = "workers";
     /**
      *  Some class must be load first, in order to invoke static method to init;
      */
@@ -58,17 +59,19 @@ public class HugeGraphComputer {
 
     public static void main(String[] args) throws IOException,
                                                   ClassNotFoundException {
-        E.checkArgument(ArrayUtils.getLength(args) == 3,
+        E.checkArgument(ArrayUtils.getLength(args) == 4,
                         "Argument count must be three, " +
                         "the first is conf path;" +
                         "the second is role type;" +
-                        "the third is drive type");
-                        
+                        "the third is drive type;" +
+                        "the forth is do which step");
+      
         String role = args[1];
         E.checkArgument(!StringUtils.isEmpty(role),
                         "The role can't be null or emtpy, " +
                         "it must be either '%s' or '%s'",
-                        ROLE_MASTER, ROLE_WORKER);
+                        ROLE_MASTER, ROLE_WORKER, ROLE_WORKERS);
+        String useMode = args[3];
 
         setUncaughtExceptionHandler();
         loadClass();
@@ -86,7 +89,7 @@ public class HugeGraphComputer {
                 if (algorithm.contains("LouvainParams"))
                     executeWorkerServiceLouvain(context);
                 else
-                    executeWorkerService(context);  //todo
+                    executeWorkerService(context, useMode);  //todo
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -121,8 +124,10 @@ public class HugeGraphComputer {
         }
     }
 
-    private static void executeWorkerService(ComputerContext context) {
+    private static void executeWorkerService(ComputerContext context, 
+                                                 String useMode) {
         try (WorkerService workerService = new WorkerService()) {
+            workerService.setUseMode(useMode);
             workerService.init(context.config());
             workerService.execute();
         }

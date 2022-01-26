@@ -372,6 +372,10 @@ public class MasterService implements Closeable {
      */
     private SuperstepStat inputstep() {
         LOG.info("{} MasterService inputstep started", this);
+        this.bsp4Master.waitWorkersVertexStarted();
+        this.bsp4Master.waitWorkersVertexFinished();
+        this.bsp4Master.waitWorkersEdgeStarted();
+        this.bsp4Master.waitWorkersEdgeFinished();
         this.bsp4Master.waitWorkersInputDone();
         this.bsp4Master.masterInputDone();
         List<WorkerStat> workerStats = this.bsp4Master.waitWorkersStepDone(

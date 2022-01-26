@@ -20,7 +20,7 @@
 package com.baidu.hugegraph.computer.algorithm.centrality.pagerank;
 
 import java.util.Iterator;
-
+import org.slf4j.Logger;
 import com.baidu.hugegraph.computer.core.aggregator.Aggregator;
 import com.baidu.hugegraph.computer.core.combiner.Combiner;
 import com.baidu.hugegraph.computer.core.config.Config;
@@ -30,8 +30,11 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerContext;
+import com.baidu.hugegraph.util.Log;
 
 public class PageRank implements Computation<DoubleValue> {
+
+    private static final Logger LOG = Log.logger(PageRank.class);
 
     public static final String OPTION_ALPHA = "page_rank.alpha";
 
@@ -139,6 +142,9 @@ public class PageRank implements Computation<DoubleValue> {
 
     @Override
     public void afterSuperstep(WorkerContext context) {
+        LOG.info("work l1diff = {}",
+                 this.l1DiffAggr.aggregatedValue().value());
+
         context.aggregateValue(
                 PageRank4Master.AGGR_COMULATIVE_PROBABILITY,
                 this.cumulativeRankAggr.aggregatedValue());

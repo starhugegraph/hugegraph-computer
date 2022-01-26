@@ -19,15 +19,19 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.common.Constants;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import org.apache.commons.lang3.tuple.Pair;
+
+
 
 public class StringValue implements Value<StringValue> {
 
     private String value;
+    private int shift;
 
     public StringValue() {
         this.value = Constants.EMPTY_STR;
@@ -53,6 +57,19 @@ public class StringValue implements Value<StringValue> {
         return new StringValue(this.value);
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        Pair<String, Integer> pair =  DataParser.
+                        parseUTF(buffer, offset);
+        this.value = pair.getLeft();
+        this.shift = pair.getRight(); 
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.value = in.readUTF();

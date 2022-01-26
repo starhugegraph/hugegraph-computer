@@ -69,4 +69,16 @@ public interface Value<T> extends Writable, Readable, Comparable<T> {
     default String string() {
         return this.toString();
     }
+
+    /**
+     * 
+     * Parse from memory instead of read File
+     */
+    void parse(byte[] buffer, int offset);
+
+    /**
+     * 
+     * Get value size in memory
+     */
+    int getShift();
 }

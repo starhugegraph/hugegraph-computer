@@ -19,11 +19,14 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
-import java.io.IOException;
-
+import com.baidu.hugegraph.computer.core.common.Constants;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
+import java.io.IOException;
+
+
 
 public class DoubleValue extends Number implements Value<DoubleValue> {
 
@@ -91,6 +94,17 @@ public class DoubleValue extends Number implements Value<DoubleValue> {
     @Override
     public boolean isNumber() {
         return true;
+    }
+
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.value = DataParser.byte2double(buffer, offset);
+    }
+
+    @Override
+    public int getShift() {
+        return Constants.DOUBLE_LEN;
     }
 
     @Override

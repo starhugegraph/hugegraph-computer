@@ -19,18 +19,18 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.cc;
 
-import java.io.IOException;
-
-import javax.ws.rs.NotSupportedException;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.baidu.hugegraph.computer.core.graph.value.IdSet;
 import com.baidu.hugegraph.computer.core.graph.value.IntValue;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import javax.ws.rs.NotSupportedException;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+
+
 
 /**
  * We should reuse triangle
@@ -40,6 +40,7 @@ public class ClusteringCoefficientValue implements
     private IdSet idSet;
     private IntValue count;
     private IntValue degree;
+    private int shift;
 
     public ClusteringCoefficientValue() {
         this.idSet = new IdSet();
@@ -86,6 +87,28 @@ public class ClusteringCoefficientValue implements
         return ccValue;
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+        this.idSet.parse(buffer, position);
+        this.shift += this.idSet.getShift();
+        position += this.idSet.getShift();
+        
+        this.count.parse(buffer, position);
+        this.shift += this.count.getShift();
+        position += this.count.getShift();
+        
+        this.degree.parse(buffer, position);
+        this.shift += this.degree.getShift();
+        position += this.degree.getShift();
+    }
+    
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.idSet.read(in);

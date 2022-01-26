@@ -101,6 +101,7 @@ public class MessageSendManager implements Manager {
         int partitionId = this.partitioner.partitionId(vertex.id());
         WriteBuffers buffer = this.buffers.get(partitionId);
 
+
         synchronized (buffer) {
             this.sortIfTargetBufferIsFull(buffer, partitionId,
                                           MessageType.VERTEX);
@@ -130,6 +131,24 @@ public class MessageSendManager implements Manager {
                 throw new ComputerException("Failed to write edges of " +
                                             "vertex '%s'", e, vertex.id());
             }
+        }
+    }
+    //only sync mode available now
+    public void sendMessage(Id srcId, Id targetId, Value<?> value) {
+        int targetPartitionId = this.partitioner.partitionId(targetId);
+        int srcPartitionId = this.partitioner.partitionId(srcId);
+        int partitionInWorkerId = this.partitioner.
+                 partitionIdInPartitionInWorker(srcPartitionId);
+        WriteBuffers buffer = this.buffers.get(targetPartitionId,
+                             partitionInWorkerId);
+        this.sortIfTargetBufferIsFull(buffer, 
+                                        targetPartitionId,
+                                        MessageType.MSG);
+        try {
+            // Write message to buffer
+            buffer.writeMessageSync(targetId, value);
+        } catch (IOException e) {
+            throw new ComputerException("Failed to write message", e);
         }
     }
 
@@ -180,7 +199,6 @@ public class MessageSendManager implements Manager {
                                     .map(this.partitioner::workerId)
                                     .collect(Collectors.toSet());
         this.sendControlMessageToWorkers(workerIds, MessageType.START);
-        LOG.info("Start sending message(type={})", type);
     }
 
     /**
@@ -189,6 +207,7 @@ public class MessageSendManager implements Manager {
      * @param type the message type
      */
     public void finishSend(MessageType type) {
+        //this.sortManager.printTime();
         Map<Integer, WriteBuffers> all = this.buffers.all();
         MessageStat stat = this.sortAndSendLastBuffer(all, type);
 
@@ -211,19 +230,47 @@ public class MessageSendManager implements Manager {
     private void sortIfTargetBufferIsFull(WriteBuffers buffer, int partitionId,
                                           MessageType type) {
         if (buffer.reachThreshold()) {
-            /*
-             * Switch buffers if writing buffer is full,
-             * After switch, the buffer can be continued to write.
-             */
-            buffer.switchForSorting();
-            this.sortThenSend(partitionId, type, buffer);
+            buffer.switchForSorting(partitionId);
+            if (type == MessageType.MSG) {
+                this.sortThenSendFast(partitionId, type, buffer);
+            }
+            else {
+                this.sortThenSend(partitionId, type, buffer);
+            }
         }
     }
 
+    private Future<?> sortThenSendFast(int partitionId, MessageType type,
+                                   WriteBuffers buffer) {
+        int workerId = this.partitioner.workerId(partitionId);
+        return this.sortManager.sortFast(type, buffer).
+                                thenAccept(sortedBuffer -> {
+            // The following code is also executed in sort thread
+            buffer.finishSorting();
+            // Each target worker has a buffer queue
+            QueuedMessage message = new QueuedMessage(partitionId, type,
+                                                      sortedBuffer);
+            try {
+                this.sender.send(workerId, message);
+            } catch (InterruptedException e) {
+                throw new ComputerException("Interrupted when waiting to " +
+                                            "put buffer into queue");
+            }
+        }).whenComplete((r, e) -> {
+            if (e != null) {
+                LOG.error("Failed to sort buffer or put sorted buffer " +
+                          "into queue", e);
+                // Just record the first error
+                this.exception.compareAndSet(null, e);
+            }
+        });
+    }
+    
     private Future<?> sortThenSend(int partitionId, MessageType type,
                                    WriteBuffers buffer) {
         int workerId = this.partitioner.workerId(partitionId);
-        return this.sortManager.sort(type, buffer).thenAccept(sortedBuffer -> {
+        return this.sortManager.sort(type, buffer).
+                                thenAccept(sortedBuffer -> {
             // The following code is also executed in sort thread
             buffer.finishSorting();
             // Each target worker has a buffer queue
@@ -287,8 +334,6 @@ public class MessageSendManager implements Manager {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         try {
             for (Integer workerId : workerIds) {
-                LOG.info("sendcontrolmessage addworker {}",
-                     workerId);
                 futures.add(this.sender.send(workerId, type));
             }
         } catch (InterruptedException e) {

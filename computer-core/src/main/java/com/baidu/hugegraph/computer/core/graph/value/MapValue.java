@@ -126,6 +126,15 @@ public class MapValue<T extends Value<?>> implements Value<MapValue<T>> {
     }
 
     @Override
+    public void parse(byte[] buffer, int offset) {
+    }
+
+    @Override
+    public int getShift() {
+        return 0;
+    }
+
+    @Override
     public void read(RandomAccessInput in) throws IOException {
         this.read(in, true);
     }
