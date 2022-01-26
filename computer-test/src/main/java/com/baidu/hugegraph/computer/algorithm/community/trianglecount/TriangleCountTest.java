@@ -31,6 +31,7 @@ import com.baidu.hugegraph.driver.GraphManager;
 import com.baidu.hugegraph.driver.SchemaManager;
 import com.baidu.hugegraph.structure.constant.T;
 import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.structure.HugeVertex;
 import com.baidu.hugegraph.testutil.Assert;
 
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
@@ -120,9 +121,9 @@ public class TriangleCountTest extends AlgorithmTestBase {
     public static class TriangleCountOutputTest extends TriangleCountOutput {
 
         @Override
-        public Vertex constructHugeVertex(
+        public HugeVertex constructHugeVertex(
                com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
-            Vertex result = super.constructHugeVertex(vertex);
+            HugeVertex result = super.constructHugeVertex(vertex);
             Integer expected = EXPECTED_RESULTS.get(result.id());
             if (expected != null) {
                 Assert.assertEquals(expected, result.property(super.name()));

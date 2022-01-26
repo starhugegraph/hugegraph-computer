@@ -22,8 +22,8 @@ package com.baidu.hugegraph.computer.core.input;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.manager.Manager;
-import com.baidu.hugegraph.structure.graph.Edge;
-import com.baidu.hugegraph.structure.graph.Vertex;
+//import com.baidu.hugegraph.structure.graph.Edge;
+//import com.baidu.hugegraph.structure.graph.Vertex;
 import com.baidu.hugegraph.testutil.Assert;
 
 public class MockWorkerInputManager implements Manager {
@@ -78,7 +78,7 @@ public class MockWorkerInputManager implements Manager {
         vertexFetcher.prepareLoadInputSplit(this.vertexInputSplit);
         int count = 0;
         while (vertexFetcher.hasNext()) {
-            Vertex vertex = vertexFetcher.next();
+            Object vertex = vertexFetcher.next();
             // Write vertex to buffer
             Assert.assertNotNull(vertex);
             count++;
@@ -106,7 +106,7 @@ public class MockWorkerInputManager implements Manager {
         edgeFetcher.prepareLoadInputSplit(this.edgeInputSplit);
         int count = 0;
         while (edgeFetcher.hasNext()) {
-            Edge edge = edgeFetcher.next();
+            Object edge = edgeFetcher.next();
             // Write edge to buffer
             Assert.assertNotNull(edge);
             count++;
