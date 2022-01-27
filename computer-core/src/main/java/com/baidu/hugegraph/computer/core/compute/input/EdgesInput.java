@@ -291,8 +291,7 @@ public class EdgesInput {
             int count = in.readFixedInt();
           
             // update count when "-1 < limitNum < count"
-            if (edgeLimitNum != UNLIMITED_NUM &&
-                edgeLimitNum < count) {
+            if (edgeLimitNum != UNLIMITED_NUM && edgeLimitNum < count) {
                 count = edgeLimitNum;
             }
 
@@ -324,7 +323,7 @@ public class EdgesInput {
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
                     }
-                    //edge.label(StreamGraphInput.readLabel(in));
+                    edge.label(StreamGraphInput.readLabel(in));
                     
                     Properties props = this.graphFactory.createProperties();
                     props.read(in);
@@ -359,7 +358,7 @@ public class EdgesInput {
                        edge.targetId(this.context.
                                       graphFactory().createId(lId));
                     }
-                    //edge.label(StreamGraphInput.readLabel(in));
+                    edge.label(StreamGraphInput.readLabel(in));
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
@@ -403,12 +402,11 @@ public class EdgesInput {
                                       graphFactory().createId(lId));
                     }
 
+                    // Skip read edge lable to reduce a lot cpu cost
                     //edge.label(StreamGraphInput.readLabel(in));
                     //edge.name(StreamGraphInput.readLabel(in));
                     in.skipBytes(in.readInt());
                     in.skipBytes(in.readInt());
-                    //LOG.info("##b" + skip);
-
 
                     // Read subValue
                     if (!this.useFixLength) {
