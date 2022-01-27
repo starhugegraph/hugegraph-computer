@@ -35,6 +35,10 @@
         </dependency>
         <dependency>
             <groupId>com.baidu.hugegraph</groupId>
+            <artifactId>hugegraph-hstore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baidu.hugegraph</groupId>
             <artifactId>hg-pd-client</artifactId>
         </dependency>
         <dependency>
