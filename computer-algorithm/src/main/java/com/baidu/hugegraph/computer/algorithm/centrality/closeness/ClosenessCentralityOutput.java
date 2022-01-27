@@ -54,7 +54,6 @@ public class ClosenessCentralityOutput extends HugeOutput {
             centrality += 1.0D / entry.getValue().value();
         }
         hugeVertex.property(this.name(), centrality);
-        //LOG.info("The closeness centrality of vertex {} is {}",vertex, centrality);
         return hugeVertex;
     }
 }

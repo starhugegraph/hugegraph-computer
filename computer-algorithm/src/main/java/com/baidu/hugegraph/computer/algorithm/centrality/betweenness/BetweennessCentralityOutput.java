@@ -44,7 +44,6 @@ public class BetweennessCentralityOutput extends HugeOutput {
         BetweennessValue localValue = vertex.value();
         double centrality = localValue.betweenness().value();
         hugeVertex.property(this.name(), centrality);
-        //LOG.info("The betweenness centrality of vertex {} is {}", vertex, centrality);
         return hugeVertex;
     }
 }
