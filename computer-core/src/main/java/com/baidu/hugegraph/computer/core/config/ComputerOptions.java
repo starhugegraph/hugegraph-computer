@@ -748,7 +748,7 @@ public class ComputerOptions extends OptionHolder {
                     "The timeout(in ms) to wait response after " +
                     "sending sync-request.",
                     positiveInt(),
-                    5_000L
+                    60_000L
             );
 
     public static final ConfigOption<Long> TRANSPORT_FINISH_SESSION_TIMEOUT =
@@ -918,6 +918,14 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(4, 6, 8),
                     8
             );
+    public static final ConfigOption<String> USE_FASTER_COMPOSER = 
+            new ConfigOption<>(
+                    "computeflow.use_fast_composer",
+                    "use which unserialize composer in compute flow",
+                    allowValues("full", "targetidonlly"),
+                    "full"
+            );
+
     public static final ConfigOption<String> AUTH_TOKEN =
             new ConfigOption<>(
                     "hugegraph.token",

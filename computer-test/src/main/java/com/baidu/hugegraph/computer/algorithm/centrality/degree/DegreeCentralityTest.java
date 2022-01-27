@@ -36,7 +36,6 @@ import com.baidu.hugegraph.computer.core.output.hdfs.HdfsOutput;
 import com.google.common.collect.Streams;
 
 public class DegreeCentralityTest extends AlgorithmTestBase {
-
     public static boolean isRun;
 
     @Test

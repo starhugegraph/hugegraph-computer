@@ -58,6 +58,10 @@ public class CombineSubKvInnerSortFlusher implements InnerSortFlusher {
         return this.combiner;
     }
 
+    @Override 
+    public void flushBytes(Iterator<byte[]> data) throws IOException {
+        throw new UnsupportedOperationException();
+    }
     @Override
     public void flush(Iterator<KvEntry> entries) throws IOException {
         E.checkArgument(entries.hasNext(), "Parameter entries can't be empty");

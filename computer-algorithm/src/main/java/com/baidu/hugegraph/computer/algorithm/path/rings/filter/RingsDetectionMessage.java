@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.path.rings.filter;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.properties.DefaultProperties;
@@ -31,11 +29,14 @@ import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+
 
 public class RingsDetectionMessage implements Value<RingsDetectionMessage> {
 
     private final IdList path;
     private Properties walkEdgeProps;
+    private int shift;
 
     public RingsDetectionMessage() {
         GraphFactory graphFactory = ComputerContext.instance().graphFactory();
@@ -58,6 +59,24 @@ public class RingsDetectionMessage implements Value<RingsDetectionMessage> {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+        
+        this.path.parse(buffer, position);
+        position += this.path.getShift();
+        this.shift += this.path.getShift();
+        
+        this.walkEdgeProps.parse(buffer, position);
+        this.shift += this.walkEdgeProps.getShift();
+    }
+      
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.path.read(in);

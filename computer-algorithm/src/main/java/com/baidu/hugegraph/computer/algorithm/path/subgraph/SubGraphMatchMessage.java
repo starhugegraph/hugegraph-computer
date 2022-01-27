@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
@@ -37,6 +38,7 @@ import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 public class SubGraphMatchMessage implements Value<SubGraphMatchMessage> {
 
     private List<Pair<Integer, Id>> matchPath;
+    private int shift = 0;
 
     public SubGraphMatchMessage() {
         this.matchPath = new LinkedList<>();
@@ -72,6 +74,33 @@ public class SubGraphMatchMessage implements Value<SubGraphMatchMessage> {
     @Override
     public Object value() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+        this.matchPath = new ArrayList<>();
+        int[] vint = DataParser.parseVInt(buffer, position);
+        int size = vint[0];
+        position += vint[1];
+        this.shift += vint[1];
+        for (int i = 0; i < size; i++) {
+            vint = DataParser.parseVInt(buffer, position);
+            int nodeId = vint[0];
+            position += vint[1];
+            this.shift += vint[1];
+            BytesId id = new BytesId();
+            id.parse(buffer, position);
+            position += id.getShift();
+            this.shift += id.getShift();
+            matchPath.add(new MutablePair<>(nodeId, id));
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

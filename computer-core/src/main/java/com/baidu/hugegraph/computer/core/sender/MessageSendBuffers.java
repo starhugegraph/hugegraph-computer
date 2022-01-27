@@ -35,15 +35,25 @@ public class MessageSendBuffers {
      * to encapsulate more objects.
      */
     private final WriteBuffers[] buffers;
-
+    private int partitionCount;
+    private int maxPartitionPerWorker;
     public MessageSendBuffers(ComputerContext context) {
         Config config = context.config();
-        int partitionCount = config.get(ComputerOptions.JOB_PARTITIONS_COUNT);
+        this.partitionCount = config.get(ComputerOptions.JOB_PARTITIONS_COUNT);
         int threshold = config.get(
                         ComputerOptions.WORKER_WRITE_BUFFER_THRESHOLD);
         int capacity = config.get(
                        ComputerOptions.WORKER_WRITE_BUFFER_INIT_CAPACITY);
-        this.buffers = new WriteBuffers[partitionCount];
+        int workerCount = config.get(
+                       ComputerOptions.JOB_WORKERS_COUNT);
+        this.maxPartitionPerWorker = 
+                 this.partitionCount / workerCount + 1;
+        this.buffers = new WriteBuffers[this.partitionCount];
+
+        //if want to non-blocking mode for buffers
+        //this.buffers = new WriteBuffers[this.partitionCount * 
+        //                                this.maxPartitionPerWorker];
+        //for (int i = 0; i < partitionCount * maxPartitionPerWorker; i++) {
         for (int i = 0; i < partitionCount; i++) {
             /*
              * It depends on the concrete implementation of the
@@ -58,6 +68,17 @@ public class MessageSendBuffers {
             throw new ComputerException("Invalid partition id %s", partitionId);
         }
         return this.buffers[partitionId];
+    }
+
+    //make sure you allocate enough buffers
+    public WriteBuffers get(int partitionId, int partitionInWorkerId) {
+        int i = partitionInWorkerId * this.partitionCount + partitionId;
+        int maxCount = this.partitionCount * this.maxPartitionPerWorker;
+
+        if (i < 0 || i >= maxCount) {
+            throw new ComputerException("Invalid partition id %s", partitionId);
+        }
+        return this.buffers[i];
     }
 
     public Map<Integer, WriteBuffers> all() {

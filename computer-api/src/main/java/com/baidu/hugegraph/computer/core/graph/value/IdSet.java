@@ -19,20 +19,22 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Set;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
+
 
 public class IdSet implements Value<IdSet> {
 
     private final GraphFactory graphFactory;
     private Set<Id> values;
+    int shift = 0;
 
     public IdSet() {
         this.graphFactory = ComputerContext.instance().graphFactory();
@@ -78,6 +80,33 @@ public class IdSet implements Value<IdSet> {
     @Override
     public Set<Id> value() {
         return this.values;
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        int position = offset;
+        int size = DataParser.byte2int(buffer, position);
+        position += 4;
+        this.shift += 4;
+
+        if (size > this.values.size() || size < this.values.size() / 2) {
+            this.values = this.graphFactory.createSet(size);
+        } else {
+            this.values.clear();
+        }
+
+        for (int i = 0; i < size; i++) {
+            Id id = this.graphFactory.createId();
+            id.parse(buffer, position);
+            position += id.getShift();
+            this.shift += id.getShift();
+            this.values.add(id);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

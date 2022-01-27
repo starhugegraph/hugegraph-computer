@@ -67,6 +67,18 @@ public class SorterImpl implements Sorter {
         }
     }
 
+    @Override 
+     public void sortBuffer2(RandomAccessInput input, InnerSortFlusher flusher,
+                           boolean withSubKv) throws Exception {
+        EntryIterator entries = new KvEntriesInput(input, withSubKv);
+        List<KvEntry> kvEntries = new ArrayList<KvEntry>();
+        while (entries.hasNext()) {
+            kvEntries.add(entries.next());
+        }
+        kvEntries.sort(KvEntry::compareTo);
+        flusher.flush(kvEntries.iterator());
+    }
+
     @Override
     public void mergeBuffers(List<RandomAccessInput> inputs,
                              OuterSortFlusher flusher, String output,

@@ -41,6 +41,10 @@ public class DefaultEdge implements Edge {
              Constants.EMPTY_STR, null);
     }
 
+    public DefaultEdge(Id targetId) {
+        this.targetId = targetId;
+    }
+
     public DefaultEdge(GraphFactory graphFactory, Id id, String label,
                        String name, Id targetId) {
         this.id = id;

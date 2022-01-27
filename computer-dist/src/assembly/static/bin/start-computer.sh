@@ -15,6 +15,11 @@ LOCAL_DRIVE="local"
 ROLE=
 ROLE_MASTER="master"
 ROLE_WORKER="worker"
+ROLE_WORKERS="workers"
+STEP="all"
+STEP_INPUT="input"
+STEP_COMPUTE="compute"
+STEP_ALL="all"
 
 usage() {
     echo "Usage:"
@@ -71,6 +76,21 @@ parse_opts() {
                 check_file_readable "file $2 not be read permission" $2
                 JAR_FILE_PATH=$2
                 shift 2 ;;
+            -s|--step)
+                case "$2" in 
+                    ${STEP_INPUT})
+                        STEP=${STEP_INPUT}
+                        ;;
+                    ${STEP_COMPUTE})
+                        STEP=${STEP_COMPUTE}
+                        ;;
+                    ${STEP_ALL})
+                        STEP=${STEP_ALL}
+                        ;;
+                    *)
+                        echo "unknown step, shole be input|compute|all, default all"
+                esac
+                shift 2;;
             -d|--drive)
                 check_empty "drive not be empty" $1
                 case "$2" in
@@ -96,8 +116,11 @@ parse_opts() {
                     ${ROLE_WORKER})
                         ROLE=${ROLE_WORKER}
                         ;;
+                    ${ROLE_WORKERS})
+                        ROLE=${ROLE_WORKERS}
+                        ;;
                     *)
-                        echo "unknown role %2, muse be master|worker"
+                        echo "unknown role %2, muse be master|worker|workers"
                         exit 1
                 esac
                 shift 2;;
@@ -186,8 +209,8 @@ MAIN_CLASS=com.baidu.hugegraph.computer.dist.HugeGraphComputer
 
 if [ "${LOG4j_CONF}" != "" ]; then
     exec ${JAVA} -Dname="hugegraph-computer" "${LOG4j_CONF}" ${JVM_OPTIONS} \
-        -cp "${CP}" ${MAIN_CLASS} "${NEW_COMPUTER_CONF_PATH}" ${ROLE} ${DRIVE}
+        -cp "${CP}" ${MAIN_CLASS} "${NEW_COMPUTER_CONF_PATH}" ${ROLE} ${DRIVE} ${STEP}
 else
     exec ${JAVA} -Dname="hugegraph-computer" ${JVM_OPTIONS} -cp "${CP}" \
-        ${MAIN_CLASS} "${NEW_COMPUTER_CONF_PATH}" ${ROLE} ${DRIVE}
+        ${MAIN_CLASS} "${NEW_COMPUTER_CONF_PATH}" ${ROLE} ${DRIVE} ${STEP}
 fi

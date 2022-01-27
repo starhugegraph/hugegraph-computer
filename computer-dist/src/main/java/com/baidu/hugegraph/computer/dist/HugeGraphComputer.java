@@ -19,18 +19,21 @@
 package com.baidu.hugegraph.computer.dist;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.master.MasterService;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.util.ComputerContextUtil;
 import com.baidu.hugegraph.computer.core.worker.WorkerService;
+import com.baidu.hugegraph.computer.core.worker.WorkerServiceLouvain;
 import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+
 import java.util.Properties;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -44,7 +47,7 @@ public class HugeGraphComputer {
 
     private static final String ROLE_MASTER = "master";
     private static final String ROLE_WORKER = "worker";
-
+    private static final String ROLE_WORKERS = "workers";
     /**
      *  Some class must be load first, in order to invoke static method to init;
      */
@@ -56,28 +59,37 @@ public class HugeGraphComputer {
 
     public static void main(String[] args) throws IOException,
                                                   ClassNotFoundException {
-        E.checkArgument(ArrayUtils.getLength(args) == 3,
+        E.checkArgument(ArrayUtils.getLength(args) == 4,
                         "Argument count must be three, " +
                         "the first is conf path;" +
                         "the second is role type;" +
-                        "the third is drive type");
-                        
+                        "the third is drive type;" +
+                        "the forth is do which step");
+      
         String role = args[1];
         E.checkArgument(!StringUtils.isEmpty(role),
                         "The role can't be null or emtpy, " +
                         "it must be either '%s' or '%s'",
-                        ROLE_MASTER, ROLE_WORKER);
+                        ROLE_MASTER, ROLE_WORKER, ROLE_WORKERS);
+        String useMode = args[3];
 
         setUncaughtExceptionHandler();
         loadClass();
         registerOptions();
         ComputerContext context = parseContext(args[0]);
+
+        String algorithm = getAlgorithmParam(args[0]);
+        System.out.println("algorithm:" + algorithm);
         switch (role) {
             case ROLE_MASTER:
-                executeMasterService(context);
+                if (!algorithm.contains("LouvainParams"))
+                    executeMasterService(context); //todo
                 break;
             case ROLE_WORKER:
-                executeWorkerService(context);
+                if (algorithm.contains("LouvainParams"))
+                    executeWorkerServiceLouvain(context);
+                else
+                    executeWorkerService(context, useMode);  //todo
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -112,8 +124,17 @@ public class HugeGraphComputer {
         }
     }
 
-    private static void executeWorkerService(ComputerContext context) {
+    private static void executeWorkerService(ComputerContext context, 
+                                                 String useMode) {
         try (WorkerService workerService = new WorkerService()) {
+            workerService.setUseMode(useMode);
+            workerService.init(context.config());
+            workerService.execute();
+        }
+    }
+
+    private static void executeWorkerServiceLouvain(ComputerContext context) {
+        try (WorkerServiceLouvain workerService = new WorkerServiceLouvain()) {
             workerService.init(context.config());
             workerService.execute();
         }
@@ -135,6 +156,17 @@ public class HugeGraphComputer {
         ComputerContextUtil.initContext(properties);
         
         return ComputerContext.instance();
+    }
+
+    private static String getAlgorithmParam(String conf)
+            throws IOException {
+        Properties properties = new Properties();
+        BufferedReader bufferedReader = new BufferedReader(
+                new FileReader(conf));
+        properties.load(bufferedReader);
+
+        return properties.getProperty(
+                ComputerOptions.ALGORITHM_PARAMS_CLASS.name());
     }
 
     private static void registerOptions() {

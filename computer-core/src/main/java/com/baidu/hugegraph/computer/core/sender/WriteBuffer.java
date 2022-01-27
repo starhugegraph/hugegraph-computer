@@ -79,7 +79,7 @@ class WriteBuffer {
     public BytesOutput output() {
         return this.bytesOutput;
     }
-
+    
     public void writeVertex(Vertex vertex) throws IOException {
         this.writeCount++;
         this.graphOutput.writeVertex(vertex);
@@ -93,5 +93,9 @@ class WriteBuffer {
     public void writeMessage(Id targetId, Value<?> value) throws IOException {
         this.writeCount++;
         this.graphOutput.writeMessage(targetId, value);
+    }
+
+    public byte[] buffer() {
+        return this.bytesOutput.buffer();
     }
 }

@@ -19,17 +19,19 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
-import java.io.IOException;
-
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
+import java.io.IOException;
+
 
 public class LongValue extends Number implements Value<LongValue> {
 
     private static final long serialVersionUID = 8332327679205404212L;
 
     private long value;
+    private int shift;
 
     public LongValue() {
         this.value = 0L;
@@ -93,6 +95,18 @@ public class LongValue extends Number implements Value<LongValue> {
         return true;
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        long[] result = DataParser.parseVLong(buffer, offset);
+        this.value = result[0];
+        this.shift = (int)result[1];
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.value = in.readLong();
