@@ -265,12 +265,13 @@ public class EdgesInputTest extends UnitTestBase {
                         break;
                     case SINGLE_PER_LABEL:
                         Assert.assertEquals(BytesId.of(j), edge.targetId());
-                        Assert.assertEquals(String.valueOf(j), edge.label());
+                        //Assert.assertEquals(String.valueOf(j), edge.label());
                         break;
                     case MULTIPLE:
                         Assert.assertEquals(BytesId.of(j), edge.targetId());
-                        Assert.assertEquals(String.valueOf(j), edge.label());
-                        Assert.assertEquals(String.valueOf(j), edge.name());
+                        // Comment due to we skip read it now
+                        //Assert.assertEquals(String.valueOf(j), edge.label());
+                        //Assert.assertEquals(String.valueOf(j), edge.name());
                         break;
                     default:
                         throw new ComputerException(
