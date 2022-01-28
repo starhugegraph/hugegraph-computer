@@ -46,5 +46,6 @@ public class ClosenessCentralityParams implements AlgorithmParams {
                          "0.01D");
         this.setIfAbsent(params,
                          ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX, PERF);
+        this.setIfAbsent(params, ComputerOptions.SKIP_EDGE_LABEL, "true");
     }
 }

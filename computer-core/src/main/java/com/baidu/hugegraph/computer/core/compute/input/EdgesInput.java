@@ -22,6 +22,7 @@ package com.baidu.hugegraph.computer.core.compute.input;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_EDGE_FREQ;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX;
 import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.SKIP_EDGE_LABEL;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,7 @@ public class EdgesInput {
     private int idBytes;
     private static final int UNLIMITED_NUM = -1;
     private static int edgeLimitNum = UNLIMITED_NUM;
+    private final boolean perfEdgeLabel;
 
 
     public EdgesInput(ComputerContext context, File edgeFile) {
@@ -76,6 +78,7 @@ public class EdgesInput {
         this.context = context;
         this.useFixLength = false;
         this.idBytes = 8;
+        this.perfEdgeLabel = context.config().get(SKIP_EDGE_LABEL);
         edgeLimitNum = context.config().get(INPUT_LIMIT_EDGES_IN_ONE_VERTEX);
     }
 
@@ -323,8 +326,12 @@ public class EdgesInput {
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
                     }
-                    edge.label(StreamGraphInput.readLabel(in));
-                    
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                    }
+
                     Properties props = this.graphFactory.createProperties();
                     props.read(in);
                     edge.properties(props);
@@ -358,7 +365,11 @@ public class EdgesInput {
                        edge.targetId(this.context.
                                       graphFactory().createId(lId));
                     }
-                    edge.label(StreamGraphInput.readLabel(in));
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                    }
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
@@ -403,10 +414,13 @@ public class EdgesInput {
                     }
 
                     // Skip read edge lable to reduce a lot cpu cost
-                    //edge.label(StreamGraphInput.readLabel(in));
-                    //edge.name(StreamGraphInput.readLabel(in));
-                    in.skipBytes(in.readInt());
-                    in.skipBytes(in.readInt());
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                        edge.name(StreamGraphInput.readLabel(in));
+                    }
 
                     // Read subValue
                     if (!this.useFixLength) {
