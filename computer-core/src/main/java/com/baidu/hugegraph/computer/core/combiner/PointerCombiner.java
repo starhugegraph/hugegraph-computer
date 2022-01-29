@@ -49,11 +49,13 @@ public class PointerCombiner<V extends Readable & Writable>
     public Pointer combine(Pointer v1, Pointer v2) {
         try {
             RandomAccessInput input1 = v1.input();
-            RandomAccessInput input2 = v2.input();
             input1.seek(v1.offset());
-            input2.seek(v2.offset());
             this.v1.read(input1);
+
+            RandomAccessInput input2 = v2.input();
+            input2.seek(v2.offset());
             this.v2.read(input2);
+
             V combinedValue = this.combiner.combine(this.v1, this.v2);
             this.bytesOutput.seek(0L);
             combinedValue.write(this.bytesOutput);
