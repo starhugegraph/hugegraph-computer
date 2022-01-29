@@ -21,23 +21,17 @@ package com.baidu.hugegraph.computer.core.io;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-
-import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.util.BytesUtil;
 import com.baidu.hugegraph.computer.core.util.CoderUtil;
 import com.baidu.hugegraph.util.E;
-import com.baidu.hugegraph.util.Log;
 
 import sun.misc.Unsafe;
 
 @SuppressWarnings("deprecation") // Unsafe.getXx
 public class UnsafeBytesInput implements BytesInput {
-
-    private static final Logger LOG = Log.logger(UnsafeBytesInput.class);
 
     private static final sun.misc.Unsafe UNSAFE;
 
@@ -310,8 +304,6 @@ public class UnsafeBytesInput implements BytesInput {
 
     protected void require(int size) throws IOException {
         if (this.position + size > this.limit) {
-            LOG.info("sort error buffer:{} position:{}",
-                     Arrays.toString(this.buffer), this.position());
             throw new ComputerException(
                       "Only %s bytes available, trying to read %s bytes",
                       this.limit - this.position, size);
