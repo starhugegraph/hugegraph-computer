@@ -20,11 +20,18 @@
 package com.baidu.hugegraph.computer.algorithm.centrality.pagerank;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
+//import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
+import com.baidu.hugegraph.schema.VertexLabel;
+//import com.baidu.hugegraph.structure.HugeProperty;
 import com.baidu.hugegraph.structure.HugeVertex;
 import com.baidu.hugegraph.type.define.WriteType;
+import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
+import com.baidu.hugegraph.testutil.Whitebox;
+
 
 public class PageRankOutput extends HugeOutput {
 
@@ -35,15 +42,35 @@ public class PageRankOutput extends HugeOutput {
                              .writeType(WriteType.OLAP_RANGE)
                              .ifNotExist()
                              .create();
+
+        //this.graph().schema().vertexLabel(VertexLabel.OLAP_VL.name())
+        //        .properties(this.name())
+        //        .nullableKeys(this.name()).append();
+
+        /*for (VertexLabel vertexLabel:this.graph().schema().getVertexLabels())
+            this.graph().schema().vertexLabel(vertexLabel.name())
+                    .properties(this.name()).nullableKeys(this.name()).append();
+        }*/
     }
 
     @Override
     public HugeVertex constructHugeVertex(Vertex vertex) {
-        HugeVertex hugeVertex = new HugeVertex(
+        /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
                 this.graph().vertexLabel(vertex.label()));
+        for (Map.Entry<String,Value<?>> entry :
+                vertex.properties().get().entrySet()) {
+            hugeVertex.property(entry.getKey(),entry.getValue());
+        }
         hugeVertex.property(this.name(),
-                            ((DoubleValue) vertex.value()).value());
+                            ((DoubleValue) vertex.value()).value());*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
+        ElementHelper.attachProperties(hugeVertex, this.name(),
+                ((DoubleValue) vertex.value()).value());
         return hugeVertex;
     }
 }

@@ -22,6 +22,9 @@ package com.baidu.hugegraph.computer.core.input.hg;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.baidu.hugegraph.backend.query.Query;
+import com.baidu.hugegraph.backend.store.BackendProviderFactory;
+import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
@@ -43,6 +46,17 @@ public class HugeGraphFetcher implements GraphFetcher {
 
     private static final Logger LOG = Log.logger("huge fetcher");
 
+    static {
+        // Register config
+        OptionSpace.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
+        // Register backend
+        BackendProviderFactory.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
+
+        Query.defaultCapacity(Integer.MAX_VALUE);
+    }
+
     private final HugeGraph hugeGraph;
     private final VertexFetcher vertexFetcher;
     private final EdgeFetcher edgeFetcher;
@@ -54,6 +68,10 @@ public class HugeGraphFetcher implements GraphFetcher {
 
         // TODO: add auth check
         configs.put("pd.peers", pdPeers);
+        configs.put("backend", "hstore");
+        configs.put("serializer", "binary");
+        configs.put("search.text_analyzer", "jieba");
+        configs.put("search.text_analyzer_mode", "INDEX");
         configs.put("gremlin.graph", "com.baidu.hugegraph.HugeFactory");
 
         Configuration propConfig = new MapConfiguration(configs);
@@ -79,6 +97,11 @@ public class HugeGraphFetcher implements GraphFetcher {
     @Override
     public void close() {
         // pass
+        try {
+            this.hugeGraph.close();
+        } catch (Throwable e) {
+            LOG.error("Exception occur when close graph", e);
+        }
     }
 
     @Override

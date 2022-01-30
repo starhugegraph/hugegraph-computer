@@ -68,6 +68,10 @@ public final class TaskManager {
         String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
         // TODO: add auth check
         configs.put("pd.peers", pdPeers);
+        configs.put("backend", "hstore");
+        configs.put("serializer", "binary");
+        configs.put("search.text_analyzer", "jieba");
+        configs.put("search.text_analyzer_mode", "INDEX");
         configs.put("gremlin.graph", "com.baidu.hugegraph.HugeFactory");
 
         Configuration propConfig = new MapConfiguration(configs);
