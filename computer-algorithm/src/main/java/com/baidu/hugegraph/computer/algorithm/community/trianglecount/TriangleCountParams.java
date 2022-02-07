@@ -43,5 +43,8 @@ public class TriangleCountParams implements AlgorithmParams {
         this.setIfAbsent(params,
                          ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
                          Boolean.TRUE.toString());
+        this.setIfAbsent(params,
+                    ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX.name(),
+                    "-1");
     }
 }

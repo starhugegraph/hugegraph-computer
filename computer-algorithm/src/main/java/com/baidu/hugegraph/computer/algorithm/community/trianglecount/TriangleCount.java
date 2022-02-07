@@ -29,8 +29,12 @@ import com.baidu.hugegraph.computer.core.graph.value.IdSet;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 public class TriangleCount implements Computation<IdList> {
+
+    private static final Logger LOG = Log.logger(TriangleCount.class);
 
     public static final String ALGORITHM_NAME = "triangle_count";
 
@@ -64,8 +68,13 @@ public class TriangleCount implements Computation<IdList> {
         }
 
         // Send all neighbors of id less than self to neighbors
+        int count = 0;
         for (Id targetId : allNeighbors.values()) {
             context.sendMessage(targetId, neighbors);
+            count += 1;
+        }
+        if (count > 10) {
+            LOG.info("count {}", count);
         }
 
         vertex.value(value);
