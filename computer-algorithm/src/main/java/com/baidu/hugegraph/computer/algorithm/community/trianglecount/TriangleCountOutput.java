@@ -20,9 +20,12 @@
 package com.baidu.hugegraph.computer.algorithm.community.trianglecount;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
+import com.baidu.hugegraph.schema.VertexLabel;
 import com.baidu.hugegraph.structure.HugeVertex;
+import com.baidu.hugegraph.testutil.Whitebox;
 import com.baidu.hugegraph.type.define.WriteType;
 
 public class TriangleCountOutput extends HugeOutput {
@@ -38,9 +41,14 @@ public class TriangleCountOutput extends HugeOutput {
 
     @Override
     public HugeVertex constructHugeVertex(Vertex vertex) {
-        HugeVertex hugeVertex = new HugeVertex(
+        /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
-                this.graph().vertexLabel(vertex.label()));
+                this.graph().vertexLabel(vertex.label()));*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
         int value = ((TriangleCountValue) vertex.value()).count();
         hugeVertex.property(this.name(), value);
         return hugeVertex;

@@ -21,15 +21,14 @@ package com.baidu.hugegraph.computer.algorithm.centrality.pagerank;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
+//import com.baidu.hugegraph.backend.tx.SchemaTransaction;
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
-//import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.schema.VertexLabel;
-//import com.baidu.hugegraph.structure.HugeProperty;
 import com.baidu.hugegraph.structure.HugeVertex;
 import com.baidu.hugegraph.type.define.WriteType;
-import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
+//import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import com.baidu.hugegraph.testutil.Whitebox;
 
 
@@ -58,10 +57,6 @@ public class PageRankOutput extends HugeOutput {
         /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
                 this.graph().vertexLabel(vertex.label()));
-        for (Map.Entry<String,Value<?>> entry :
-                vertex.properties().get().entrySet()) {
-            hugeVertex.property(entry.getKey(),entry.getValue());
-        }
         hugeVertex.property(this.name(),
                             ((DoubleValue) vertex.value()).value());*/
         GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
@@ -69,8 +64,10 @@ public class PageRankOutput extends HugeOutput {
         HugeVertex hugeVertex = HugeVertex.create(gtx,
                 IdGenerator.of(vertex.id().asObject()),
                 VertexLabel.OLAP_VL);
-        ElementHelper.attachProperties(hugeVertex, this.name(),
+        hugeVertex.property(this.name(),
                 ((DoubleValue) vertex.value()).value());
+        //ElementHelper.attachProperties(hugeVertex, this.name(),
+        //        ((DoubleValue) vertex.value()).value());
         return hugeVertex;
     }
 }

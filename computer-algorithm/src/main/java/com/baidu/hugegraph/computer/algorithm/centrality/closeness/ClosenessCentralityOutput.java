@@ -21,6 +21,9 @@ package com.baidu.hugegraph.computer.algorithm.centrality.closeness;
 
 import java.util.Map;
 
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
+import com.baidu.hugegraph.schema.VertexLabel;
+import com.baidu.hugegraph.testutil.Whitebox;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
@@ -49,9 +52,14 @@ public class ClosenessCentralityOutput extends HugeOutput {
     @Override
     public HugeVertex constructHugeVertex(Vertex vertex) {
         LOG.info("The closeness centrality aaa\n");
-        HugeVertex hugeVertex = new HugeVertex(
+        /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
-                this.graph().vertexLabel(vertex.label()));
+                this.graph().vertexLabel(vertex.label()));*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
 
         LOG.info("The closeness centrality bbb\n");
 

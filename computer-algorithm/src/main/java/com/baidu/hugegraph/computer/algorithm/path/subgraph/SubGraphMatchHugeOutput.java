@@ -23,9 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
+import com.baidu.hugegraph.schema.VertexLabel;
 import com.baidu.hugegraph.structure.HugeVertex;
+import com.baidu.hugegraph.testutil.Whitebox;
 import com.baidu.hugegraph.type.define.WriteType;
 
 public class SubGraphMatchHugeOutput extends HugeOutput {
@@ -43,9 +46,14 @@ public class SubGraphMatchHugeOutput extends HugeOutput {
     @Override
     public HugeVertex constructHugeVertex(
             com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
-        HugeVertex hugeVertex = new HugeVertex(
+        /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
-                this.graph().vertexLabel(vertex.label()));
+                this.graph().vertexLabel(vertex.label()));*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
 
         SubGraphMatchValue value = vertex.value();
         IdListList res = value.res();

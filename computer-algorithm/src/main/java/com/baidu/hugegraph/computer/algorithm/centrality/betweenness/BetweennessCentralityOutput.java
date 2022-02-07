@@ -19,6 +19,9 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
+import com.baidu.hugegraph.schema.VertexLabel;
+import com.baidu.hugegraph.testutil.Whitebox;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
@@ -44,9 +47,14 @@ public class BetweennessCentralityOutput extends HugeOutput {
 
     @Override
     public HugeVertex constructHugeVertex(Vertex vertex) {
-        HugeVertex hugeVertex = new HugeVertex(
+        /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
-                this.graph().vertexLabel(vertex.label()));
+                this.graph().vertexLabel(vertex.label()));*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
         BetweennessValue localValue = vertex.value();
         double centrality = localValue.betweenness().value();
         hugeVertex.property(this.name(), centrality);

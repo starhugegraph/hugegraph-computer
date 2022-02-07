@@ -22,6 +22,8 @@ package com.baidu.hugegraph.computer.core.output.hg;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.testutil.Whitebox;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeGraph;
@@ -51,6 +53,10 @@ public abstract class HugeOutput extends AbstractComputerOutput {
         this.batchSize = config.get(ComputerOptions.OUTPUT_BATCH_SIZE);
 
         this.prepareSchema();
+
+        SchemaTransaction stx = Whitebox.invoke(this.graph().getClass(),
+                "schemaTransaction", this.graph());
+        stx.initAndRegisterOlapTables();
     }
 
     public HugeGraph graph() {
