@@ -48,7 +48,7 @@ public final class Constants {
      * The big buffer size for buffered input & output,
      * mainly used in input & output of file and stream
      */
-    public static final int BIG_BUF_SIZE = (int) Bytes.KB * 8;
+    public static final int BIG_BUF_SIZE = (int) Bytes.KB * 16;
 
     /*
      * The capacity of message queue
