@@ -80,6 +80,11 @@ public class ListValue<T extends Value<?>> implements Value<ListValue<T>> {
         this.values.add(value);
     }
 
+    public void add(int pos, T value) {
+        this.checkAndSetType(value);
+        this.values.add(pos, value);
+    }
+
     public void addAll(Collection<T> values) {
         if (CollectionUtils.isEmpty(values)) {
             return;

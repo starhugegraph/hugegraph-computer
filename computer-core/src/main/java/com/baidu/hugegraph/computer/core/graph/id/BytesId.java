@@ -91,6 +91,16 @@ public class BytesId implements Id {
         return new BytesId(IdType.UUID, output.buffer(), output.position());
     }
 
+    public static BytesId of(boolean value) {
+        byte[] output = new byte[1];
+        if (value) {
+            output[0] = 1;
+        } else {
+            output[0] = 0;
+        }
+        return new BytesId(IdType.FLAG, output, 1);
+    }
+
     public byte[] bytes() {
         return this.bytes;
     }
@@ -148,6 +158,14 @@ public class BytesId implements Id {
                     throw new ComputerException("Failed to read BytesId to " +
                                                 "UUID object");
                 }
+            case FLAG:
+                if (this.bytes[0] == 1) {
+                    return true;
+                } 
+                else {
+                    return false;
+                }
+
             default:
                 throw new ComputerException("Unexpected IdType %s",
                                             this.idType);
@@ -187,8 +205,7 @@ public class BytesId implements Id {
     @Override
     public void read(RandomAccessInput in) throws IOException {
         byte type = in.readByte();
-        this.idType = (type == 1 ? IdType.LONG : (type == 2 ?
-                                                  IdType.UTF8 : IdType.UUID));
+        this.idType = IdType.getIdTypeByCode(type);
         int len = in.readByte();
         //int len = in.readInt();
         this.bytes = BytesUtil.ensureCapacityWithoutCopy(this.bytes, len);
