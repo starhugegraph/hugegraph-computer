@@ -283,7 +283,7 @@ public class EdgesInputFast {
                 
         IdType idType = IdType.getIdTypeByCode(code);
         position += 1;
-        int idLen = data[position];
+        int idLen = data[position] & 0xFF;
         position += 1;
         byte[] idData = new byte[idLen];
         System.arraycopy(data, position, idData, 0, idLen);    
@@ -331,7 +331,12 @@ public class EdgesInputFast {
         int count = DataParser.byte2int(data, position);
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
-        
+
+        if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+            count = this.edgeLimitNum;
+        }
+
         for (int i = 0; i < count; i++) {
             Edge edge = this.graphFactory.createEdge();
             byte inv = data[position];
@@ -339,7 +344,7 @@ public class EdgesInputFast {
             
             IdType idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            int idL = data[position];
+            int idL = data[position] & 0xFF;
             position++;
             byte[] idd = new byte[idL];
 
@@ -350,7 +355,7 @@ public class EdgesInputFast {
                         
             idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            idL = data[position];
+            idL = data[position] & 0xFF;
             position++;
             idd = new byte[idL];
             System.arraycopy(data, position, idd, 0, idL);   
@@ -413,7 +418,7 @@ public class EdgesInputFast {
                 
         IdType idType = IdType.getIdTypeByCode(code);
         position += 1;
-        int idLen = data[position];
+        int idLen = data[position] & 0xFF;
         position += 1;
         byte[] idData = new byte[idLen];
         System.arraycopy(data, position, idData, 0, idLen);    
@@ -461,7 +466,12 @@ public class EdgesInputFast {
         int count = DataParser.byte2int(data, position);
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
-        
+
+        if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+            count = this.edgeLimitNum;
+        }
+
         for (int i = 0; i < count; i++) {
             Edge edge = this.graphFactory.createEdge();
             byte inv = data[position];
@@ -469,7 +479,7 @@ public class EdgesInputFast {
             
             IdType idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            int idL = data[position];
+            int idL = data[position] & 0xFF;
             position++;
             byte[] idd = new byte[idL];
 
@@ -490,7 +500,7 @@ public class EdgesInputFast {
             
             idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            idL = data[position];
+            idL = data[position] & 0xFF;
             position++;
             idd = new byte[idL];
             System.arraycopy(data, position, idd, 0, idL);   
@@ -550,7 +560,7 @@ public class EdgesInputFast {
                 
         IdType idType = IdType.getIdTypeByCode(code);
         position += 1;
-        int idLen = data[position];
+        int idLen = data[position] & 0xFF;
         position += 1;
         byte[] idData = new byte[idLen];
         System.arraycopy(data, position, idData, 0, idLen);    
@@ -598,7 +608,12 @@ public class EdgesInputFast {
         int count = DataParser.byte2int(data, position);
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
-        
+
+        if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+            count = this.edgeLimitNum;
+        }
+
         for (int i = 0; i < count; i++) {
             Edge edge = this.graphFactory.createEdge();
             byte inv = data[position];
@@ -606,7 +621,7 @@ public class EdgesInputFast {
             
             IdType idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            int idL = data[position];
+            int idL = data[position] & 0xFF;
             position++;
             byte[] idd = new byte[idL];
 
@@ -635,7 +650,7 @@ public class EdgesInputFast {
 
             idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            idL = data[position];
+            idL = data[position] & 0xFF;
             position++;
             idd = new byte[idL];
             System.arraycopy(data, position, idd, 0, idL);   
@@ -726,6 +741,11 @@ public class EdgesInputFast {
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
 
+        if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+            count = this.edgeLimitNum;
+        }
+
         for (int i = 0; i < count; i++) {
             position++;
             
@@ -779,7 +799,7 @@ public class EdgesInputFast {
         byte code = data[position];
         IdType idType = IdType.getIdTypeByCode(code);
         position += 1;
-        int idLen = data[position];
+        int idLen = data[position] & 0xFF;
         position += 1;
         byte[] idData = new byte[idLen];
         System.arraycopy(data, position, idData, 0, idLen);    
@@ -816,12 +836,18 @@ public class EdgesInputFast {
         Edges edges = this.graphFactory.createEdges(count);
         position += 4;
 
+        if (this.edgeLimitNum != UNLIMITED_NUM &&
+                this.edgeLimitNum < count) {
+            count = this.edgeLimitNum;
+        }
+
         for (int i = 0; i < count; i++) {
             position++;
             
             IdType idT = IdType.getIdTypeByCode(data[position]);
             position++;
-            int idL = data[position];
+            int idL = data[position] & 0xFF;
+
             position++;
             byte[] idd = new byte[idL];
             System.arraycopy(data, position, idd, 0, idL);   
@@ -838,7 +864,8 @@ public class EdgesInputFast {
             position += vint[1];
 
             position++;
-            idL = data[position];
+            idL = data[position] & 0xFF;
+
             position += 1 + idL;
 
             vint = DataParser.parseVInt(data, position);

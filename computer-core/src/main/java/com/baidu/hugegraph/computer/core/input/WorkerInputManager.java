@@ -91,6 +91,11 @@ public class WorkerInputManager implements Manager {
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
         while (iterator.hasNext()) {
             Vertex vertex = iterator.next();
+            if (vertex.id().length() >= 256) {
+                //filter too long id
+                System.out.printf("too long id");
+                continue;
+            }
             this.sendManager.sendVertex(vertex);
         }
     }
@@ -111,6 +116,14 @@ public class WorkerInputManager implements Manager {
             for (Edge edge:vertex.edges()) {
                 Id targetId = edge.targetId();
                 Id sourceId = vertex.id();
+
+                if (targetId.length() >= 256 ||
+                    sourceId.length() >= 256 ||
+                    edge.id().length() >= 256) {
+                    //filter too long id
+                    System.out.printf("too long id");
+                    continue;
+                }
 
                 Vertex vertexInv = new DefaultVertex(graphFactory,
                                                   targetId, null);

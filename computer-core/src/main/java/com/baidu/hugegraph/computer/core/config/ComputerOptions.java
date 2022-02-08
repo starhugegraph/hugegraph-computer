@@ -186,6 +186,15 @@ public class ComputerOptions extends OptionHolder {
                     -1
             );
 
+    public static final ConfigOption<Boolean> SKIP_EDGE_LABEL =
+            new ConfigOption<>(
+                    "skip_edge_label",
+                    "Choose whether need read edge label in each edge, " +
+                    "skip it could reduce a lot cpu cost when cpu busy.",
+                    disallowEmpty(),
+                    false
+            );
+
     public static final ConfigOption<String> INPUT_LOADER_STRUCT_PATH =
             new ConfigOption<>(
                     "input.loader_struct_path",

@@ -50,7 +50,7 @@ public class PageRank implements Computation<DoubleValue> {
     private Aggregator<LongValue> danglingVertexNumAggr;
     private Aggregator<DoubleValue> danglingCumulativeAggr;
 
-    // Initial value in superstep 0.
+    /** Initial value in superstep 0. */
     private DoubleValue initialValue;
     private DoubleValue contribValue;
 

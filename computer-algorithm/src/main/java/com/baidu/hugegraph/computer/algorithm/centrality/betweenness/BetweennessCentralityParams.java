@@ -22,7 +22,6 @@ package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 import java.util.Map;
 
 import com.baidu.hugegraph.computer.algorithm.AlgorithmParams;
-import com.baidu.hugegraph.computer.algorithm.centrality.closeness.ClosenessCentrality;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.input.filter.ExtractAllPropertyInputFilter;
 import com.baidu.hugegraph.computer.core.master.DefaultMasterComputation;
@@ -43,7 +42,10 @@ public class BetweennessCentralityParams implements AlgorithmParams {
                          BetweennessCentralityOutput.class.getName());
         this.setIfAbsent(params, ComputerOptions.INPUT_FILTER_CLASS,
                          ExtractAllPropertyInputFilter.class.getName());
-        this.setIfAbsent(params, ClosenessCentrality.OPTION_SAMPLE_RATE,
-                         "0.5D");
+        this.setIfAbsent(params, BetweennessCentrality.OPTION_SAMPLE_RATE,
+                         "0.01D");
+        this.setIfAbsent(params,
+                         ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX, PERF);
+        this.setIfAbsent(params, ComputerOptions.SKIP_EDGE_LABEL, "true");
     }
 }

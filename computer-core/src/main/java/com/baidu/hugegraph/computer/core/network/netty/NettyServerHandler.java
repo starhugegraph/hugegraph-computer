@@ -104,11 +104,9 @@ public class NettyServerHandler extends AbstractNettyHandler {
     }
 
     private void ackStartMessage(ChannelHandlerContext ctx) {
-        LOG.info("{} act start message begin", this);
         AckMessage startAck = new AckMessage(AbstractMessage.START_SEQ);
         ctx.writeAndFlush(startAck).addListener(this.listenerOnWrite);
         this.serverSession.completeStateStart();
-        LOG.info("{} act start message complete", this);
 
         Channel channel = ctx.channel();
         this.handler.onStarted(TransportUtil.remoteConnectionId(channel));

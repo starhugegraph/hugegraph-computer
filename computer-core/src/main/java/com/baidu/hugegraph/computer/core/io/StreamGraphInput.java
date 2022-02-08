@@ -19,6 +19,8 @@
 
 package com.baidu.hugegraph.computer.core.io;
 
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.SKIP_EDGE_LABEL;
+
 import java.io.IOException;
 
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -45,11 +47,13 @@ public class StreamGraphInput implements GraphComputeInput {
     private final Config config;
     private final EdgeFrequency frequency;
     private final EntryInput in;
+    private final boolean perfEdgeLabel;
 
     public StreamGraphInput(ComputerContext context, EntryInput in) {
         this.graphFactory = context.graphFactory();
         this.config = context.config();
         this.frequency = context.config().get(ComputerOptions.INPUT_EDGE_FREQ);
+        this.perfEdgeLabel = context.config().get(SKIP_EDGE_LABEL);
         this.in = in;
     }
 
@@ -83,7 +87,11 @@ public class StreamGraphInput implements GraphComputeInput {
                     edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));
-                    edge.label(readLabel(in));
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(readLabel(in));
+                    }
                     edge.properties(readProperties(in));
                 });
                 if (inv.value()) {
@@ -102,7 +110,11 @@ public class StreamGraphInput implements GraphComputeInput {
                     boolean inv_ = (in.readByte() == 1) ? true : false;
                     inv.value(inv_);
                     edge.targetId(readId(in));
-                    edge.label(readLabel(in));
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(readLabel(in));
+                    }
                     //edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));
@@ -128,8 +140,13 @@ public class StreamGraphInput implements GraphComputeInput {
                     boolean inv_ = (in.readByte() == 1) ? true : false;
                     inv.value(inv_);
                     edge.targetId(readId(in));
-                    edge.label(readLabel(in));
-                    edge.name(readLabel(in));
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(readLabel(in));
+                        edge.name(readLabel(in));
+                    }
                     //edge.targetId(readId(in));
                 }, in -> {
                     edge.id(readId(in));

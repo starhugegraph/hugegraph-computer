@@ -30,6 +30,7 @@ public interface AlgorithmParams {
 
     Logger LOG = Log.logger(AlgorithmParams.class);
 
+    String PERF = "10000";
     /**
      * set algorithm's specific configuration
      * @param params

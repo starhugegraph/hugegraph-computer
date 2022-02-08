@@ -22,6 +22,7 @@ package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 
@@ -45,8 +46,9 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
     public static final String OPTION_SAMPLE_RATE =
                                "betweenness_centrality.sample_rate";
 
-    private double sampleRate;
-    /*
+    private int storePerf;
+    private float sampleRate;
+    /**
      * Record the number of shortest paths for intermediate vertex, suppose
      * there are two shortest paths from A(source vertex) to E(current vertex),
      * [A -> B -> C -> E] and [A -> B -> D -> E]
@@ -58,6 +60,7 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
      *    totalCount:2
      */
     private Map<Id, SeqCount> seqTable;
+    private ThreadLocalRandom random;
 
     @Override
     public String name() {
@@ -71,13 +74,19 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
 
     @Override
     public void init(Config config) {
-        this.sampleRate = config.getDouble(OPTION_SAMPLE_RATE, 1.0D);
-        if (this.sampleRate <= 0.0D || this.sampleRate > 1.0D) {
+        this.sampleRate = (float) config.getDouble(OPTION_SAMPLE_RATE, 1.0D);
+        if (this.sampleRate <= 0.0 || this.sampleRate > 1.0) {
             throw new ComputerException("The param %s must be in (0.0, 1.0], " +
-                                        "actual got '%s'",
-                                        OPTION_SAMPLE_RATE, this.sampleRate);
+                                        "actual got '%s'", OPTION_SAMPLE_RATE,
+                                        this.sampleRate);
         }
         this.seqTable = new HashMap<>();
+        this.random = ThreadLocalRandom.current();
+        //this.counter = new LongAdder();
+        this.storePerf = config.getInt("store_perf", 64);
+
+        LOG.info("## Sample rate ={}, size = {}",
+                 this.sampleRate, this.storePerf);
     }
 
     @Override
@@ -98,8 +107,8 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
         IdList sequence = new IdList();
         sequence.add(vertex.id());
         context.sendMessageToAllEdges(vertex, new BetweennessMessage(sequence));
-        LOG.info("Finished compute-0 step {} {}", 
-               vertex.id(), vertex.numEdges());
+        LOG.info("Finished compute-0 step {} {}",
+                 vertex.id(), vertex.numEdges());
     }
 
     @Override
@@ -122,8 +131,10 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
 
         boolean active = !this.seqTable.isEmpty();
         if (active) {
-            this.sendMessage(context);
-            this.seqTable.clear();
+            this.voteThenSendMsg(context);
+            // TODO: test perf
+            this.seqTable = new HashMap<>();
+            //this.seqTable.clear();
         } else {
             vertex.inactivate();
         }
@@ -140,7 +151,8 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
         Id source = sequence.get(0);
 
         // The source vertex is arriving at first time
-        if (!arrivedVertices.contains(source)) {
+        if (arrivedVertices.size() < this.storePerf &&
+            !arrivedVertices.contains(source)) {
             arrivingVertices.add(source);
 
             SeqCount seqCount = this.seqTable.computeIfAbsent(
@@ -166,7 +178,7 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
         }
     }
 
-    private void sendMessage(ComputationContext context) {
+    private void voteThenSendMsg(ComputationContext context) {
         for (SeqCount seqCount : this.seqTable.values()) {
             for (Map.Entry<Id, Integer> entry : seqCount.idCount.entrySet()) {
                 double vote = (double) entry.getValue() / seqCount.totalCount;
@@ -180,15 +192,18 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
 
     @Override
     public void beforeSuperstep(WorkerContext context) {
+        //EdgesInput.setPerfNum(10000);
     }
 
     @Override
     public void afterSuperstep(WorkerContext context) {
+        // TODO: Use heuristic way to change the sample rate dynamically
+        //LOG.info("##seq count = " + counter);
     }
 
     private boolean sample(Id sourceId, Id targetId, Edge edge) {
         // Now just use the simplest way
-        return Math.random() <= this.sampleRate;
+        return this.random.nextFloat() < this.sampleRate;
     }
 
     private static class SeqCount {
