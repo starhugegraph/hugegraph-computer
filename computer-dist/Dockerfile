@@ -10,5 +10,3 @@ COPY . ${WORK_PATH}
 
 WORKDIR ${WORK_PATH}
 RUN apt-get update && apt-get -y install gettext-base wget
-RUN wget https://github.com/alibaba/arthas/releases/download/arthas-all-3.5.5/arthas-bin.zip
-RUN unzip arthas-bin.zip
