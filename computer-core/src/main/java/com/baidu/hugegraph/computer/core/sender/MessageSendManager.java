@@ -48,6 +48,7 @@ import com.baidu.hugegraph.computer.core.network.TransportConf;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.Log;
 
 public class MessageSendManager implements Manager {
@@ -241,7 +242,7 @@ public class MessageSendManager implements Manager {
     }
 
     private Future<?> sortThenSendFast(int partitionId, MessageType type,
-                                   WriteBuffers buffer) {
+                                       WriteBuffers buffer) {
         int workerId = this.partitioner.workerId(partitionId);
         return this.sortManager.sortFast(type, buffer).
                                 thenAccept(sortedBuffer -> {
@@ -262,6 +263,7 @@ public class MessageSendManager implements Manager {
                           "into queue", e);
                 // Just record the first error
                 this.exception.compareAndSet(null, e);
+                WorkerService.setThrowable(e);
             }
         });
     }
@@ -288,6 +290,7 @@ public class MessageSendManager implements Manager {
                           "into queue", e);
                 // Just record the first error
                 this.exception.compareAndSet(null, e);
+                WorkerService.setThrowable(e);
             }
         });
     }

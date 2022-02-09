@@ -59,6 +59,7 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.Pointer;
 import com.baidu.hugegraph.computer.core.util.BytesUtil;
 import com.baidu.hugegraph.computer.core.dataparser.DataParser;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
 
@@ -156,7 +157,11 @@ public abstract class SortManager implements Manager {
             ByteBuffer bytebuffer = ByteBuffer.wrap(output.buffer(), 0,
                                 (int) output.position());
             return bytebuffer;
-        }, this.sortExecutor);
+        }, this.sortExecutor).whenComplete((r, e) -> {
+            if (e != null) {
+                WorkerService.setThrowable(e);
+            }
+        });
     }
 
     public CompletableFuture<ByteBuffer> sort(MessageType type,
@@ -177,7 +182,11 @@ public abstract class SortManager implements Manager {
             }
 
             return ByteBuffer.wrap(output.buffer(), 0, (int) output.position());
-        }, this.sortExecutor);
+        }, this.sortExecutor).whenComplete((r, e) -> {
+            if (e != null) {
+                WorkerService.setThrowable(e);
+            }
+        });
     }
 
     public CompletableFuture<Void> mergeBuffers(List<RandomAccessInput> inputs,
@@ -195,7 +204,11 @@ public abstract class SortManager implements Manager {
                           "Failed to merge %s buffers to file '%s'",
                           e, inputs.size(), path);
             }
-        }, this.sortExecutor);
+        }, this.sortExecutor).whenComplete((r, e) -> {
+            if (e != null) {
+                WorkerService.setThrowable(e);
+            }
+        });
     }
 
     public void mergeInputs(List<String> inputs, List<String> outputs,

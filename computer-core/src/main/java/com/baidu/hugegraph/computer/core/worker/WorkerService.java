@@ -56,14 +56,21 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.slf4j.Logger;
-
-
 
 public class WorkerService implements Closeable {
 
     private static final Logger LOG = Log.logger(WorkerService.class);
 
+    private static final AtomicReference<Throwable> workerError =
+                                                    new AtomicReference<>();
+    private static final ScheduledExecutorService scheduled =
+                         Executors.newScheduledThreadPool(1);
     private final ComputerContext context;
     private final Managers managers;
     private final Map<Integer, ContainerInfo> workers;
@@ -86,6 +93,10 @@ public class WorkerService implements Closeable {
     private WorkerStat inputWorkerStat;
     private boolean useIdFixLength;
     private String useMode;
+
+    static {
+        startErrorCheck();
+    }
 
     public WorkerService() {
         this.context = ComputerContext.instance();
@@ -400,6 +411,21 @@ public class WorkerService implements Closeable {
         LOG.info("{} WorkerService initialized managers with data server " +
                  "address '{}'", this, address);
         return address;
+    }
+
+    public static void setThrowable(Throwable t) {
+        workerError.compareAndSet(null, t);
+    }
+
+    private static void startErrorCheck() {
+        scheduled.scheduleWithFixedDelay(() -> {
+            Throwable throwable = workerError.get();
+            if (throwable != null) {
+                LOG.error("An error was found while worker was running, " +
+                          "exit worker now and error info is:", throwable);
+                System.exit(1);
+            }
+        }, 0, 1, TimeUnit.MINUTES);
     }
 
     private void checkInited() {
