@@ -67,9 +67,9 @@ public class WorkerService implements Closeable {
 
     private static final Logger LOG = Log.logger(WorkerService.class);
 
-    private static final AtomicReference<Throwable> workerError =
+    private static final AtomicReference<Throwable> WORKER_ERROR =
                                                     new AtomicReference<>();
-    private static final ScheduledExecutorService scheduled =
+    private static final ScheduledExecutorService SCHEDULED =
                          Executors.newScheduledThreadPool(1);
     private final ComputerContext context;
     private final Managers managers;
@@ -414,12 +414,12 @@ public class WorkerService implements Closeable {
     }
 
     public static void setThrowable(Throwable t) {
-        workerError.compareAndSet(null, t);
+        WORKER_ERROR.compareAndSet(null, t);
     }
 
     private static void startErrorCheck() {
-        scheduled.scheduleWithFixedDelay(() -> {
-            Throwable throwable = workerError.get();
+        SCHEDULED.scheduleWithFixedDelay(() -> {
+            Throwable throwable = WORKER_ERROR.get();
             if (throwable != null) {
                 LOG.error("An error was found while worker was running, " +
                           "exit worker now and error info is:", throwable);
