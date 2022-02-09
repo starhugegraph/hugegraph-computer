@@ -507,6 +507,14 @@ public class ComputerOptions extends OptionHolder {
                     TimeUnit.SECONDS.toMillis(30L)
             );
 
+    public static final ConfigOption<Boolean> WORKER_ERROR_QUIT =
+            new ConfigOption<>(
+                    "worker.worker_error_quit",
+                    "Quit worker process when find an error.",
+                    allowValues(true, false),
+                    true
+            );
+
     public static final ConfigOption<Class<?>> WORKER_PARTITIONER =
             new ConfigOption<>(
                     "worker.partitioner",

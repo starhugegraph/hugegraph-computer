@@ -418,14 +418,18 @@ public class WorkerService implements Closeable {
     }
 
     private static void startErrorCheck() {
-        SCHEDULED.scheduleWithFixedDelay(() -> {
-            Throwable throwable = WORKER_ERROR.get();
-            if (throwable != null) {
-                LOG.error("An error was found while worker was running, " +
-                          "exit worker now and error info is:", throwable);
-                System.exit(1);
-            }
-        }, 0, 1, TimeUnit.MINUTES);
+        ComputerContext context = ComputerContext.instance();
+        Config config = context.config();
+        if (config.get(ComputerOptions.WORKER_ERROR_QUIT)) {
+            SCHEDULED.scheduleWithFixedDelay(() -> {
+                Throwable throwable = WORKER_ERROR.get();
+                if (throwable != null) {
+                    LOG.error("An error was found while worker was running, " +
+                              "exit worker now and error info is:", throwable);
+                    System.exit(1);
+                }
+            }, 0, 1, TimeUnit.MINUTES);
+        }
     }
 
     private void checkInited() {
