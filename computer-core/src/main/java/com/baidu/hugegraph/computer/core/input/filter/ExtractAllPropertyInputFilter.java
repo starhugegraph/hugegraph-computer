@@ -19,19 +19,13 @@
 
 package com.baidu.hugegraph.computer.core.input.filter;
 
+import com.baidu.hugegraph.computer.core.input.Holder;
 import com.baidu.hugegraph.computer.core.input.InputFilter;
-import com.baidu.hugegraph.structure.graph.Edge;
-import com.baidu.hugegraph.structure.graph.Vertex;
 
-public class ExtractAllPropertyInputFilter implements InputFilter {
+public class ExtractAllPropertyInputFilter<T> implements InputFilter<T> {
 
     @Override
-    public Vertex filter(Vertex vertex) {
+    public Holder<T> filter(Holder<T> vertex) {
         return vertex;
-    }
-
-    @Override
-    public Edge filter(Edge edge) {
-        return edge;
     }
 }

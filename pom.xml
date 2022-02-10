@@ -45,7 +45,7 @@
         <compiler.source>1.8</compiler.source>
         <compiler.target>1.8</compiler.target>
         <shell-executable>bash</shell-executable>
-        <etcd.version>0.5.4</etcd.version>
+        <etcd.version>0.5.9</etcd.version>
         <hadoop-version>3.1.2</hadoop-version>
     </properties>
 
@@ -82,7 +82,22 @@
             </dependency>
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hugegraph-hstore</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-client</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hugegraph-core</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-pd-client</artifactId>
                 <version>3.0.0</version>
             </dependency>
             <dependency>

@@ -27,6 +27,8 @@ import static com.baidu.hugegraph.config.OptionChecker.positiveInt;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.tinkerpop.gremlin.structure.Direction;
+
 import com.baidu.hugegraph.computer.core.combiner.OverwriteCombiner;
 import com.baidu.hugegraph.computer.core.graph.partition.HashPartitioner;
 import com.baidu.hugegraph.computer.core.input.filter.DefaultInputFilter;
@@ -38,7 +40,6 @@ import com.baidu.hugegraph.config.ConfigConvOption;
 import com.baidu.hugegraph.config.ConfigListOption;
 import com.baidu.hugegraph.config.ConfigOption;
 import com.baidu.hugegraph.config.OptionHolder;
-import com.baidu.hugegraph.structure.constant.Direction;
 import com.baidu.hugegraph.util.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +94,14 @@ public class ComputerOptions extends OptionHolder {
                     "The source type to load input data",
                     allowValues("hugegraph", "loader"),
                     "hugegraph"
+            );
+
+    public static final ConfigOption<String> INPUT_PD_PEERS =
+            new ConfigOption<>(
+                    "pd.peers",
+                    "The addresses of pd nodes, separated with commas.",
+                    disallowEmpty(),
+                    "localhost"
             );
 
     public static final ConfigOption<Integer> INPUT_SPLIT_FETCH_TIMEOUT =

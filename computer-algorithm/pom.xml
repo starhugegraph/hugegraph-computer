@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.baidu.hugegraph</groupId>
             <artifactId>computer-core</artifactId>
-            <version>${project.version}</version>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.aviator</groupId>
@@ -35,6 +35,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>

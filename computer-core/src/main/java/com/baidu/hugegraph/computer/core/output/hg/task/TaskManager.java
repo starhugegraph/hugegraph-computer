@@ -19,24 +19,28 @@
 
 package com.baidu.hugegraph.computer.core.output.hg.task;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.MapConfiguration;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.exceptions.WriteBackException;
-
-
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.Printer;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.driver.HugeClientBuilder;
-import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.config.CoreOptions;
+import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.baidu.hugegraph.util.Log;
 
@@ -47,7 +51,7 @@ public final class TaskManager {
     public static final String BATCH_WORKER = "batch-worker-%d";
     public static final String SINGLE_WORKER = "single-worker-%d";
 
-    private final HugeClient client;
+    private final HugeGraph graph;
     private final Config config;
 
     private final Semaphore batchSemaphore;
@@ -59,22 +63,31 @@ public final class TaskManager {
 
     public TaskManager(Config config) {
         this.config = config;
-        String url = config.get(ComputerOptions.HUGEGRAPH_URL);
-        String graph = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
-        String token = config.get(ComputerOptions.AUTH_TOKEN);
-        String usrname = config.get(ComputerOptions.AUTH_USRNAME);
-        String passwd = config.get(ComputerOptions.AUTH_PASSWD);
 
-        // Use token first, then try passwd mode
-        HugeClientBuilder clientBuilder = new HugeClientBuilder(url, "DEFAULT",
-                graph);
-        if (token != null && token.length() != 0) {
-            this.client = clientBuilder.configToken(token).build();
-        } else if (usrname != null && usrname.length() != 0) {
-            this.client = clientBuilder.configUser(usrname, passwd).build();
-        } else {
-            this.client = clientBuilder.build();
+        Map<String, Object> configs = new HashMap<>();
+        String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
+        // TODO: add auth check
+        configs.put("pd.peers", pdPeers);
+        configs.put("backend", "hstore");
+        configs.put("serializer", "binary");
+        configs.put("search.text_analyzer", "jieba");
+        configs.put("search.text_analyzer_mode", "INDEX");
+        configs.put("gremlin.graph", "com.baidu.hugegraph.HugeFactory");
+
+        Configuration propConfig = new MapConfiguration(configs);
+        String graphName = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
+        String[] parts = graphName.split("/");
+
+        propConfig.setProperty(CoreOptions.STORE.name(),
+                               parts[parts.length - 1]);
+        HugeConfig hugeConfig = new HugeConfig(propConfig);
+        try {
+            this.graph = (HugeGraph) GraphFactory.open(hugeConfig);
+        } catch (Throwable e) {
+            LOG.error("Exception occur when open graph", e);
+            throw e;
         }
+        this.graph.graphSpace(parts[0]);
 
         // Try to make all batch threads running and don't wait for producer
         this.batchSemaphore = new Semaphore(this.batchSemaphoreNum());
@@ -100,8 +113,8 @@ public final class TaskManager {
         this.loadSummary.startTimer();
     }
 
-    public HugeClient client() {
-        return this.client;
+    public HugeGraph graph() {
+        return this.graph;
     }
 
     private int batchSemaphoreNum() {
@@ -166,7 +179,11 @@ public final class TaskManager {
         this.loadSummary.stopTimer();
         Printer.printSummary(this.loadSummary);
 
-        this.client.close();
+        try {
+            this.graph.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void submitBatch(List<Vertex> batch) {
@@ -177,7 +194,7 @@ public final class TaskManager {
                       "Interrupted while waiting to submit batch", e);
         }
 
-        InsertTask task = new BatchInsertTask(this.config, this.client,
+        InsertTask task = new BatchInsertTask(this.config, this.graph,
                                               batch, this.loadSummary);
         CompletableFuture.runAsync(task, this.batchService).exceptionally(e -> {
             LOG.warn("Batch insert error, try single insert", e);
@@ -194,7 +211,7 @@ public final class TaskManager {
                       "Interrupted while waiting to submit single", e);
         }
 
-        InsertTask task = new SingleInsertTask(this.config, this.client,
+        InsertTask task = new SingleInsertTask(this.config, this.graph,
                                                batch, this.loadSummary);
         CompletableFuture.runAsync(task, this.singleService)
                          .whenComplete((r, e) -> {

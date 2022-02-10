@@ -21,25 +21,29 @@ package com.baidu.hugegraph.computer.core.input.hg;
 
 import java.util.Iterator;
 
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import com.baidu.hugegraph.HugeGraph;
+import com.baidu.hugegraph.backend.query.ConditionQuery;
+import com.baidu.hugegraph.backend.store.Shard;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.structure.graph.Shard;
-import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.type.HugeType;
 
 public class HugeVertexFetcher extends HugeElementFetcher<Vertex>
-                               implements VertexFetcher {
+                               implements VertexFetcher<Vertex> {
 
-    public HugeVertexFetcher(Config config, HugeClient client) {
-        super(config, client);
+    public HugeVertexFetcher(Config config, HugeGraph graph) {
+        super(config, graph);
     }
 
     @Override
     public Iterator<Vertex> fetch(InputSplit split) {
         Shard shard = toShard(split);
-        return this.client().traverser().iteratorVertices(shard,
-                                                          this.pageSize());
+        ConditionQuery query = new ConditionQuery(HugeType.VERTEX);
+        query.scan(shard.start(), shard.end());
+        return this.graph().vertices(query);
     }
 
     @Override
