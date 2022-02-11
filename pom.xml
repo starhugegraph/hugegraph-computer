@@ -89,6 +89,12 @@
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-client</artifactId>
                 <version>3.0.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.mockito</groupId>
+                        <artifactId>mockito-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
