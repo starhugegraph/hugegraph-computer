@@ -186,6 +186,15 @@ public class ComputerOptions extends OptionHolder {
                     -1
             );
 
+    public static final ConfigOption<Integer> MIN_EDGES_USE_SUPEREDGE_CACHE =
+            new ConfigOption<>(
+                    "input.minimum_edges_use_superedge_cache",
+                    "super edges with numedges larger than this use cache " +
+                    "to save message amount",
+                    disallowEmpty(),
+                    100
+            );
+
     public static final ConfigOption<Boolean> SKIP_EDGE_LABEL =
             new ConfigOption<>(
                     "skip_edge_label",

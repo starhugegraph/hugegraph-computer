@@ -43,6 +43,7 @@ public class TriangleCount implements Computation<IdList> {
     public static final String ALGORITHM_NAME = "triangle_count";
     private Partitioner partitioner;
     private Map<Id, IdList> messageStorage;
+    private int superedgeThreshold;
 
     @Override
     public String name() {
@@ -55,6 +56,8 @@ public class TriangleCount implements Computation<IdList> {
                            ComputerOptions.WORKER_PARTITIONER);
         this.partitioner.init(config);
         this.messageStorage = new HashMap();
+        this.superedgeThreshold = 
+            config.get(ComputerOptions.MIN_EDGES_USE_SUPEREDGE_CACHE);
     }
 
     @Override
@@ -85,7 +88,7 @@ public class TriangleCount implements Computation<IdList> {
         
         // Send all neighbors of id less than self to neighbors
         for (Id targetId : allNeighbors.values()) {
-            if (vertex.numEdges() < 10) {
+            if (vertex.numEdges() < this.superedgeThreshold) {
                 context.sendMessage(targetId, neighbors);
             }
             else {
@@ -124,7 +127,7 @@ public class TriangleCount implements Computation<IdList> {
         }
     }
 
-    private IdList saveOrMap(Id vertexId, IdList list) {
+    private IdList cacheOrHit(Id vertexId, IdList list) {
         if (list.size() == 0) {
             this.messageStorage.put(vertexId, list);
             return list;
@@ -178,7 +181,7 @@ public class TriangleCount implements Computation<IdList> {
             while (messages.hasNext()) {
                 IdList message = messages.next();
                 IdList twoDegreeNeighbors = 
-                       this.saveOrMap(vertex.id(), message);
+                       this.cacheOrHit(vertex.id(), message);
                 for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
                     if (allNeighbors.contains(twoDegreeNeighbor)) {
                         count++;
