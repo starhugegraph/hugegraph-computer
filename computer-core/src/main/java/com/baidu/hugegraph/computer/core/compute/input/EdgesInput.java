@@ -19,28 +19,33 @@
 
 package com.baidu.hugegraph.computer.core.compute.input;
 
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_EDGE_FREQ;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX;
+import static com.baidu.hugegraph.computer.core.config.ComputerOptions.SKIP_EDGE_LABEL;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 
+import org.slf4j.Logger;
+
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.EdgeFrequency;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.edge.Edges;
 import com.baidu.hugegraph.computer.core.graph.properties.Properties;
+import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
 import com.baidu.hugegraph.computer.core.io.BufferedFileInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.StreamGraphInput;
-import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
-import java.nio.ByteBuffer;
-import org.slf4j.Logger;
 import com.baidu.hugegraph.util.Log;
 
 public class EdgesInput {
@@ -57,8 +62,9 @@ public class EdgesInput {
     private final ComputerContext context;
     private boolean useFixLength;
     private int idBytes;
-    private final int edgeLimitNum;
     private static final int UNLIMITED_NUM = -1;
+    private static int edgeLimitNum = UNLIMITED_NUM;
+    private final boolean perfEdgeLabel;
 
 
     public EdgesInput(ComputerContext context, File edgeFile) {
@@ -67,13 +73,13 @@ public class EdgesInput {
         this.valuePointer = new ReusablePointer();
         this.edgeFile = edgeFile;
         this.flushThreshold = context.config().get(
-                              ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX);
-        this.frequency = context.config().get(ComputerOptions.INPUT_EDGE_FREQ);
+                              INPUT_MAX_EDGES_IN_ONE_VERTEX);
+        this.frequency = context.config().get(INPUT_EDGE_FREQ);
         this.context = context;
         this.useFixLength = false;
         this.idBytes = 8;
-        this.edgeLimitNum = context
-            .config().get(ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX);
+        this.perfEdgeLabel = context.config().get(SKIP_EDGE_LABEL);
+        edgeLimitNum = context.config().get(INPUT_LIMIT_EDGES_IN_ONE_VERTEX);
     }
 
     public void init() throws IOException {
@@ -288,9 +294,8 @@ public class EdgesInput {
             int count = in.readFixedInt();
           
             // update count when "-1 < limitNum < count"
-            if (this.edgeLimitNum != UNLIMITED_NUM &&
-                this.edgeLimitNum < count) {
-                count = this.edgeLimitNum;
+            if (edgeLimitNum != UNLIMITED_NUM && edgeLimitNum < count) {
+                count = edgeLimitNum;
             }
 
             Edges edges = this.graphFactory.createEdges(count);
@@ -321,8 +326,12 @@ public class EdgesInput {
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
                     }
-                    edge.label(StreamGraphInput.readLabel(in));
-                    
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                    }
+
                     Properties props = this.graphFactory.createProperties();
                     props.read(in);
                     edge.properties(props);
@@ -356,7 +365,11 @@ public class EdgesInput {
                        edge.targetId(this.context.
                                       graphFactory().createId(lId));
                     }
-                    edge.label(StreamGraphInput.readLabel(in));
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                    }
                     // Read subValue
                     if (!this.useFixLength) {
                         edge.id(StreamGraphInput.readId(in));
@@ -400,8 +413,14 @@ public class EdgesInput {
                                       graphFactory().createId(lId));
                     }
 
-                    edge.label(StreamGraphInput.readLabel(in));
-                    edge.name(StreamGraphInput.readLabel(in));
+                    // Skip read edge lable to reduce a lot cpu cost
+                    if (this.perfEdgeLabel) {
+                        in.skipBytes(in.readInt());
+                        in.skipBytes(in.readInt());
+                    } else {
+                        edge.label(StreamGraphInput.readLabel(in));
+                        edge.name(StreamGraphInput.readLabel(in));
+                    }
 
                     // Read subValue
                     if (!this.useFixLength) {
@@ -453,5 +472,10 @@ public class EdgesInput {
         public Iterator<Edge> iterator() {
             return Collections.emptyIterator();
         }
+    }
+
+    public static int setPerfNum(int perf) {
+        edgeLimitNum = perf;
+        return edgeLimitNum;
     }
 }

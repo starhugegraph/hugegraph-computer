@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import com.baidu.hugegraph.computer.core.common.SerialEnum;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
@@ -41,6 +40,7 @@ public class BytesId implements Id {
     private IdType idType;
     private byte[] bytes;
     private int length;
+    private int shift = 0;
 
     public BytesId() {
         BytesId id = BytesId.of(0L);
@@ -89,6 +89,16 @@ public class BytesId implements Id {
                                         "BytesId");
         }
         return new BytesId(IdType.UUID, output.buffer(), output.position());
+    }
+
+    public static BytesId of(boolean value) {
+        byte[] output = new byte[1];
+        if (value) {
+            output[0] = 1;
+        } else {
+            output[0] = 0;
+        }
+        return new BytesId(IdType.FLAG, output, 1);
     }
 
     public byte[] bytes() {
@@ -148,16 +158,55 @@ public class BytesId implements Id {
                     throw new ComputerException("Failed to read BytesId to " +
                                                 "UUID object");
                 }
+            case FLAG:
+                if (this.bytes[0] == 1) {
+                    return true;
+                } 
+                else {
+                    return false;
+                }
+
             default:
                 throw new ComputerException("Unexpected IdType %s",
                                             this.idType);
         }
     }
 
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+
+        byte value = buffer[position];
+        IdType idType = IdType.getIdTypeByCode(value);
+        position += 1;
+        this.shift += 1;
+
+        int idLen = buffer[position];
+        position += 1;
+        this.shift += 1;
+
+        byte[] idData = new byte[idLen];
+        System.arraycopy(buffer, position, idData, 0, idLen);    
+        Id id = new BytesId(idType, idData, idLen);
+        this.shift += idLen;
+
+        this.bytes = BytesUtil.ensureCapacityWithoutCopy(this.bytes, idLen);
+        System.arraycopy(buffer, position, this.bytes, 0, idLen);
+        this.length = idLen;
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+
     @Override
     public void read(RandomAccessInput in) throws IOException {
-        this.idType = SerialEnum.fromCode(IdType.class, in.readByte());
-        int len = (int)(in.readByte());
+        byte type = in.readByte();
+        this.idType = IdType.getIdTypeByCode(type);
+        int len = in.readByte();
         //int len = in.readInt();
         this.bytes = BytesUtil.ensureCapacityWithoutCopy(this.bytes, len);
         in.readFully(this.bytes, 0, len);

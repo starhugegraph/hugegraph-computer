@@ -57,4 +57,12 @@ public final class HashPartitioner implements Partitioner {
         // Note: workerId start from 1
         return (partitionId % this.workerCount) + 1;
     }
+
+    @Override 
+    public int partitionIdInPartitionInWorker(int partitionId) {
+        int maxPartitionPerWorker = 
+                 this.partitionCount / this.workerCount + 1;
+        int partitionInWorkerId = partitionId / this.workerCount;
+        return partitionInWorkerId % maxPartitionPerWorker;
+    }
 }

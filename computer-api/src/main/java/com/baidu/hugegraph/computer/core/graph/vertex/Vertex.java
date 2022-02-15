@@ -59,4 +59,8 @@ public interface Vertex extends Recyclable {
     void inactivate();
 
     void reactivate();
+
+    byte[] data();
+
+    void data(byte[] data);
 }

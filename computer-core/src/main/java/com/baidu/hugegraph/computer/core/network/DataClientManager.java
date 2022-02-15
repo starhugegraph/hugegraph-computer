@@ -28,6 +28,7 @@ import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.manager.Manager;
 import com.baidu.hugegraph.computer.core.network.connection.ConnectionManager;
 import com.baidu.hugegraph.computer.core.sender.QueuedMessageSender;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 
@@ -124,6 +125,7 @@ public class DataClientManager implements Manager {
             LOG.error("Channel for connectionId {} occurred exception",
                       connectionId, cause);
             DataClientManager.this.connManager.closeClient(connectionId);
+            WorkerService.setThrowable(cause);
         }
     }
 }

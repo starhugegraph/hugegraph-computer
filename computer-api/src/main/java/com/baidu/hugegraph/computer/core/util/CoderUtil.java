@@ -90,7 +90,7 @@ public class CoderUtil {
         int count = start;
         int charIndex = 0;
 
-        while (count < length) {
+        while (count < start + length) {
             c = (int) bytes[count] & 0xff;
             if (c > 127) {
                 break;
@@ -99,7 +99,7 @@ public class CoderUtil {
             chars[charIndex++] = (char) c;
         }
 
-        while (count < length) {
+        while (count < start + length) {
             c = (int) bytes[count] & 0xff;
             switch (c >> 4) {
                 case 0:

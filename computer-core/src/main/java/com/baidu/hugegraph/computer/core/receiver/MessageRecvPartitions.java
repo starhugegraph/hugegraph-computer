@@ -23,16 +23,20 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.io.FileUtils;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
 import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
 import com.baidu.hugegraph.computer.core.store.SuperstepFileGenerator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.util.Consumers;
 
 public abstract class MessageRecvPartitions<P extends MessageRecvPartition> {
 
@@ -79,10 +83,23 @@ public abstract class MessageRecvPartitions<P extends MessageRecvPartition> {
         return partition;
     }
 
-    public Map<Integer, PeekableIterator<KvEntry>> iterators() {
-        Map<Integer, PeekableIterator<KvEntry>> entries = new HashMap<>();
-        for (Map.Entry<Integer, P> entry : this.partitions.entrySet()) {
-            entries.put(entry.getKey(), entry.getValue().iterator());
+    public Map<Integer, PeekableIterator<KvEntry>> iterators(
+                        ExecutorService partitionExecutor) {
+        Map<Integer, PeekableIterator<KvEntry>> entries =
+                                                new ConcurrentHashMap<>();
+        Consumers<Map.Entry<Integer, P>> consumers =
+                  new Consumers<>(partitionExecutor, entry -> {
+                      entries.put(entry.getKey(), entry.getValue().iterator());
+                  });
+        consumers.start("partitions-iterator");
+        try {
+            for (Map.Entry<Integer, P> entry : this.partitions.entrySet()) {
+                consumers.provide(entry);
+            }
+            consumers.await();
+        } catch (Throwable t) {
+            throw new ComputerException("An exception occurred when " +
+                                        "partition parallel iterator", t);
         }
         return entries;
     }

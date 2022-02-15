@@ -42,6 +42,7 @@ public interface ComputationContext {
      * will receive the value at next superstep.
      */
     void sendMessage(Id target, Value<?> value);
+    void sendMessage(Id src, Id target, Value<?> value);
 
     /**
      * Send value to all adjacent vertices of specified vertex. The adjacent

@@ -19,20 +19,20 @@
 
 package com.baidu.hugegraph.computer.core.store;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.manager.Manager;
 import com.baidu.hugegraph.util.Log;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+
+
 
 public class FileManager implements FileGenerator, Manager {
 
@@ -42,10 +42,12 @@ public class FileManager implements FileGenerator, Manager {
 
     private List<String> dirs;
     private AtomicInteger sequence;
+    private String useMode;
 
     public FileManager() {
         this.dirs = new ArrayList<>();
         this.sequence = new AtomicInteger();
+        this.useMode = "all";
     }
 
     @Override
@@ -87,7 +89,10 @@ public class FileManager implements FileGenerator, Manager {
     @Override
     public void close(Config config) {
         for (String dir : this.dirs) {
-            FileUtils.deleteQuietly(new File(dir));
+            LOG.info("filemanager filename: {} {}", dir, this.useMode);
+            if (this.useMode.equals("all")) {
+                FileUtils.deleteQuietly(new File(dir));
+            }
         }
     }
 
@@ -101,6 +106,10 @@ public class FileManager implements FileGenerator, Manager {
     @Override
     public List<String> dirs() {
         return this.dirs;
+    }
+
+    public void setUseMode(String useMode) {
+        this.useMode = useMode;
     }
 
     /**

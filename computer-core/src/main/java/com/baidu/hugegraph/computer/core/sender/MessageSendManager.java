@@ -48,6 +48,7 @@ import com.baidu.hugegraph.computer.core.network.TransportConf;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.MessageStat;
 import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.Log;
 
 public class MessageSendManager implements Manager {
@@ -98,54 +99,92 @@ public class MessageSendManager implements Manager {
     public void sendVertex(Vertex vertex) {
         this.checkException();
 
-        WriteBuffers buffer = this.sortIfTargetBufferIsFull(vertex.id(),
-                                                            MessageType.VERTEX);
-        try {
-            // Write vertex to buffer
-            buffer.writeVertex(vertex);
-        } catch (IOException e) {
-            throw new ComputerException("Failed to write vertex '%s'",
-                                        e, vertex.id());
+        int partitionId = this.partitioner.partitionId(vertex.id());
+        WriteBuffers buffer = this.buffers.get(partitionId);
+
+
+        synchronized (buffer) {
+            this.sortIfTargetBufferIsFull(buffer, partitionId,
+                                          MessageType.VERTEX);
+            try {
+                // Write vertex to buffer
+                buffer.writeVertex(vertex);
+            } catch (IOException e) {
+                throw new ComputerException("Failed to write vertex '%s'",
+                                            e, vertex.id());
+            }
         }
     }
 
     public void sendEdge(Vertex vertex) {
         this.checkException();
 
-        WriteBuffers buffer = this.sortIfTargetBufferIsFull(vertex.id(),
-                                                            MessageType.EDGE);
+        int partitionId = this.partitioner.partitionId(vertex.id());
+        WriteBuffers buffer = this.buffers.get(partitionId);
+
+        synchronized (buffer) {
+            this.sortIfTargetBufferIsFull(buffer, partitionId,
+                                          MessageType.EDGE);
+            try {
+                // Write edge to buffer
+                buffer.writeEdges(vertex);
+            } catch (IOException e) {
+                throw new ComputerException("Failed to write edges of " +
+                                            "vertex '%s'", e, vertex.id());
+            }
+        }
+    }
+    //only sync mode available now
+    public void sendMessage(Id srcId, Id targetId, Value<?> value) {
+        int targetPartitionId = this.partitioner.partitionId(targetId);
+        int srcPartitionId = this.partitioner.partitionId(srcId);
+        int partitionInWorkerId = this.partitioner.
+                 partitionIdInPartitionInWorker(srcPartitionId);
+        WriteBuffers buffer = this.buffers.get(targetPartitionId,
+                             partitionInWorkerId);
+        this.sortIfTargetBufferIsFull(buffer, 
+                                        targetPartitionId,
+                                        MessageType.MSG);
         try {
-            // Write edge to buffer
-            buffer.writeEdges(vertex);
+            // Write message to buffer
+            buffer.writeMessageSync(targetId, value);
         } catch (IOException e) {
-            throw new ComputerException("Failed to write edges of vertex '%s'",
-                                        e, vertex.id());
+            throw new ComputerException("Failed to write message", e);
         }
     }
 
     public void sendMessage(Id targetId, Value<?> value) {
         this.checkException();
 
-        WriteBuffers buffer = this.sortIfTargetBufferIsFull(targetId,
-                                                            MessageType.MSG);
-        try {
-            // Write message to buffer
-            buffer.writeMessage(targetId, value);
-        } catch (IOException e) {
-            throw new ComputerException("Failed to write message", e);
+        int partitionId = this.partitioner.partitionId(targetId);
+        WriteBuffers buffer = this.buffers.get(partitionId);
+
+        synchronized (buffer) {
+            this.sortIfTargetBufferIsFull(buffer, partitionId, MessageType.MSG);
+            try {
+                // Write message to buffer
+                buffer.writeMessage(targetId, value);
+            } catch (IOException e) {
+                throw new ComputerException("Failed to write message", e);
+            }
         }
     }
 
     public void sendHashIdMessage(Id targetId, Value<?> value) {
         this.checkException();
 
-        WriteBuffers buffer = this.sortIfTargetBufferIsFull(targetId,
-                                                            MessageType.HASHID);
-        try {
-            // Write message to buffer
-            buffer.writeMessage(targetId, value);
-        } catch (IOException e) {
-            throw new ComputerException("Failed to write message", e);
+        int partitionId = this.partitioner.partitionId(targetId);
+        WriteBuffers buffer = this.buffers.get(partitionId);
+
+        synchronized (buffer) {
+            this.sortIfTargetBufferIsFull(buffer, partitionId,
+                                          MessageType.HASHID);
+            try {
+                // Write message to buffer
+                buffer.writeMessage(targetId, value);
+            } catch (IOException e) {
+                throw new ComputerException("Failed to write message", e);
+            }
         }
     }
 
@@ -161,7 +200,6 @@ public class MessageSendManager implements Manager {
                                     .map(this.partitioner::workerId)
                                     .collect(Collectors.toSet());
         this.sendControlMessageToWorkers(workerIds, MessageType.START);
-        LOG.info("Start sending message(type={})", type);
     }
 
     /**
@@ -170,6 +208,7 @@ public class MessageSendManager implements Manager {
      * @param type the message type
      */
     public void finishSend(MessageType type) {
+        //this.sortManager.printTime();
         Map<Integer, WriteBuffers> all = this.buffers.all();
         MessageStat stat = this.sortAndSendLastBuffer(all, type);
 
@@ -189,30 +228,24 @@ public class MessageSendManager implements Manager {
         this.useVariableLengthOnly = true;
     }
 
-    private WriteBuffers sortIfTargetBufferIsFull(Id id, MessageType type) {
-        int partitionId;
-        if (type == MessageType.MSG && !this.useVariableLengthOnly) {
-            partitionId = this.partitioner.partitionIdFixIdLength(id);
-        }
-        else {
-            partitionId = this.partitioner.partitionId(id);
-        }
-        WriteBuffers buffer = this.buffers.get(partitionId);
+    private void sortIfTargetBufferIsFull(WriteBuffers buffer, int partitionId,
+                                          MessageType type) {
         if (buffer.reachThreshold()) {
-            /*
-             * Switch buffers if writing buffer is full,
-             * After switch, the buffer can be continued to write.
-             */
-            buffer.switchForSorting();
-            this.sortThenSend(partitionId, type, buffer);
+            buffer.switchForSorting(partitionId);
+            if (type == MessageType.MSG) {
+                this.sortThenSendFast(partitionId, type, buffer);
+            }
+            else {
+                this.sortThenSend(partitionId, type, buffer);
+            }
         }
-        return buffer;
     }
 
-    private Future<?> sortThenSend(int partitionId, MessageType type,
-                                   WriteBuffers buffer) {
+    private Future<?> sortThenSendFast(int partitionId, MessageType type,
+                                       WriteBuffers buffer) {
         int workerId = this.partitioner.workerId(partitionId);
-        return this.sortManager.sort(type, buffer).thenAccept(sortedBuffer -> {
+        return this.sortManager.sortFast(type, buffer).
+                                thenAccept(sortedBuffer -> {
             // The following code is also executed in sort thread
             buffer.finishSorting();
             // Each target worker has a buffer queue
@@ -230,6 +263,34 @@ public class MessageSendManager implements Manager {
                           "into queue", e);
                 // Just record the first error
                 this.exception.compareAndSet(null, e);
+                WorkerService.setThrowable(e);
+            }
+        });
+    }
+    
+    private Future<?> sortThenSend(int partitionId, MessageType type,
+                                   WriteBuffers buffer) {
+        int workerId = this.partitioner.workerId(partitionId);
+        return this.sortManager.sort(type, buffer).
+                                thenAccept(sortedBuffer -> {
+            // The following code is also executed in sort thread
+            buffer.finishSorting();
+            // Each target worker has a buffer queue
+            QueuedMessage message = new QueuedMessage(partitionId, type,
+                                                      sortedBuffer);
+            try {
+                this.sender.send(workerId, message);
+            } catch (InterruptedException e) {
+                throw new ComputerException("Interrupted when waiting to " +
+                                            "put buffer into queue");
+            }
+        }).whenComplete((r, e) -> {
+            if (e != null) {
+                LOG.error("Failed to sort buffer or put sorted buffer " +
+                          "into queue", e);
+                // Just record the first error
+                this.exception.compareAndSet(null, e);
+                WorkerService.setThrowable(e);
             }
         });
     }

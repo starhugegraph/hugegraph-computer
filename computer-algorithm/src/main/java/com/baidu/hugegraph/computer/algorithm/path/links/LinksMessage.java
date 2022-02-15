@@ -19,10 +19,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.path.links;
 
-import java.io.IOException;
-
-import javax.ws.rs.NotSupportedException;
-
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -33,12 +29,17 @@ import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import javax.ws.rs.NotSupportedException;
+
+
 
 public class LinksMessage implements Value<LinksMessage> {
 
     private IdList pathVertexes;
     private IdList pathEdges;
     private Properties walkEdgeProps;
+    private int shift;
 
     public LinksMessage() {
         GraphFactory graphFactory = ComputerContext.instance().graphFactory();
@@ -60,6 +61,28 @@ public class LinksMessage implements Value<LinksMessage> {
     @Override
     public int compareTo(LinksMessage o) {
         throw new NotSupportedException();
+    }
+
+    @Override   
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+
+        this.pathVertexes.parse(buffer, position);
+        this.shift += this.pathVertexes.getShift();
+        position += this.pathVertexes.getShift();
+
+        this.pathEdges.parse(buffer, position);
+        this.shift += this.pathEdges.getShift();
+        position += this.pathEdges.getShift();
+        
+        this.walkEdgeProps.parse(buffer, position);
+        this.shift += this.walkEdgeProps.getShift();
+    }
+    
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

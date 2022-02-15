@@ -19,22 +19,25 @@
 
 package com.baidu.hugegraph.computer.core.graph.properties;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-
 import com.baidu.hugegraph.computer.core.common.SerialEnum;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import com.baidu.hugegraph.computer.core.util.CoderUtil;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+
 
 public class DefaultProperties implements Properties {
 
     private final Map<String, Value<?>> keyValues;
     private final GraphFactory graphFactory;
+    private int shift;
 
     public DefaultProperties(GraphFactory graphFactory) {
         this(graphFactory.createMap(), graphFactory);
@@ -67,6 +70,7 @@ public class DefaultProperties implements Properties {
         this.keyValues.putIfAbsent(key, value);
     }
 
+    @Override
     public int size() {
         return this.keyValues.size();
     }
@@ -74,6 +78,46 @@ public class DefaultProperties implements Properties {
     @Override
     public void remove(String key) {
         this.keyValues.remove(key);
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        int position = offset;
+        int[] vint = DataParser.parseVInt(buffer, position);
+        int num = vint[0];
+        int shifti = vint[1];
+        position += shifti;
+        this.shift += shifti;
+
+        for (int j = 0; j < num; j++) {
+            vint = DataParser.parseVInt(buffer, position);
+            int length = vint[0];
+            shifti = vint[1];
+            position += shifti;
+            this.shift += shifti;
+            String key = CoderUtil.
+                            decode(buffer, position, length);
+            position += length;
+            this.shift += length;
+
+            ValueType valueType = ValueType.
+                        getValueTypeByCode(buffer[position]);
+            position += 1;  
+            this.shift += 1;   
+            Value<?> value = this.graphFactory.
+                                    createValue(valueType);       
+            value.parse(buffer, position);
+            shifti = value.getShift();
+            position += shift;
+            this.shift += shift;
+
+            this.put(key, value);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

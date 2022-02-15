@@ -18,7 +18,7 @@
  */
 
 package com.baidu.hugegraph.computer.core.util;
-
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.google.common.base.Preconditions;
 
 public class BytesUtil {
@@ -41,6 +41,11 @@ public class BytesUtil {
             hash = (31 * hash) + (int) bytes[i];
         }
         return hash;
+    }
+    public static int compareKey(byte[] bytes1, byte[] bytes2) {
+        int keylength1 = DataParser.byte2int(bytes1, 0);
+        int keylength2 = DataParser.byte2int(bytes1, 0);
+        return BytesUtil.compare(bytes1, 4, keylength1, bytes2, 4, keylength2);
     }
 
     public static int compare(byte[] bytes1, byte[] bytes2) {

@@ -25,7 +25,8 @@ public enum IdType implements SerialEnum {
 
     LONG(1),
     UTF8(2),
-    UUID(3);
+    UUID(3),
+    FLAG(4);
 
     static {
         SerialEnum.register(IdType.class);
@@ -38,7 +39,20 @@ public enum IdType implements SerialEnum {
         this.code = (byte) code;
     }
 
+    @Override
     public byte code() {
         return this.code;
+    }
+
+    public static IdType getIdTypeByCode(byte code) {
+        if (code == 1) {
+            return IdType.LONG;
+        } else if (code == 2) {
+            return IdType.UTF8;
+        } else if (code == 3) {
+            return IdType.UUID;
+        } else {
+            return IdType.FLAG;
+        }
     }
 }

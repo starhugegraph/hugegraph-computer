@@ -78,9 +78,21 @@ public class WriteBuffers {
         this.writingBuffer.writeEdges(vertex);
     }
 
+    public void writeMessageSync(Id targetId, Value<?> value)
+                                          throws IOException {
+        this.writingBuffer.writeMessage(targetId, value);
+    }
+
     public synchronized void writeMessage(Id targetId, Value<?> value)
                                           throws IOException {
         this.writingBuffer.writeMessage(targetId, value);
+    }
+
+    public void switchForSortingSync() {
+        if (!this.reachThreshold()) {
+            return;
+        }
+        this.prepareSortingSync();
     }
 
     public synchronized void switchForSorting() {
@@ -90,10 +102,27 @@ public class WriteBuffers {
         this.prepareSorting();
     }
 
+    public synchronized void switchForSorting(int partitionId) {
+        if (!this.reachThreshold()) {
+            return;
+        }
+        this.prepareSorting();
+    }
     /**
      * Can remove synchronized if MessageSendManager.finish() only called by
      * single thread
      */
+    public void prepareSortingSync() {
+        // Ensure last sorting task finished
+        // Record total message bytes
+        this.totalCount += this.writingBuffer.writeCount();
+        this.totalBytes += this.writingBuffer.numBytes();
+        // Swap the writing buffer and sorting buffer pointer
+        WriteBuffer temp = this.writingBuffer;
+        this.writingBuffer = this.sortingBuffer;
+        this.sortingBuffer = temp;
+    }
+
     public synchronized void prepareSorting() {
         // Ensure last sorting task finished
         while (!this.sortingBuffer.isEmpty()) {
@@ -113,6 +142,22 @@ public class WriteBuffers {
         this.sortingBuffer = temp;
     }
 
+    public void finishSortingSync() {
+        try {
+            this.sortingBuffer.clear();
+        } catch (IOException e) {
+            throw new ComputerException("Failed to clear sorting buffer");
+        }
+    }
+
+    public long getCount() {
+        return this.writingBuffer.writeCount();
+    }
+
+    public long getSortCount() {
+        return this.sortingBuffer.writeCount();
+    }
+    
     public synchronized void finishSorting() {
         try {
             this.sortingBuffer.clear();
@@ -126,6 +171,14 @@ public class WriteBuffers {
         BytesOutput output = this.sortingBuffer.output();
         return IOFactory.createBytesInput(output.buffer(),
                                           (int) output.position());
+    }
+
+    public byte[] outputByteArray() {
+        byte[] largebuffer = this.sortingBuffer.output().buffer();
+        int limit = (int)this.sortingBuffer.output().position();
+        byte[] databuffer = new byte[limit];
+        System.arraycopy(largebuffer, 0, databuffer, 0, limit);
+        return databuffer;
     }
 
     public void resetMessageWritten() {

@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.core.receiver;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
 import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.store.SuperstepFileGenerator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 
@@ -148,6 +150,7 @@ public class MessageRecvManager implements Manager, MessageHandler {
         // TODO: implement failover
         LOG.warn("Exception caught for connection:{}, root cause:{}",
                  connectionId, cause);
+        WorkerService.setThrowable(cause);
     }
 
     public void waitReceivedAllMessages() {
@@ -217,34 +220,38 @@ public class MessageRecvManager implements Manager, MessageHandler {
     /**
      * Get the Iterator<KeyStore.Entry> of each partition.
      */
-    public Map<Integer, PeekableIterator<KvEntry>> vertexPartitions() {
+    public Map<Integer, PeekableIterator<KvEntry>> vertexPartitions(
+                        ExecutorService partitionExecutor) {
         E.checkState(this.vertexPartitions != null,
                      "The vertexPartitions can't be null");
         VertexMessageRecvPartitions partitions = this.vertexPartitions;
-        return partitions.iterators();
+        return partitions.iterators(partitionExecutor);
     }
 
-    public Map<Integer, PeekableIterator<KvEntry>> edgePartitions() {
+    public Map<Integer, PeekableIterator<KvEntry>> edgePartitions(
+                        ExecutorService partitionExecutor) {
         E.checkState(this.edgePartitions != null,
                      "The edgePartitions can't be null");
         EdgeMessageRecvPartitions partitions = this.edgePartitions;
-        return partitions.iterators();
+        return partitions.iterators(partitionExecutor);
     }
 
-    public Map<Integer, PeekableIterator<KvEntry>> messagePartitions() {
+    public Map<Integer, PeekableIterator<KvEntry>> messagePartitions(
+                        ExecutorService partitionExecutor) {
         E.checkState(this.messagePartitions != null,
                      "The messagePartitions can't be null");
         ComputeMessageRecvPartitions partitions = this.messagePartitions;
         this.messagePartitions = null;
-        return partitions.iterators();
+        return partitions.iterators(partitionExecutor);
     }
 
-    public Map<Integer, PeekableIterator<KvEntry>> hashIdMessagePartitions() {
+    public Map<Integer, PeekableIterator<KvEntry>> hashIdMessagePartitions(
+                        ExecutorService partitionExecutor) {
         E.checkState(this.hashIdMessagePartitions != null,
                      "The messagePartitions can't be null");
         HashIdMessageRecvPartitions partitions = this.hashIdMessagePartitions;
         this.hashIdMessagePartitions = null;
-        return partitions.iterators();
+        return partitions.iterators(partitionExecutor);
     }
 
     public Map<Integer, MessageStat> messageStats() {

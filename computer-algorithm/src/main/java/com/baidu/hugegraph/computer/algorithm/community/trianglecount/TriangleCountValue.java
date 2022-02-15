@@ -19,21 +19,22 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.trianglecount;
 
-import java.io.IOException;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.baidu.hugegraph.computer.core.graph.value.IdSet;
 import com.baidu.hugegraph.computer.core.graph.value.IntValue;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+
 
 public class TriangleCountValue implements Value<TriangleCountValue> {
 
     private IdSet idSet;
     private IntValue count;
+    private int shift;
 
     public TriangleCountValue() {
         this.idSet = new IdSet();
@@ -70,6 +71,24 @@ public class TriangleCountValue implements Value<TriangleCountValue> {
         return triangleCountValue;
     }
 
+    @Override   
+    public void parse(byte[] buffer, int offset) {
+        int position = offset;
+        this.shift = 0;
+
+        this.idSet.parse(buffer, position);
+        position += this.idSet().getShift();
+        this.shift += this.idSet().getShift();
+        
+        this.count.parse(buffer, position);
+        this.shift += this.count.getShift();
+    }
+    
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.idSet.read(in);
@@ -90,7 +109,7 @@ public class TriangleCountValue implements Value<TriangleCountValue> {
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                   .append("idSet", this.idSet)
+                   .append("idSet", this.idSet.values())
                    .append("count", this.count)
                    .toString();
     }

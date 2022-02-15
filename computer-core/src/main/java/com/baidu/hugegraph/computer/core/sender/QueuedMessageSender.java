@@ -109,6 +109,7 @@ public class QueuedMessageSender implements MessageSender {
     public void send(int workerId, QueuedMessage message)
                      throws InterruptedException {
         WorkerChannel channel = this.channels[channelId(workerId)];
+        //System.out.printf("queue size = %d \n", channel.queue.size());
         channel.queue.put(message);
     }
 
@@ -274,10 +275,10 @@ public class QueuedMessageSender implements MessageSender {
                 assert future != null;
 
                 if (e != null) {
-                    LOG.debug("Failed to start session connected to {}", this);
+                    LOG.info("Failed to start session connected to {}", this);
                     future.completeExceptionally(e);
                 } else {
-                    LOG.debug("Start session connected to {}", this);
+                    LOG.info("Start session connected to {}", this);
                     future.complete(null);
                 }
             });

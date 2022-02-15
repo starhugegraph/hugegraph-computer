@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.k8s.operator.controller;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import com.baidu.hugegraph.computer.k8s.crd.model.ResourceName;
 import com.baidu.hugegraph.computer.k8s.operator.config.OperatorOptions;
 import com.baidu.hugegraph.computer.k8s.util.KubeUtil;
 import com.baidu.hugegraph.config.HugeConfig;
+import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -61,6 +63,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.TopologySpreadConstraint;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
@@ -252,6 +255,7 @@ public class ComputerJobDeployer {
     public Job desiredMasterJob(HugeGraphComputerJob computerJob,
                                 Set<ContainerPort> ports) {
         String crName = computerJob.getMetadata().getName();
+        String namespace = computerJob.getMetadata().getNamespace();
         ComputerJobSpec spec = computerJob.getSpec();
 
         List<String> command = spec.getMasterCommand();
@@ -267,7 +271,8 @@ public class ComputerJobDeployer {
 
         ObjectMeta metadata = this.getMetadata(computerJob, name);
 
-        Container container = this.getContainer(name, spec, ports,
+        Container container = this.getContainer(name, namespace,
+                                                spec, ports,
                                                 command, args);
         List<Container> containers = Lists.newArrayList(container);
 
@@ -278,6 +283,7 @@ public class ComputerJobDeployer {
     public Job desiredWorkerJob(HugeGraphComputerJob computerJob,
                                 Set<ContainerPort> ports) {
         String crName = computerJob.getMetadata().getName();
+        String namespace = computerJob.getMetadata().getNamespace();
         ComputerJobSpec spec = computerJob.getSpec();
 
         List<String> command = spec.getWorkerCommand();
@@ -293,7 +299,8 @@ public class ComputerJobDeployer {
 
         ObjectMeta metadata = this.getMetadata(computerJob, name);
 
-        Container container = this.getContainer(name, spec, ports,
+        Container container = this.getContainer(name, namespace,
+                                                spec, ports,
                                                 command, args);
         List<Container> containers = Lists.newArrayList(container);
 
@@ -380,7 +387,8 @@ public class ComputerJobDeployer {
         return volumes;
     }
 
-    private Container getContainer(String name, ComputerJobSpec spec,
+    private Container getContainer(String name, String namespace,
+                                   ComputerJobSpec spec,
                                    Set<ContainerPort> ports,
                                    Collection<String> command,
                                    Collection<String> args) {
@@ -488,24 +496,40 @@ public class ComputerJobDeployer {
             volumeMounts = Lists.newArrayList(volumeMounts);
         }
 
+        final KubernetesClient client;
+        if (!Objects.equals(this.kubeClient.getNamespace(), namespace)) {
+            client = this.kubeClient.inNamespace(namespace);
+        } else {
+            client = this.kubeClient;
+        }
+
         // Mount configmap and secret files
-        Map<String, String> paths = new HashMap<>();
         Map<String, String> configMapPaths = spec.getConfigMapPaths();
         if (MapUtils.isNotEmpty(configMapPaths)) {
-            paths.putAll(configMapPaths);
+            for (String key : configMapPaths.keySet()) {
+                ConfigMap configMap = client.configMaps().withName(key).get();
+                E.checkArgument(configMap != null &&
+                                configMap.getData().size() > 0,
+                                "The configMap '%s' don't exist", key);
+
+                this.mountConfigMapOrSecret(volumeMounts, key,
+                                            configMapPaths.get(key),
+                                            configMap.getData());
+            }
         }
+
         Map<String, String> secretPaths = spec.getSecretPaths();
         if (MapUtils.isNotEmpty(secretPaths)) {
-            paths.putAll(secretPaths);
-        }
-        Set<Map.Entry<String, String>> entries = paths.entrySet();
-        for (Map.Entry<String, String> entry : entries) {
-            VolumeMount volumeMount = new VolumeMountBuilder()
-                    .withName(this.volumeName(entry.getKey()))
-                    .withMountPath(entry.getValue())
-                    .withReadOnly(true)
-                    .build();
-            volumeMounts.add(volumeMount);
+            for (String key : secretPaths.keySet()) {
+                Secret secret = client.secrets().withName(key).get();
+                E.checkArgument(secret != null &&
+                                secret.getData().size() > 0,
+                                "The secret '%s' don't exist", key);
+
+                this.mountConfigMapOrSecret(volumeMounts, key,
+                                            secretPaths.get(key),
+                                            secret.getData());
+            }
         }
 
         VolumeMount configMount = this.getComputerConfigMount();
@@ -526,6 +550,22 @@ public class ComputerJobDeployer {
                     .addToLimits(ResourceName.MEMORY.value(), memory)
                 .endResources()
                 .build();
+    }
+
+    private void mountConfigMapOrSecret(List<VolumeMount> volumeMounts,
+                                        String key, String volumePath,
+                                        Map<String, String> data) {
+        VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                                                .withName(this.volumeName(key))
+                                                .withMountPath(volumePath);
+        // mount subPath if data only have one, otherwise mount the directory
+        if (data.size() == 1) {
+            String fileName = data.keySet().stream().findFirst().orElse("");
+            volumeMountBuilder.withMountPath(Paths.get(volumePath, fileName)
+                                                  .toString());
+            volumeMountBuilder.withSubPath(fileName);
+        }
+        volumeMounts.add(volumeMountBuilder.build());
     }
 
     private VolumeMount getComputerConfigMount() {

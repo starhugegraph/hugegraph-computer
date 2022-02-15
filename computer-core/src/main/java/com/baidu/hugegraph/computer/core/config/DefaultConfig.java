@@ -94,9 +94,9 @@ public final class DefaultConfig implements Config {
         String value = this.allConfig.getString(key);
         if (value == null) {
             return defaultValue;
-        } else if (value.equalsIgnoreCase("true")) {
+        } else if ("true".equalsIgnoreCase(value)) {
             return true;
-        } else if (value.equalsIgnoreCase("false")) {
+        } else if ("false".equalsIgnoreCase(value)) {
             return false;
         } else {
             throw new ComputerException(

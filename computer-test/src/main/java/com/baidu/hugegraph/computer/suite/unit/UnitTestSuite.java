@@ -117,6 +117,10 @@ public class UnitTestSuite {
                  ComputerOptions.INPUT_LOADER_STRUCT_PATH,
                  "defaultValue",
                  "src/main/resources/hdfs_input_test/struct.json");
+        Whitebox.setInternalState(
+                ComputerOptions.WORKER_ERROR_QUIT,
+                "defaultValue",
+                false);
     }
 
     @BeforeClass
