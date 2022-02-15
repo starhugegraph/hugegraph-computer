@@ -21,6 +21,7 @@ package com.baidu.hugegraph.computer.core.input.hg;
 
 import java.util.Iterator;
 
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 
 import com.baidu.hugegraph.HugeGraph;
@@ -43,6 +44,12 @@ public class HugeEdgeFetcher extends HugeElementFetcher<Edge>
         Shard shard = toShard(split);
         ConditionQuery query = new ConditionQuery(HugeType.EDGE);
         query.scan(shard.start(), shard.end());
+        String filterClassName = this.config().get(
+                ComputerOptions.INPUT_FILTER_CLASS).getName();
+        if (filterClassName.contains("DefaultInputFilter"))
+            query.withProperties(false);
+        else
+            query.withProperties(true);
         return this.graph().edges(query);
     }
 
