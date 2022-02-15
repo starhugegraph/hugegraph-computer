@@ -22,35 +22,30 @@ package com.baidu.hugegraph.computer.core.input.hg;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.HugeGraph;
+import com.baidu.hugegraph.backend.store.Shard;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.input.ElementFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.structure.graph.Shard;
 
 public abstract class HugeElementFetcher<T> implements ElementFetcher<T> {
 
     private final Config config;
-    private final HugeClient client;
+    private final HugeGraph graph;
     private Iterator<T> localBatch;
     private T next;
 
-    public HugeElementFetcher(Config config, HugeClient client) {
+    public HugeElementFetcher(Config config, HugeGraph graph) {
         this.config = config;
-        this.client = client;
+        this.graph = graph;
     }
 
     protected Config config() {
         return this.config;
     }
 
-    protected HugeClient client() {
-        return this.client;
-    }
-
-    protected int pageSize() {
-        return this.config.get(ComputerOptions.INPUT_SPLIT_PAGE_SIZE);
+    protected HugeGraph graph() {
+        return this.graph;
     }
 
     @Override

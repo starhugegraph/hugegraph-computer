@@ -23,10 +23,6 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,16 +34,22 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NotSupportedException;
 
+import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
+import com.baidu.hugegraph.computer.core.graph.value.StringValue;
+import com.baidu.hugegraph.computer.core.input.HugeConverter;
+import com.baidu.hugegraph.computer.core.output.ComputerOutput;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
-//import com.baidu.hugegraph.computer.core.config.ComputerOptions;
-import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.input.GraphFetcher;
-import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.HugeOutput;
+import com.baidu.hugegraph.computer.algorithm.community.louvain.input.HugeGraphFetcherLocal;
+import com.baidu.hugegraph.computer.algorithm.community.louvain.input.LoaderFileGraphFetcherLocal;
+//import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.HugeOutput;
 import com.baidu.hugegraph.computer.core.config.Config;
-import com.baidu.hugegraph.structure.graph.Edge;
-import com.baidu.hugegraph.structure.graph.Vertex;
+//import com.baidu.hugegraph.structure.graph.Edge;
+//import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.baidu.hugegraph.util.TimeUtil;
@@ -65,6 +67,8 @@ public class HGModularityOptimizer {
     private final String weightKey;
     private final String delimiter;
     private int maxId;
+    private final ComputerContext context;
+    private final Vertex vertex;
 
     public static final String OPTION_CAPACITY = "louvain.capacity";
     public static final String OPTION_WEIGHTKEY = "louvain.weightkey";
@@ -74,12 +78,15 @@ public class HGModularityOptimizer {
     public static final String OPTION_RANDOMSTART = "louvain.randomstart";
     public static final String OPTION_ITERATIONS = "louvain.iterations";
     public static final String OPTION_RANDOMSEED = "louvain.randomseed";
-    public static final String OPTION_INPUTTYPE = "louvain.inputtype";
-    public static final String OPTION_INPUTPATH = "louvain.inputpath";
-    public static final String OPTION_OUTPUTTYPE = "louvain.outputtype";
-    public static final String OPTION_OUTPUTPATH = "louvain.outputpath";
+
+    //public static final String OPTION_INPUTTYPE = "louvain.inputtype";
+    //public static final String OPTION_INPUTPATH = "louvain.inputpath";
+    //public static final String OPTION_OUTPUTTYPE = "louvain.outputtype";
+    //public static final String OPTION_OUTPUTPATH = "louvain.outputpath";
 
     public HGModularityOptimizer(Config config) {
+        this.context = ComputerContext.instance();
+        this.vertex = context.graphFactory().createVertex();
         this.config = config;
         this.maxId = -1;
         this.initialCapacity = config.getInt(OPTION_CAPACITY,50000000);
@@ -108,15 +115,16 @@ public class HGModularityOptimizer {
         StopWatch watcher = new StopWatch();
         watcher.start();
 
-        String inputType = config.getString(OPTION_INPUTTYPE,"hugegraph");
+        String inputType = config.get(ComputerOptions.INPUT_SOURCE_TYPE);
+
         Network network;
         switch (inputType) {
             case "hugegraph":
                 network = this.readFromHG(modularityFunction);
                 break;
-            case "file":
-                String inputFilePath = config.getString(OPTION_INPUTPATH,"");
-                network = this.readInputFile(inputFilePath, modularityFunction);
+            case "loader":
+                //String inputFilePath = config.getString(OPTION_INPUTPATH,"");
+                network = this.readFromHdfs(modularityFunction);
                 break;
             default:
                 throw new NotSupportedException(
@@ -202,6 +210,14 @@ public class HGModularityOptimizer {
         LOG.info("Start output...");
         watcher.reset();
         watcher.start();
+
+        ComputerOutput output = this.config.createObject(
+                ComputerOptions.OUTPUT_CLASS);
+        output.init(this.config, 1);
+        this.writeOutput(clustering,output);
+        output.close();
+
+        /*
         String outputType = config.getString(OPTION_OUTPUTTYPE,"hugegraph");
         switch (outputType) {
             case "hugegraph":
@@ -214,7 +230,7 @@ public class HGModularityOptimizer {
             default:
                 throw new NotSupportedException(
                         "not support outputType: " + outputType);
-        }
+        }*/
         watcher.stop();
         LOG.info("End output, cost:{}",
                  TimeUtil.readableTime(watcher.getTime()));
@@ -231,24 +247,32 @@ public class HGModularityOptimizer {
 
         StopWatch watcher = new StopWatch();
         watcher.start();
-        try (GraphFetcher hgFetcher = new GraphFetcher(this.config)) {
-            Iterator<Edge> iterator = hgFetcher.createIteratorFromEdge();
+        try {
+            HugeGraphFetcherLocal hgFetcher =
+                    new HugeGraphFetcherLocal(this.config);
+            Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
+                    hgFetcher.createIteratorFromEdge();
 
             while (iterator.hasNext()) {
-                Edge edge = iterator.next();
+                com.baidu.hugegraph.structure.HugeEdge edge = iterator.next();
                 if (System.currentTimeMillis() - lastTime >=
                         TimeUnit.SECONDS.toMillis(30L)) {
                     LOG.info("Loading edge: {}, nums:{}", edge, nums + 1);
                     lastTime = System.currentTimeMillis();
                 }
-                Integer sourceId = this.covertId(edge.sourceId());
+                Integer sourceId = this.covertId(HugeConverter.convertId(
+                                edge.sourceVertex().id().asObject())
+                        .asObject());
 
                 node1.add(sourceId);
-                originalNode2.add(edge.targetId());
+                originalNode2.add(HugeConverter.convertId(
+                                edge.targetVertex().id().asObject())
+                        .asObject());
 
                 Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
                 if (StringUtils.isNotBlank(this.weightKey)) {
-                    Double weight_ = (Double) edge.property(this.weightKey);
+                    Double weight_ = (Double)
+                            edge.property(this.weightKey).value();
                     if (weight_ != null) {
                         weight = weight_;
                     }
@@ -266,12 +290,17 @@ public class HGModularityOptimizer {
             }
             originalNode2 = null;
 
-
-            Iterator<Vertex> iteratorV = hgFetcher.createIteratorFromVertex();
+            Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
+                    hgFetcher.createIteratorFromVertex();
             while (iteratorV.hasNext()) {
-                Vertex vertex = iteratorV.next();
-                this.covertId(vertex.id());
+                com.baidu.hugegraph.structure.HugeVertex vertex =
+                        iteratorV.next();
+                this.covertId(HugeConverter.convertId(
+                        vertex.id().asObject()).asObject());
             }
+            hgFetcher.close();
+        } catch (Exception e) {
+            LOG.error("readFromHG:", e);
         }
         watcher.stop();
         LOG.info("Load data complete, cost: {}, nums: {}",
@@ -333,24 +362,128 @@ public class HGModularityOptimizer {
 
         return network;
     }
+  
+    private Network readFromHdfs(int modularityFunction) {
+        int i, j, nEdges;
+        List<Integer> node1 = new ArrayList<>(this.initialCapacity);
+        List<Integer> node2 = new ArrayList<>(this.initialCapacity);
+        List<Object> originalNode2 = new LinkedList<>();
+        List<Double> edgeWeight1 = new ArrayList<>();
+        int nums = 0;
+        long lastTime = 0;
 
-    private void writeOutputHg(Clustering clustering) {
-        int i, nNodes;
-        nNodes = clustering.getNNodes();
-        clustering.orderClustersByNNodes();
-        int nClusters = clustering.getNClusters();
-        LOG.info("nClusters: {}", nClusters);
-        BiMap<Integer, Object> biMap = this.idMap.inverse();
+        StopWatch watcher = new StopWatch();
+        watcher.start();
+        try {
+            LoaderFileGraphFetcherLocal hgFetcher =
+                    new LoaderFileGraphFetcherLocal(this.config);
+            Iterator<com.baidu.hugegraph.structure.graph.Edge> iterator =
+                    hgFetcher.createIteratorFromEdge();
 
-        try (HugeOutput hugeOutput = new HugeOutput(config)) {
-            for (i = 0; i < nNodes; i++) {
-                //LOG.info("id: {}, cluster:{}", biMap.get(i),
-                //         clustering.getCluster(i));
-                hugeOutput.write(biMap.get(i),
-                                 Integer.toString(clustering.getCluster(i)));
+            while (iterator.hasNext()) {
+                com.baidu.hugegraph.structure.graph.Edge edge = iterator.next();
+                if (System.currentTimeMillis() - lastTime >=
+                        TimeUnit.SECONDS.toMillis(30L)) {
+                    LOG.info("Loading edge: {}, nums:{}", edge, nums + 1);
+                    lastTime = System.currentTimeMillis();
+                }
+                Integer sourceId = this.covertId(edge.sourceId());
+
+                node1.add(sourceId);
+                originalNode2.add(edge.targetId());
+
+                Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
+                if (StringUtils.isNotBlank(this.weightKey)) {
+                    Double weight_ = (Double) edge.property(this.weightKey);
+                    if (weight_ != null) {
+                        weight = weight_;
+                    }
+                }
+                edgeWeight1.add(weight);
+                nums++;
+            }
+
+            // Covert targetId
+            Iterator<Object> iterator2 = originalNode2.iterator();
+            while (iterator2.hasNext()) {
+                Object id = iterator2.next();
+                node2.add(this.covertId(id));
+                iterator2.remove();
+            }
+            originalNode2 = null;
+
+            Iterator<com.baidu.hugegraph.structure.graph.Vertex> iteratorV =
+                    hgFetcher.createIteratorFromVertex();
+            while (iteratorV.hasNext()) {
+                com.baidu.hugegraph.structure.graph.Vertex vertex =
+                        iteratorV.next();
+                this.covertId(vertex.id());
+            }
+            hgFetcher.close();
+        } catch (Exception e) {
+            LOG.error("readFromHG:", e);
+        }
+        watcher.stop();
+        LOG.info("Load data complete, cost: {}, nums: {}",
+                TimeUtil.readableTime(watcher.getTime()),
+                nums);
+
+        int nNodes = this.maxId + 1;
+        int[] nNeighbors = new int[nNodes];
+        for (i = 0; i < nums; i++) {
+            if (node1.get(i) < node2.get(i)) {
+                nNeighbors[node1.get(i)]++;
+                nNeighbors[node2.get(i)]++;
             }
         }
+
+        int[] firstNeighborIndex = new int[nNodes + 1];
+        nEdges = 0;
+        for (i = 0; i < nNodes; i++) {
+            firstNeighborIndex[i] = nEdges;
+            nEdges += nNeighbors[i];
+        }
+
+        firstNeighborIndex[nNodes] = nEdges;
+        int[] neighbor = new int[nEdges];
+        double[] edgeWeight2 = new double[nEdges];
+        Arrays.fill(nNeighbors, 0);
+        for (i = 0; i < nums; i++) {
+            if (node1.get(i) < node2.get(i)) {
+                j = firstNeighborIndex[node1.get(i)] + nNeighbors[node1.get(i)];
+                neighbor[j] = node2.get(i);
+                edgeWeight2[j] = edgeWeight1.get(i);
+                nNeighbors[node1.get(i)]++;
+                j = firstNeighborIndex[node2.get(i)] + nNeighbors[node2.get(i)];
+                neighbor[j] = node1.get(i);
+                edgeWeight2[j] = edgeWeight1.get(i);
+                nNeighbors[node2.get(i)]++;
+            }
+        }
+
+        node1 = null;
+        node2 = null;
+        System.gc();
+
+        double[] nodeWeight = new double[nNodes];
+        for (i = 0; i < nEdges; i++) {
+            nodeWeight[neighbor[i]] += edgeWeight2[i];
+        }
+
+        Network network;
+        if (modularityFunction == 1) {
+            network = new Network(nNodes, firstNeighborIndex, neighbor,
+                    edgeWeight2);
+        } else {
+            nodeWeight = new double[nNodes];
+            Arrays.fill(nodeWeight, 1);
+            network = new Network(nNodes, nodeWeight, firstNeighborIndex,
+                    neighbor, edgeWeight2);
+        }
+
+        return network;
     }
+
 
     public int idGenerator() {
         return ++maxId;
@@ -361,94 +494,46 @@ public class HGModularityOptimizer {
     }
 
 
-    private Network readInputFile(String fileName, int modularityFunction)
-            throws IOException {
-        BufferedReader bufferedReader;
-        double[] edgeWeight1, edgeWeight2, nodeWeight;
-        int i, j, nEdges, nLines, nNodes;
-        int[] firstNeighborIndex, neighbor, nNeighbors, node1, node2;
-        Network network;
-        String[] splittedLine;
+    private void writeOutput(Clustering clustering, ComputerOutput output) {
+        int i, nNodes;
+        nNodes = clustering.getNNodes();
+        clustering.orderClustersByNNodes();
+        int nClusters = clustering.getNClusters();
+        LOG.info("nClusters: {}", nClusters);
+        LOG.info("nNodes: {}", nNodes);
+        BiMap<Integer, Object> biMap = this.idMap.inverse();
 
-        bufferedReader = new BufferedReader(new FileReader(fileName));
-
-        nLines = 0;
-        while (bufferedReader.readLine() != null)
-            nLines++;
-
-        bufferedReader.close();
-
-        bufferedReader = new BufferedReader(new FileReader(fileName));
-
-        node1 = new int[nLines];
-        node2 = new int[nLines];
-        edgeWeight1 = new double[nLines];
-        i = -1;
-        long lastTime = 0;
-        for (j = 0; j < nLines; j++) {
-            if (System.currentTimeMillis() - lastTime >=
-                    TimeUnit.SECONDS.toMillis(30L)) {
-                LOG.info("Loading edge nums:{}", j + 1);
-                lastTime = System.currentTimeMillis();
-            }
-
-            splittedLine = StringUtils.split(bufferedReader.readLine(),
-                                             this.delimiter);
-            node1[j] = Integer.parseInt(splittedLine[0]);
-            if (node1[j] > i)
-                i = node1[j];
-            node2[j] = Integer.parseInt(splittedLine[1]);
-            if (node2[j] > i)
-                i = node2[j];
-            edgeWeight1[j] = (splittedLine.length > 2) ?
-                    Double.parseDouble(splittedLine[2]) :
-                    1.0;//ComputerOptions.DEFAULT_WEIGHT;
-        }
-        nNodes = i + 1;
-
-        bufferedReader.close();
-
-        nNeighbors = new int[nNodes];
-        for (i = 0; i < nLines; i++)
-            if (node1[i] < node2[i]) {
-                nNeighbors[node1[i]]++;
-                nNeighbors[node2[i]]++;
-            }
-
-        firstNeighborIndex = new int[nNodes + 1];
-        nEdges = 0;
         for (i = 0; i < nNodes; i++) {
-            firstNeighborIndex[i] = nEdges;
-            nEdges += nNeighbors[i];
+            //LOG.info("id: {}, cluster:{}", biMap.get(i),
+            //         clustering.getCluster(i));
+            this.vertex.id(this.context.graphFactory().
+                    createId(biMap.get(i).toString()));
+            this.vertex.value(new StringValue(
+                    Integer.toString(clustering.getCluster(i))));
+            output.write(this.vertex);
         }
-        firstNeighborIndex[nNodes] = nEdges;
+    }
 
-        neighbor = new int[nEdges];
-        edgeWeight2 = new double[nEdges];
-        Arrays.fill(nNeighbors, 0);
-        for (i = 0; i < nLines; i++)
-            if (node1[i] < node2[i]) {
-                j = firstNeighborIndex[node1[i]] + nNeighbors[node1[i]];
-                neighbor[j] = node2[i];
-                edgeWeight2[j] = edgeWeight1[i];
-                nNeighbors[node1[i]]++;
-                j = firstNeighborIndex[node2[i]] + nNeighbors[node2[i]];
-                neighbor[j] = node1[i];
-                edgeWeight2[j] = edgeWeight1[i];
-                nNeighbors[node2[i]]++;
+    /*
+    private void writeOutputHg(Clustering clustering) {
+        int i, nNodes;
+        nNodes = clustering.getNNodes();
+        clustering.orderClustersByNNodes();
+        int nClusters = clustering.getNClusters();
+        LOG.info("nClusters: {}", nClusters);
+        LOG.info("nNodes: {}", nNodes);
+        BiMap<Integer, Object> biMap = this.idMap.inverse();
+
+        try (HugeOutput hugeOutput = new HugeOutput(config)) {
+            for (i = 0; i < nNodes; i++) {
+                //LOG.info("id: {}, cluster:{}", biMap.get(i),
+                //         clustering.getCluster(i));
+                hugeOutput.write(biMap.get(i),
+                        Integer.toString(clustering.getCluster(i)));
             }
-
-        if (modularityFunction == 1)
-            network = new Network(nNodes, firstNeighborIndex,
-                    neighbor, edgeWeight2);
-        else {
-            nodeWeight = new double[nNodes];
-            Arrays.fill(nodeWeight, 1);
-            network = new Network(nNodes, nodeWeight, firstNeighborIndex,
-                    neighbor, edgeWeight2);
+        } catch (Exception e) {
+            LOG.error("writeOutputHg:", e);
         }
-
-        return network;
     }
 
     private void writeOutputFile(String fileName, Clustering clustering)
@@ -470,5 +555,5 @@ public class HGModularityOptimizer {
         }
 
         bufferedWriter.close();
-    }
+    }*/
 }

@@ -22,12 +22,14 @@ package com.baidu.hugegraph.computer.core.input;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.tinkerpop.gremlin.structure.Edge;
+
+import com.baidu.hugegraph.backend.id.SplicingIdGenerator;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
-import com.baidu.hugegraph.structure.graph.Edge;
-import com.baidu.hugegraph.structure.schema.EdgeLabel;
+import com.baidu.hugegraph.schema.EdgeLabel;
+import com.baidu.hugegraph.structure.HugeEdge;
 import com.baidu.hugegraph.util.E;
-import com.baidu.hugegraph.util.SplicingIdGenerator;
 import com.google.common.collect.ImmutableList;
 
 public class IdUtil {
@@ -43,6 +45,23 @@ public class IdUtil {
     }
 
     private static List<Object> sortValues(Edge edge, EdgeLabel edgeLabel) {
+        List<com.baidu.hugegraph.backend.id.Id> sortKeys = edgeLabel.sortKeys();
+        if (sortKeys.isEmpty()) {
+            return ImmutableList.of();
+        }
+        List<Object> propValues = new ArrayList<>(sortKeys.size());
+        for (com.baidu.hugegraph.backend.id.Id sk : sortKeys) {
+            Object property = ((HugeEdge) edge).getProperty(sk).value();
+            E.checkState(property != null,
+                         "The value of sort key '%s' can't be null", sk);
+            propValues.add(property);
+        }
+        return propValues;
+    }
+
+    private static List<Object> sortValues(
+            com.baidu.hugegraph.structure.graph.Edge edge,
+            com.baidu.hugegraph.structure.schema.EdgeLabel edgeLabel) {
         List<String> sortKeys = edgeLabel.sortKeys();
         if (sortKeys.isEmpty()) {
             return ImmutableList.of();
@@ -59,9 +78,19 @@ public class IdUtil {
 
     public static String assignEdgeId(Edge edge, EdgeLabel edgeLabel) {
         return SplicingIdGenerator.concat(
-               writeString(edge.sourceId()),
+               writeString(((HugeEdge) edge).sourceVertex().id().asString()),
                String.valueOf(edgeLabel.id()),
                SplicingIdGenerator.concatValues(sortValues(edge, edgeLabel)),
-               writeString(edge.targetId()));
+               writeString(((HugeEdge) edge).targetVertex().id().asString()));
+    }
+
+    public static String assignEdgeId(
+            com.baidu.hugegraph.structure.graph.Edge edge,
+            com.baidu.hugegraph.structure.schema.EdgeLabel edgeLabel) {
+        return SplicingIdGenerator.concat(
+                writeString(edge.sourceId()),
+                String.valueOf(edgeLabel.id()),
+                SplicingIdGenerator.concatValues(sortValues(edge, edgeLabel)),
+                writeString((edge.targetId())));
     }
 }

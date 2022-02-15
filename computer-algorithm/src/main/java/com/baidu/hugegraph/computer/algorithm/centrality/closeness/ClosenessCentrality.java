@@ -51,7 +51,7 @@ public class ClosenessCentrality implements Computation<ClosenessMessage> {
 
     @Override
     public String name() {
-        return "closeness_centrality";
+        return "olap_closeness_centrality";
     }
 
     @Override

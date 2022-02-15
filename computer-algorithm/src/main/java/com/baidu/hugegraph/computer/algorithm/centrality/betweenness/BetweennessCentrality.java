@@ -64,7 +64,7 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
 
     @Override
     public String name() {
-        return "betweenness_centrality";
+        return "olap_betweenness_centrality";
     }
 
     @Override

@@ -38,7 +38,7 @@ public class KCore implements Computation<Id> {
 
     @Override
     public String name() {
-        return ALGORITHM_NAME;
+        return "olap_" + ALGORITHM_NAME;
     }
 
     @Override

@@ -35,7 +35,7 @@ public class Wcc implements Computation<Id> {
 
     @Override
     public String name() {
-        return "wcc";
+        return "olap_wcc";
     }
 
     @Override

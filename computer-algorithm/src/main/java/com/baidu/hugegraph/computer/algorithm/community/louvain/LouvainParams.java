@@ -35,5 +35,7 @@ public class LouvainParams implements AlgorithmParams {
                          BytesId.class.getName());
         this.setIfAbsent(params, ComputerOptions.ALGORITHM_MESSAGE_CLASS,
                          BytesId.class.getName());
+        this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
+                        LouvainOutput.class.getName());
     }
 }

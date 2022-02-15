@@ -30,7 +30,7 @@ public class MockComputation implements Computation<DoubleValue> {
 
     @Override
     public String name() {
-        return "mock";
+        return "olap_mock";
     }
 
     @Override

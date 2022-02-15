@@ -83,7 +83,7 @@ public class HugeGraphComputer {
         switch (role) {
             case ROLE_MASTER:
                 if (!algorithm.contains("LouvainParams"))
-                    executeMasterService(context); //todo
+                    executeMasterService(context);
                 break;
             case ROLE_WORKER:
                 if (algorithm.contains("LouvainParams"))
@@ -128,6 +128,13 @@ public class HugeGraphComputer {
                                                  String useMode) {
         try (WorkerService workerService = new WorkerService()) {
             workerService.setUseMode(useMode);
+            workerService.init(context.config());
+            workerService.execute();
+        }
+    }
+
+    private static void executeWorkerServiceLouvain(ComputerContext context) {
+        try (WorkerServiceLouvain workerService = new WorkerServiceLouvain()) {
             workerService.init(context.config());
             workerService.execute();
         }

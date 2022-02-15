@@ -19,6 +19,18 @@
 
 package com.baidu.hugegraph.computer.core.input.hg;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.baidu.hugegraph.backend.query.Query;
+import com.baidu.hugegraph.backend.store.BackendProviderFactory;
+import com.baidu.hugegraph.config.OptionSpace;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.MapConfiguration;
+import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
+import org.slf4j.Logger;
+
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
@@ -26,41 +38,70 @@ import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.rpc.InputSplitRpcService;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.driver.HugeClientBuilder;
+import com.baidu.hugegraph.config.CoreOptions;
+import com.baidu.hugegraph.config.HugeConfig;
+import com.baidu.hugegraph.util.Log;
 
 public class HugeGraphFetcher implements GraphFetcher {
 
-    private final HugeClient client;
+    private static final Logger LOG = Log.logger("huge fetcher");
+
+    static {
+        // Register config
+        OptionSpace.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
+        // Register backend
+        BackendProviderFactory.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
+
+        Query.defaultCapacity(Integer.MAX_VALUE);
+    }
+
+    private final HugeGraph hugeGraph;
     private final VertexFetcher vertexFetcher;
     private final EdgeFetcher edgeFetcher;
     private final InputSplitRpcService rpcService;
 
     public HugeGraphFetcher(Config config, InputSplitRpcService rpcService) {
-        String url = config.get(ComputerOptions.HUGEGRAPH_URL);
+        Map<String, Object> configs = new HashMap<>();
+        String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
+
+        // TODO: add auth check
+        configs.put("pd.peers", pdPeers);
+        configs.put("backend", "hstore");
+        configs.put("serializer", "binary");
+        configs.put("search.text_analyzer", "jieba");
+        configs.put("search.text_analyzer_mode", "INDEX");
+        configs.put("gremlin.graph", "com.baidu.hugegraph.HugeFactory");
+
+        Configuration propConfig = new MapConfiguration(configs);
         String graph = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
-        String token = config.get(ComputerOptions.AUTH_TOKEN);
-        String usrname = config.get(ComputerOptions.AUTH_USRNAME);
-        String passwd = config.get(ComputerOptions.AUTH_PASSWD);
+        String[] parts = graph.split("/");
 
-        // Use token first, then try passwd mode
-        HugeClientBuilder clientBuilder = new HugeClientBuilder(url, graph);
-        if (token != null && token.length() != 0) {
-            this.client = clientBuilder.configToken(token).build();
-        } else if (usrname != null && usrname.length() != 0) {
-            this.client = clientBuilder.configUser(usrname, passwd).build();
-        } else {
-            this.client = clientBuilder.build();
+        propConfig.setProperty(CoreOptions.STORE.name(),
+                               parts[parts.length - 1]);
+        HugeConfig hugeConfig = new HugeConfig(propConfig);
+        try {
+            this.hugeGraph = (HugeGraph) GraphFactory.open(hugeConfig);
+        } catch (Throwable e) {
+            LOG.error("Exception occur when open graph", e);
+            throw e;
         }
+        this.hugeGraph.graphSpace(parts[0]);
 
-        this.vertexFetcher = new HugeVertexFetcher(config, this.client);
-        this.edgeFetcher = new HugeEdgeFetcher(config, this.client);
+        this.vertexFetcher = new HugeVertexFetcher(config, this.hugeGraph);
+        this.edgeFetcher = new HugeEdgeFetcher(config, this.hugeGraph);
         this.rpcService = rpcService;
     }
 
     @Override
     public void close() {
-        this.client.close();
+        // pass
+        try {
+            this.hugeGraph.close();
+        } catch (Throwable e) {
+            LOG.error("Exception occur when close graph", e);
+        }
     }
 
     @Override

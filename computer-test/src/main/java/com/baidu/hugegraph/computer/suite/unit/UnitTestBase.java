@@ -72,7 +72,7 @@ public class UnitTestBase {
     private static final String URL = HUGEGRAPH_URL.defaultValue();
     private static final String GRAPH = HUGEGRAPH_GRAPH_NAME.defaultValue();
     private static final HugeClient CLIENT =
-            HugeClient.builder(URL, GRAPH)
+            HugeClient.builder(URL, "DEFAULT",GRAPH)
                       .configToken(AUTH_TOKEN.defaultValue())
                       .configUser(AUTH_USRNAME.defaultValue(),
                                   AUTH_PASSWD.defaultValue())

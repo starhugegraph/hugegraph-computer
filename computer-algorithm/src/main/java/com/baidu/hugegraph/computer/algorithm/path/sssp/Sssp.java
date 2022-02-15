@@ -22,7 +22,7 @@ public class Sssp implements Computation<DoubleValue> {
 
     @Override
     public String name() {
-        return "sssp";
+        return "olap_sssp";
     }
 
     @Override

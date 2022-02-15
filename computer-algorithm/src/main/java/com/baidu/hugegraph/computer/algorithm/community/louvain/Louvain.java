@@ -33,7 +33,7 @@ public class Louvain implements Computation<Id> {
 
     @Override
     public String name() {
-        return "louvain";
+        return "olap_louvain";
     }
 
     @Override

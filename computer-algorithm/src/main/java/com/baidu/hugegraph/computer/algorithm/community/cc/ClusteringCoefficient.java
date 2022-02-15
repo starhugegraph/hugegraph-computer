@@ -53,7 +53,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
 
     @Override
     public String name() {
-        return "clustering_coefficient";
+        return "olap_clustering_coefficient";
     }
 
     @Override
