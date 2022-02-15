@@ -488,7 +488,7 @@ public class FileGraphPartition {
                 break;
             }
             Vertex vertex = this.edgesInput.
-                    composeVertex(data, true);
+                    composeVertexFast(data, true);
             this.readVertexStatusAndValue(vertex, result);
 
             if (!this.useVariableLengthOnly) {
