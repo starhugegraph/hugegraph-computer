@@ -140,13 +140,6 @@ public class HugeGraphComputer {
         }
     }
 
-    private static void executeWorkerServiceLouvain(ComputerContext context) {
-        try (WorkerServiceLouvain workerService = new WorkerServiceLouvain()) {
-            workerService.init(context.config());
-            workerService.execute();
-        }
-    }
-
     private static void executeMasterService(ComputerContext context) {
         try (MasterService masterService = new MasterService()) {
             masterService.init(context.config());
