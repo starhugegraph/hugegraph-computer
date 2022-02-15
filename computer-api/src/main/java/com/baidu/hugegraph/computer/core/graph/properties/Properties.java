@@ -19,11 +19,11 @@
 
 package com.baidu.hugegraph.computer.core.graph.properties;
 
-import java.util.Map;
-
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.io.Readable;
 import com.baidu.hugegraph.computer.core.io.Writable;
+import java.util.Map;
+
 
 public interface Properties extends Readable, Writable {
 
@@ -36,6 +36,10 @@ public interface Properties extends Readable, Writable {
     void putIfAbsent(String key, Value<?> value);
     
     void remove(String key);
+
+    void parse(byte[] buffer, int offset);
+    
+    int getShift();
 
     int size();
 }

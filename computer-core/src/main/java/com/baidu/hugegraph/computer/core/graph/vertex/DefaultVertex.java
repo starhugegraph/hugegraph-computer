@@ -37,6 +37,7 @@ public class DefaultVertex implements Vertex {
     private Edges edges;
     private Properties properties;
     private boolean active;
+    private byte[] data;
 
     public DefaultVertex(GraphFactory graphFactory) {
         this(graphFactory, null, null);
@@ -54,6 +55,7 @@ public class DefaultVertex implements Vertex {
         this.edges = graphFactory.createEdges();
         this.properties = graphFactory.createProperties();
         this.active = true;
+        this.data = null;
     }
 
     @Override
@@ -164,5 +166,15 @@ public class DefaultVertex implements Vertex {
         return String.format("DefaultVertex{id=%s, value=%s, edges.size=%s, " +
                              "active=%s}", this.id, this.value,
                              this.edges.size(), this.active);
+    }
+
+    @Override 
+    public byte[] data() {
+        return this.data;
+    }
+
+    @Override 
+    public void data(byte[] data) {
+        this.data = data;
     }
 }

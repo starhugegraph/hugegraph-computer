@@ -20,6 +20,7 @@
 package com.baidu.hugegraph.computer.algorithm.centrality.closeness;
 
 import java.util.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 
@@ -38,6 +39,7 @@ import com.baidu.hugegraph.util.NumericUtil;
 public class ClosenessCentrality implements Computation<ClosenessMessage> {
 
     private static final Logger LOG = Log.logger(ClosenessCentrality.class);
+    private ThreadLocalRandom random;
 
     public static final String OPTION_WEIGHT_PROPERTY =
                                "closeness_centrality.weight_property";
@@ -45,7 +47,7 @@ public class ClosenessCentrality implements Computation<ClosenessMessage> {
                                "closeness_centrality.sample_rate";
 
     private String weightProp;
-    private double sampleRate;
+    private float sampleRate;
 
     @Override
     public String name() {
@@ -60,12 +62,15 @@ public class ClosenessCentrality implements Computation<ClosenessMessage> {
     @Override
     public void init(Config config) {
         this.weightProp = config.getString(OPTION_WEIGHT_PROPERTY, "");
-        this.sampleRate = config.getDouble(OPTION_SAMPLE_RATE, 1.0D);
-        if (this.sampleRate <= 0.0D || this.sampleRate > 1.0D) {
+        this.sampleRate = (float) config.getDouble(OPTION_SAMPLE_RATE, 1.0D);
+        // TODO: Use heuristic way to change the sample rate dynamically
+        if (this.sampleRate <= 0.0 || this.sampleRate > 1.0) {
             throw new ComputerException("The param %s must be in (0.0, 1.0], " +
                                         "actual got '%s'",
                                         OPTION_SAMPLE_RATE, this.sampleRate);
         }
+        this.random = ThreadLocalRandom.current();
+        LOG.info("## Sample rate = " + this.sampleRate);
     }
 
     @Override
@@ -149,8 +154,8 @@ public class ClosenessCentrality implements Computation<ClosenessMessage> {
     }
 
     private boolean sample(Id sourceId, Id targetId, Edge edge) {
-        // Now just use the simplest way
-        return Math.random() <= this.sampleRate;
+        // Now just use the simplest way, perf it to reduce cpu cost
+        return this.random.nextFloat() < this.sampleRate;
     }
 
     private double weightValue(Value<?> rawValue) {

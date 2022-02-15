@@ -43,6 +43,9 @@ public class ClosenessCentralityParams implements AlgorithmParams {
         this.setIfAbsent(params, ComputerOptions.INPUT_FILTER_CLASS,
                          ExtractAllPropertyInputFilter.class.getName());
         this.setIfAbsent(params, ClosenessCentrality.OPTION_SAMPLE_RATE,
-                         "0.5D");
+                         "0.01D");
+        this.setIfAbsent(params,
+                         ComputerOptions.INPUT_LIMIT_EDGES_IN_ONE_VERTEX, PERF);
+        this.setIfAbsent(params, ComputerOptions.SKIP_EDGE_LABEL, "true");
     }
 }

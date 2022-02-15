@@ -67,7 +67,6 @@ public class HGModularityOptimizer {
     private final String weightKey;
     private final String delimiter;
     private int maxId;
-
     private final ComputerContext context;
     private final Vertex vertex;
 
@@ -79,6 +78,7 @@ public class HGModularityOptimizer {
     public static final String OPTION_RANDOMSTART = "louvain.randomstart";
     public static final String OPTION_ITERATIONS = "louvain.iterations";
     public static final String OPTION_RANDOMSEED = "louvain.randomseed";
+
     //public static final String OPTION_INPUTTYPE = "louvain.inputtype";
     //public static final String OPTION_INPUTPATH = "louvain.inputpath";
     //public static final String OPTION_OUTPUTTYPE = "louvain.outputtype";
@@ -116,6 +116,7 @@ public class HGModularityOptimizer {
         watcher.start();
 
         String inputType = config.get(ComputerOptions.INPUT_SOURCE_TYPE);
+
         Network network;
         switch (inputType) {
             case "hugegraph":
@@ -361,7 +362,7 @@ public class HGModularityOptimizer {
 
         return network;
     }
-
+  
     private Network readFromHdfs(int modularityFunction) {
         int i, j, nEdges;
         List<Integer> node1 = new ArrayList<>(this.initialCapacity);
@@ -482,6 +483,7 @@ public class HGModularityOptimizer {
 
         return network;
     }
+
 
     public int idGenerator() {
         return ++maxId;

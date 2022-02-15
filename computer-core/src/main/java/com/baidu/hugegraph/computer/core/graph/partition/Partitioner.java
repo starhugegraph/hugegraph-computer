@@ -39,6 +39,8 @@ public interface Partitioner {
      */
     int partitionIdFixIdLength(Id vertexId);
 
+    public int partitionIdInPartitionInWorker(int partitionId);
+
     /**
      * Get the worker id by specified partition id.
      */

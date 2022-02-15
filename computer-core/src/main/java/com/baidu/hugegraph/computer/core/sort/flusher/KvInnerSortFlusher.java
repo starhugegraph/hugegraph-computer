@@ -39,6 +39,14 @@ public class KvInnerSortFlusher implements InnerSortFlusher {
         return this.output;
     }
 
+    @Override public void flushBytes(Iterator<byte[]> datas) 
+                                     throws IOException {
+       while (datas.hasNext()) {
+            byte[] data = datas.next();
+            this.output.write(data);
+        }
+    }
+
     @Override
     public void flush(Iterator<KvEntry> entries) throws IOException {
         E.checkArgument(entries.hasNext(),

@@ -19,6 +19,8 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
+import com.baidu.hugegraph.computer.core.common.Constants;
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import java.io.IOException;
 
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
@@ -91,6 +93,16 @@ public class FloatValue extends Number implements Value<FloatValue> {
     @Override
     public boolean isNumber() {
         return true;
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.value = DataParser.byte2float(buffer, offset);
+    }
+
+    @Override
+    public int getShift() {
+        return Constants.FLOAT_LEN;
     }
 
     @Override

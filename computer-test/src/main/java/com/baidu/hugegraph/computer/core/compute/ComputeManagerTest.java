@@ -19,15 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.compute;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Random;
-import java.util.function.Consumer;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
@@ -58,9 +49,17 @@ import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
 import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.EntryOutputImpl;
-import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.suite.unit.UnitTestBase;
 import com.baidu.hugegraph.testutil.Whitebox;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Random;
+import java.util.function.Consumer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+
 
 public class ComputeManagerTest extends UnitTestBase {
 
@@ -69,10 +68,9 @@ public class ComputeManagerTest extends UnitTestBase {
     private Config config;
     private Managers managers;
     private ConnectionId connectionId;
-    private ComputeManager<?> computeManager;
+    private ComputeManager computeManager;
 
     @Before
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void setup() {
         this.config = UnitTestBase.updateWithRequiredOptions(
             ComputerOptions.JOB_ID, "local_001",
@@ -112,10 +110,7 @@ public class ComputeManagerTest extends UnitTestBase {
         this.connectionId = new ConnectionId(new InetSocketAddress("localhost",
                                                                    8081),
                                              0);
-        Computation<?> computation = this.config.createObject(
-                                     ComputerOptions.WORKER_COMPUTATION_CLASS);
-        this.computeManager = new ComputeManager(context(), this.managers,
-                                                 computation);
+        this.computeManager = new ComputeManager(context(), this.managers);
     }
 
     @After
@@ -125,6 +120,7 @@ public class ComputeManagerTest extends UnitTestBase {
 
     @Test
     public void testProcess() throws IOException {
+        System.out.printf("\n\n\n ComputeManagerTest \n\n\n");
         MessageRecvManager receiveManager = this.managers.get(
                                             MessageRecvManager.NAME);
         receiveManager.onStarted(this.connectionId);
@@ -141,7 +137,7 @@ public class ComputeManagerTest extends UnitTestBase {
             receiveManager.handle(MessageType.EDGE, 0, buffer);
         });
         receiveManager.onFinished(this.connectionId);
-        this.computeManager.input();
+        this.computeManager.input("all");
 
         // Superstep 0
         receiveManager.beforeSuperstep(this.config, 0);
@@ -151,9 +147,10 @@ public class ComputeManagerTest extends UnitTestBase {
         });
         receiveManager.onFinished(this.connectionId);
         this.computeManager.useVariableLengthOnly();
+        System.out.printf("before compute 0\n");
         this.computeManager.compute(null, 0);
         receiveManager.afterSuperstep(this.config, 0);
-
+        System.out.printf("after compute 1\n");
         // Superstep 1
         this.computeManager.takeRecvedMessages(true);
         receiveManager.beforeSuperstep(this.config, 1);

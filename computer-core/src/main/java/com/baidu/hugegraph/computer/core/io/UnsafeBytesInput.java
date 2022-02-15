@@ -27,7 +27,6 @@ import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.util.BytesUtil;
 import com.baidu.hugegraph.computer.core.util.CoderUtil;
 import com.baidu.hugegraph.util.E;
-
 import sun.misc.Unsafe;
 
 @SuppressWarnings("deprecation") // Unsafe.getXx
@@ -159,6 +158,65 @@ public class UnsafeBytesInput implements BytesInput {
         this.position += Constants.FLOAT_LEN;
         return value;
     }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + 
+                            Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
+    public static byte[] testIntByte() {
+        byte[] test =  hexStringToByteArray("00000040");
+        return test;
+    }
+
+    public static int testInt() {
+        byte[] test =  testIntByte();
+        int value = UNSAFE.getInt(test,
+                         Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        return value;
+    }
+
+    public static byte[] testLongByte() {
+        byte[] test =  hexStringToByteArray("0101001002000000");
+        return test;
+    }
+
+    public static long testLong() {
+        byte[] test =  testLongByte();
+        long value = UNSAFE.getLong(test,
+                         Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        return value;
+    }
+
+    public static byte[] testDoubleByte() {
+        byte[] test =  hexStringToByteArray("0000000000012340");
+        return test;
+    }
+
+    public static double testDouble() {
+        byte[] test =  testDoubleByte();
+        double value = UNSAFE.getDouble(test,
+                         Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        return value;
+    }
+
+    public static byte[] testFloatByte() {
+        byte[] test =  hexStringToByteArray("00000040");
+        return test;
+    }
+
+    public static float testFloat() {
+        byte[] test =  testFloatByte();
+        float value = UNSAFE.getFloat(test,
+                         Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        return value;
+    }
+
 
     @Override
     public double readDouble() throws IOException {

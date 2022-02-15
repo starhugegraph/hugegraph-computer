@@ -195,6 +195,24 @@ public class ComputerOptions extends OptionHolder {
                     -1
             );
 
+    public static final ConfigOption<Integer> MIN_EDGES_USE_SUPEREDGE_CACHE =
+            new ConfigOption<>(
+                    "input.minimum_edges_use_superedge_cache",
+                    "super edges with numedges larger than this use cache " +
+                    "to save message amount",
+                    disallowEmpty(),
+                    100
+            );
+
+    public static final ConfigOption<Boolean> SKIP_EDGE_LABEL =
+            new ConfigOption<>(
+                    "skip_edge_label",
+                    "Choose whether need read edge label in each edge, " +
+                    "skip it could reduce a lot cpu cost when cpu busy.",
+                    disallowEmpty(),
+                    false
+            );
+
     public static final ConfigOption<String> INPUT_LOADER_STRUCT_PATH =
             new ConfigOption<>(
                     "input.loader_struct_path",
@@ -450,6 +468,14 @@ public class ComputerOptions extends OptionHolder {
                     1
             );
 
+    public static final ConfigOption<Integer> PARTITIONS_COMPUTE_THREAD_NUMS =
+            new ConfigOption<>(
+                    "job.partitions_thread_nums",
+                    "The number of threads for partition parallel compute.",
+                    positiveInt(),
+                    4
+            );
+
     public static final ConfigOption<Integer> BSP_MAX_SUPER_STEP =
             new ConfigOption<>(
                     "bsp.max_super_step",
@@ -497,6 +523,14 @@ public class ComputerOptions extends OptionHolder {
                     "waiting bsp event.",
                     positiveInt(),
                     TimeUnit.SECONDS.toMillis(30L)
+            );
+
+    public static final ConfigOption<Boolean> WORKER_ERROR_QUIT =
+            new ConfigOption<>(
+                    "worker.worker_error_quit",
+                    "Quit worker process when find an error.",
+                    allowValues(true, false),
+                    true
             );
 
     public static final ConfigOption<Class<?>> WORKER_PARTITIONER =
@@ -749,7 +783,7 @@ public class ComputerOptions extends OptionHolder {
                     "The timeout(in ms) to wait response after " +
                     "sending sync-request.",
                     positiveInt(),
-                    5_000L
+                    60_000L
             );
 
     public static final ConfigOption<Long> TRANSPORT_FINISH_SESSION_TIMEOUT =
@@ -919,6 +953,14 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(4, 6, 8),
                     8
             );
+    public static final ConfigOption<String> USE_FASTER_COMPOSER = 
+            new ConfigOption<>(
+                    "computeflow.use_fast_composer",
+                    "use which unserialize composer in compute flow",
+                    allowValues("full", "targetidonlly"),
+                    "full"
+            );
+
     public static final ConfigOption<String> AUTH_TOKEN =
             new ConfigOption<>(
                     "hugegraph.token",

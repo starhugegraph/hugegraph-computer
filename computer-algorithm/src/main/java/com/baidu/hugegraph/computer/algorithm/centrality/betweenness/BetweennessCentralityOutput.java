@@ -33,9 +33,6 @@ import com.baidu.hugegraph.util.Log;
 
 public class BetweennessCentralityOutput extends HugeOutput {
 
-    private static final Logger LOG =
-            Log.logger(BetweennessCentralityOutput.class);
-
     @Override
     public void prepareSchema() {
         this.graph().schema().propertyKey(this.name())
@@ -58,8 +55,6 @@ public class BetweennessCentralityOutput extends HugeOutput {
         BetweennessValue localValue = vertex.value();
         double centrality = localValue.betweenness().value();
         hugeVertex.property(this.name(), centrality);
-        LOG.info("The betweenness centrality of vertex {} is {}",
-                 vertex, centrality);
         return hugeVertex;
     }
 }

@@ -115,6 +115,50 @@ public class Bsp4Worker extends BspBase {
     }
 
     /**
+     * all worker ping pong all workers for send vertex
+     */
+    public void workerInputVertexStarted() {
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_VERTEX_STARTED,
+                                    this.workerInfo.id());
+        this.bspClient().put(path, Constants.EMPTY_BYTES);
+        LOG.info("Worker({}) vertex send started", this.workerInfo.id());
+    }
+
+    /**
+     * all worker ping pong all workers for send vertex
+     */
+    public void workerInputEdgeStarted() {
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_EDGE_STARTED,
+                                    this.workerInfo.id());
+        this.bspClient().put(path, Constants.EMPTY_BYTES);
+        LOG.info("Worker({}) vertex send started", this.workerInfo.id());
+    }
+
+    /**
+     * all worker ping pong all workers for send vertex
+     */
+    public void workerInputVertexFinished() {
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_VERTEX_FINISHED,
+                                    this.workerInfo.id());
+        this.bspClient().put(path, Constants.EMPTY_BYTES);
+        LOG.info("Worker({}) vertex send finished", this.workerInfo.id());
+    }
+
+    /**
+     * all worker ping pong all workers for send vertex
+     */
+    public void workerInputEdgeFinished() {
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_EDGE_FINISHED,
+                                    this.workerInfo.id());
+        this.bspClient().put(path, Constants.EMPTY_BYTES);
+        LOG.info("Worker({}) vertex send finished", this.workerInfo.id());
+    }
+
+    /**
      * Set read done signal after read input splits, and send all vertices and
      * edges to correspond workers.
      */

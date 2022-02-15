@@ -37,9 +37,6 @@ import com.baidu.hugegraph.util.Log;
 
 public class ClosenessCentralityOutput extends HugeOutput {
 
-    private static final Logger LOG =
-            Log.logger(ClosenessCentralityOutput.class);
-
     @Override
     public void prepareSchema() {
         this.graph().schema().propertyKey(this.name())
@@ -61,8 +58,6 @@ public class ClosenessCentralityOutput extends HugeOutput {
                 IdGenerator.of(vertex.id().asObject()),
                 VertexLabel.OLAP_VL);
 
-        LOG.info("The closeness centrality bbb\n");
-
         // TODO：How to get the total vertices count here?
         // long n = context.totalVertexCount() - 1;
         ClosenessValue localValue = vertex.value();
@@ -71,10 +66,7 @@ public class ClosenessCentralityOutput extends HugeOutput {
         for (Map.Entry<Id, DoubleValue> entry : localValue.entrySet()) {
             centrality += 1.0D / entry.getValue().value();
         }
-        LOG.info("The closeness centrality ccc\n");
         hugeVertex.property(this.name(), centrality);
-        LOG.info("The closeness centrality of vertex {} is {}",
-                 vertex, centrality);
         return hugeVertex;
     }
 }

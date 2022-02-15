@@ -19,10 +19,10 @@
 
 package com.baidu.hugegraph.computer.core.sender;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import com.baidu.hugegraph.util.E;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+
 
 /**
  * It's not a public class, need package access
@@ -37,7 +37,7 @@ class MessageQueue {
                                "The callback to notify that a queue is " +
                                "not empty can't be null");
         // TODO: replace with disruptor queue
-        this.queue = new LinkedBlockingQueue<>(128);
+        this.queue = new ArrayBlockingQueue<>(128);
         this.notEmptyNotifier = notEmptyNotifier;
     }
 
@@ -56,5 +56,9 @@ class MessageQueue {
 
     public QueuedMessage take() throws InterruptedException {
         return this.queue.take();
+    }
+
+    public int size() {
+        return this.queue.size();
     }
 }

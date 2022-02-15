@@ -46,6 +46,8 @@ public interface Sorter {
     void sortBuffer(RandomAccessInput input, InnerSortFlusher flusher,
                     boolean withSubKv) throws Exception;
 
+    void sortBuffer2(RandomAccessInput input, InnerSortFlusher flusher,
+                    boolean withSubKv) throws Exception;
     /**
      * Merge the buffers by increasing order of key.
      * The input buffers in list are in increasing order of the key.
