@@ -24,7 +24,6 @@ import java.util.Map;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.schema.VertexLabel;
 import com.baidu.hugegraph.testutil.Whitebox;
-import org.slf4j.Logger;
 
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -33,7 +32,6 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.structure.HugeVertex;
 import com.baidu.hugegraph.type.define.WriteType;
-import com.baidu.hugegraph.util.Log;
 
 public class ClosenessCentralityOutput extends HugeOutput {
 
@@ -48,7 +46,6 @@ public class ClosenessCentralityOutput extends HugeOutput {
 
     @Override
     public HugeVertex constructHugeVertex(Vertex vertex) {
-        LOG.info("The closeness centrality aaa\n");
         /*HugeVertex hugeVertex = new HugeVertex(
                 this.graph(), IdGenerator.of(vertex.id().asObject()),
                 this.graph().vertexLabel(vertex.label()));*/
