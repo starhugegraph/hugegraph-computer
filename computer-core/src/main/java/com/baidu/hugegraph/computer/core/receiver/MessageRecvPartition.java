@@ -145,7 +145,7 @@ public abstract class MessageRecvPartition {
         this.sortBuffers.waitSorted();
         if (this.recvBuffers.totalBytes() > 0) {
             String path = this.genOutputPath();
-            this.mergeBuffers(this.recvBuffers, this.genOutputPath());
+            this.mergeBuffers(this.recvBuffers, path);
             this.outputFiles.add(path);
         }
         this.recvBuffers.waitSorted();
