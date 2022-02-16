@@ -203,6 +203,7 @@ public class WorkerService implements Closeable {
 
         this.closed = true;
         LOG.info("{} WorkerService closed", this);
+        System.exit(1);
     }
 
     private void stopServiceThread() {
