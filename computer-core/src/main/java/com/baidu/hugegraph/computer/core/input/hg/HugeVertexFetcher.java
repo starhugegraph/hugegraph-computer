@@ -48,7 +48,7 @@ public class HugeVertexFetcher extends HugeElementFetcher<Vertex>
         String filterClassName = this.config().get(
                 ComputerOptions.INPUT_FILTER_CLASS).getName();
         if (filterClassName.contains("DefaultInputFilter"))
-            query.withProperties(false);
+            query.withProperties(true);
         else
             query.withProperties(true);
 
