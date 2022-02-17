@@ -75,7 +75,8 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
             ComputerOptions.JOB_PARTITIONS_COUNT, "1",
             ComputerOptions.WORKER_DATA_DIRS, "[data_dir1, data_dir2]",
             ComputerOptions.WORKER_RECEIVED_BUFFERS_BYTES_LIMIT, "20",
-            ComputerOptions.HGKV_MERGE_FILES_NUM, "5"
+            ComputerOptions.HGKV_MERGE_FILES_NUM, "5",
+            ComputerOptions.TRANSPORT_ZERO_COPY_MODE, "false"
         );
         FileUtils.deleteQuietly(new File("data_dir1"));
         FileUtils.deleteQuietly(new File("data_dir2"));
@@ -117,7 +118,8 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
             ComputerOptions.JOB_PARTITIONS_COUNT, "1",
             ComputerOptions.WORKER_DATA_DIRS, "[data_dir1, data_dir2]",
             ComputerOptions.WORKER_RECEIVED_BUFFERS_BYTES_LIMIT, "1000",
-            ComputerOptions.HGKV_MERGE_FILES_NUM, "5"
+            ComputerOptions.HGKV_MERGE_FILES_NUM, "5",
+            ComputerOptions.TRANSPORT_ZERO_COPY_MODE, "false"
         );
         FileUtils.deleteQuietly(new File("data_dir1"));
         FileUtils.deleteQuietly(new File("data_dir2"));
@@ -147,7 +149,8 @@ public class VertexMessageRecvPartitionTest extends UnitTestBase {
                 ComputerOptions.WORKER_RECEIVED_BUFFERS_BYTES_LIMIT, "10000",
                 ComputerOptions.HGKV_MERGE_FILES_NUM, "5",
                 ComputerOptions.WORKER_VERTEX_PROPERTIES_COMBINER_CLASS,
-                MergeNewPropertiesCombiner.class.getName()
+                MergeNewPropertiesCombiner.class.getName(),
+                ComputerOptions.TRANSPORT_ZERO_COPY_MODE, "false"
         );
         FileUtils.deleteQuietly(new File("data_dir1"));
         FileUtils.deleteQuietly(new File("data_dir2"));
