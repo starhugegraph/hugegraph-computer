@@ -27,6 +27,8 @@ import static com.baidu.hugegraph.config.OptionChecker.positiveInt;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.tinkerpop.gremlin.structure.Direction;
+
 import com.baidu.hugegraph.computer.core.combiner.OverwriteCombiner;
 import com.baidu.hugegraph.computer.core.graph.partition.HashPartitioner;
 import com.baidu.hugegraph.computer.core.input.filter.DefaultInputFilter;
@@ -38,7 +40,6 @@ import com.baidu.hugegraph.config.ConfigConvOption;
 import com.baidu.hugegraph.config.ConfigListOption;
 import com.baidu.hugegraph.config.ConfigOption;
 import com.baidu.hugegraph.config.OptionHolder;
-import com.baidu.hugegraph.structure.constant.Direction;
 import com.baidu.hugegraph.util.Bytes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -100,6 +101,14 @@ public class ComputerOptions extends OptionHolder {
                     "input.parallel_num",
                     "The number of parallel input",
                     4
+            );
+
+    public static final ConfigOption<String> INPUT_PD_PEERS =
+            new ConfigOption<>(
+                    "pd.peers",
+                    "The addresses of pd nodes, separated with commas.",
+                    disallowEmpty(),
+                    "localhost"
             );
 
     public static final ConfigOption<Integer> INPUT_SPLIT_FETCH_TIMEOUT =
@@ -191,6 +200,24 @@ public class ComputerOptions extends OptionHolder {
                     "stored and transferred together as a batch unit.",
                     disallowEmpty(),
                     -1
+            );
+
+    public static final ConfigOption<Integer> MIN_EDGES_USE_SUPEREDGE_CACHE =
+            new ConfigOption<>(
+                    "input.minimum_edges_use_superedge_cache",
+                    "super edges with numedges larger than this use cache " +
+                    "to save message amount",
+                    disallowEmpty(),
+                    100
+            );
+
+    public static final ConfigOption<Boolean> SKIP_EDGE_LABEL =
+            new ConfigOption<>(
+                    "skip_edge_label",
+                    "Choose whether need read edge label in each edge, " +
+                    "skip it could reduce a lot cpu cost when cpu busy.",
+                    disallowEmpty(),
+                    false
             );
 
     public static final ConfigOption<String> INPUT_LOADER_STRUCT_PATH =
@@ -505,6 +532,14 @@ public class ComputerOptions extends OptionHolder {
                     TimeUnit.SECONDS.toMillis(30L)
             );
 
+    public static final ConfigOption<Boolean> WORKER_ERROR_QUIT =
+            new ConfigOption<>(
+                    "worker.worker_error_quit",
+                    "Quit worker process when find an error.",
+                    allowValues(true, false),
+                    true
+            );
+
     public static final ConfigOption<Class<?>> WORKER_PARTITIONER =
             new ConfigOption<>(
                     "worker.partitioner",
@@ -755,7 +790,7 @@ public class ComputerOptions extends OptionHolder {
                     "The timeout(in ms) to wait response after " +
                     "sending sync-request.",
                     positiveInt(),
-                    5_000L
+                    60_000L
             );
 
     public static final ConfigOption<Long> TRANSPORT_FINISH_SESSION_TIMEOUT =
@@ -925,6 +960,14 @@ public class ComputerOptions extends OptionHolder {
                     allowValues(4, 6, 8),
                     8
             );
+    public static final ConfigOption<String> USE_FASTER_COMPOSER = 
+            new ConfigOption<>(
+                    "computeflow.use_fast_composer",
+                    "use which unserialize composer in compute flow",
+                    allowValues("full", "targetidonlly"),
+                    "full"
+            );
+
     public static final ConfigOption<String> AUTH_TOKEN =
             new ConfigOption<>(
                     "hugegraph.token",

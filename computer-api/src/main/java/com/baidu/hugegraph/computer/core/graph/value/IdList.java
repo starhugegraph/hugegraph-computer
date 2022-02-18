@@ -38,6 +38,11 @@ public class IdList extends ListValue<Id> {
     }
 
     @Override
+    public void parse(byte[] buffer, int offset) {
+        this.parse(buffer, offset, false);
+    }
+
+    @Override
     public void read(RandomAccessInput in) throws IOException {
         this.read(in, false);
     }

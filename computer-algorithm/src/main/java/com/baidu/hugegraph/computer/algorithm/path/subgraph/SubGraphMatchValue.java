@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.IdList;
@@ -39,6 +40,7 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
 
     private final IdListList res;
     private final List<List<Pair<Integer, Id>>> mp;
+    private int shift;
 
     public SubGraphMatchValue() {
         this.res = new IdListList();
@@ -90,6 +92,48 @@ public class SubGraphMatchValue implements Value<SubGraphMatchValue> {
     @Override
     public Object value() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        
+        int position = offset;
+        this.res.parse(buffer, position);
+        position += this.res.getShift();
+        this.shift += this.res.getShift();
+
+        this.mp.clear();
+        int[] vint = DataParser.parseVInt(buffer, position);
+        int mpSize = vint[0];
+        position += vint[1];
+        this.shift += vint[1];
+
+        for (int i = 0; i < mpSize; i++) {
+            List<Pair<Integer, Id>> pairs = new ArrayList<>();
+            this.mp.add(pairs);
+            vint = DataParser.parseVInt(buffer, position);
+            int pairSize = vint[0];
+            position += vint[1];
+            this.shift += vint[1];
+
+            for (int j = 0; j < pairSize; j++) {
+                vint = DataParser.parseVInt(buffer, position);
+                int nodeId = vint[0];
+                position += vint[1];
+                this.shift += vint[1];
+                Id id = new BytesId();
+                id.parse(buffer, position);
+                position += id.getShift();
+                this.shift += id.getShift();
+                pairs.add(new MutablePair<>(nodeId, id));
+            }
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
     }
 
     @Override

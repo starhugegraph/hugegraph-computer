@@ -19,13 +19,11 @@
 
 package com.baidu.hugegraph.computer.core.input;
 
-import com.baidu.hugegraph.structure.graph.Vertex;
-
 /**
  * Streamed read the data of each input split, and return one HugeVertex object
  * at each iteration
  */
-public interface VertexFetcher extends ElementFetcher<Vertex> {
+public interface VertexFetcher<T> extends ElementFetcher<T> {
 
     void close();
 }

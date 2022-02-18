@@ -147,7 +147,8 @@ public class EdgesInputTest extends UnitTestBase {
                                                      "localhost", 8081),
                                                      0);
         FileGraphPartition partition = new FileGraphPartition(
-                                           context(), this.managers, 0);
+                                          context(), this.managers, 0, "all");
+
         receiveManager.onStarted(connectionId);
         add200VertexBuffer((ManagedBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 0, buffer);
@@ -254,6 +255,7 @@ public class EdgesInputTest extends UnitTestBase {
             Edges edges = edgesInput.edges(idPointer);
             Iterator<Edge> edgesIt = edges.iterator();
             Assert.assertEquals(i, edges.size());
+
             for (int j = 0; j < edges.size(); j++) {
                 Assert.assertTrue(edgesIt.hasNext());
                 Edge edge = edgesIt.next();

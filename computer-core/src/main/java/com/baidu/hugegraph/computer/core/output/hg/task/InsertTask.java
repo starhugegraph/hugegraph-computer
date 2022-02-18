@@ -20,20 +20,18 @@
 package com.baidu.hugegraph.computer.core.output.hg.task;
 
 import java.util.List;
-import java.util.Set;
 
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import com.baidu.hugegraph.HugeGraph;
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadMetrics;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
-import com.baidu.hugegraph.driver.HugeClient;
-import com.baidu.hugegraph.structure.graph.Vertex;
-import com.google.common.collect.ImmutableSet;
+import com.baidu.hugegraph.structure.HugeVertex;
+import com.baidu.hugegraph.testutil.Whitebox;
 
 public abstract class InsertTask implements Runnable {
-
-    public static final Set<String> UNACCEPTABLE_EXCEPTIONS = ImmutableSet.of(
-            "class java.lang.IllegalArgumentException"
-    );
 
     public static final String[] UNACCEPTABLE_MESSAGES = {
             // org.apache.http.conn.HttpHostConnectException
@@ -44,14 +42,14 @@ public abstract class InsertTask implements Runnable {
     };
 
     protected Config config;
-    private HugeClient client;
+    private HugeGraph graph;
     protected final List<Vertex> batch;
     private LoadSummary summary;
 
-    public InsertTask(Config config, HugeClient client,
+    public InsertTask(Config config, HugeGraph graph,
                       List<Vertex> batch, LoadSummary loadSummary) {
         this.config = config;
-        this.client = client;
+        this.graph = graph;
         this.batch = batch;
         this.summary = loadSummary;
     }
@@ -75,6 +73,12 @@ public abstract class InsertTask implements Runnable {
     }
 
     protected void insertBatch(List<Vertex> vertices) {
-        this.client.graph().addVertices(vertices);
+
+        GraphTransaction gtx = Whitebox.invoke(this.graph.getClass(),
+                                               "graphTransaction", this.graph);
+        for (Vertex vertex : vertices) {
+            gtx.addVertex((HugeVertex) vertex);
+        }
+        this.graph.tx().commit();
     }
 }

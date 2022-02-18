@@ -19,25 +19,26 @@
 
 package com.baidu.hugegraph.computer.algorithm.path.links;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.ws.rs.NotSupportedException;
-
-import org.apache.commons.collections.CollectionUtils;
-
 import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.ws.rs.NotSupportedException;
+import org.apache.commons.collections.CollectionUtils;
+
+
+
 
 public class LinksValue implements Value<LinksValue> {
 
     private final List<LinksValueItem> values;
+    int shift = 0;
 
     public LinksValue() {
         this.values = new ArrayList<>();
@@ -63,6 +64,33 @@ public class LinksValue implements Value<LinksValue> {
         throw new NotSupportedException();
     }
 
+    @Override 
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        int position = offset;
+
+        this.values.clear();
+        int count = buffer[position];
+        position++;
+        this.shift++;
+        
+        LinksValueItem value;
+        for (int i = 0; i < count; i++) {
+            value = new LinksValueItem();
+            value.parse(buffer, position);
+            int shifti = value.getShift();
+            this.shift += shifti;
+            position += shifti;
+            
+            this.values.add(value);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.values.clear();
@@ -116,6 +144,7 @@ public class LinksValue implements Value<LinksValue> {
 
         private final IdList vertexes;
         private final IdList edges;
+        private int shift;
 
         public LinksValueItem() {
             this.vertexes = new IdList();
@@ -147,6 +176,24 @@ public class LinksValue implements Value<LinksValue> {
             throw new NotSupportedException();
         }
 
+        @Override 
+        public void parse(byte[] buffer, int offset) {
+            int position = offset;
+            this.shift = 0;
+            this.vertexes.parse(buffer, position);
+            int shifti = this.vertexes.getShift();
+            this.shift += shifti;
+            position += shifti;
+            this.edges.parse(buffer, position);
+            shifti = this.edges.getShift();
+            this.shift += shifti;
+        }
+    
+        @Override
+        public int getShift() {
+            return this.shift;
+        }
+        
         @Override
         public void read(RandomAccessInput in) throws IOException {
             this.vertexes.read(in);

@@ -19,19 +19,20 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 
-import java.io.IOException;
-
 import com.baidu.hugegraph.computer.core.graph.value.DoubleValue;
 import com.baidu.hugegraph.computer.core.graph.value.IdSet;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.computer.core.graph.value.ValueType;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
+import java.io.IOException;
+
 
 public class BetweennessValue implements Value<BetweennessValue> {
 
     private final DoubleValue betweenness;
     private final IdSet arrivedVertices;
+    private int shift = 0;
 
     public BetweennessValue() {
         this(0.0D);
@@ -70,6 +71,24 @@ public class BetweennessValue implements Value<BetweennessValue> {
         throw new UnsupportedOperationException();
     }
 
+    @Override   
+    public void parse(byte[] buffer, int offset) {
+        int position = offset;
+        this.shift = 0;
+
+        this.betweenness.parse(buffer, position);
+        position += this.betweenness.getShift();
+        this.shift += this.betweenness.getShift();
+        
+        this.arrivedVertices.parse(buffer, position);
+        this.shift += this.arrivedVertices.getShift();
+    }
+    
+    @Override
+    public int getShift() {
+        return this.shift;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.betweenness.read(in);

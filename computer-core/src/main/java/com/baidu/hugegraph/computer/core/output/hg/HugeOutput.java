@@ -22,14 +22,16 @@ package com.baidu.hugegraph.computer.core.output.hg;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.testutil.Whitebox;
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.AbstractComputerOutput;
 import com.baidu.hugegraph.computer.core.output.hg.task.TaskManager;
-import com.baidu.hugegraph.driver.HugeClient;
 import com.baidu.hugegraph.util.Log;
 
 public abstract class HugeOutput extends AbstractComputerOutput {
@@ -37,7 +39,7 @@ public abstract class HugeOutput extends AbstractComputerOutput {
     private static final Logger LOG = Log.logger(HugeOutput.class);
 
     private TaskManager taskManager;
-    private List<com.baidu.hugegraph.structure.graph.Vertex> vertexBatch;
+    private List<org.apache.tinkerpop.gremlin.structure.Vertex> vertexBatch;
     private int batchSize;
 
     @Override
@@ -51,10 +53,14 @@ public abstract class HugeOutput extends AbstractComputerOutput {
         this.batchSize = config.get(ComputerOptions.OUTPUT_BATCH_SIZE);
 
         this.prepareSchema();
+
+        SchemaTransaction stx = Whitebox.invoke(this.graph().getClass(),
+                "schemaTransaction", this.graph());
+        stx.initAndRegisterOlapTables();
     }
 
-    public HugeClient client() {
-        return this.taskManager.client();
+    public HugeGraph graph() {
+        return this.taskManager.graph();
     }
 
     public abstract void prepareSchema();
@@ -67,7 +73,7 @@ public abstract class HugeOutput extends AbstractComputerOutput {
         }
     }
 
-    public abstract com.baidu.hugegraph.structure.graph.Vertex
+    public abstract org.apache.tinkerpop.gremlin.structure.Vertex
                     constructHugeVertex(Vertex vertex);
 
     @Override

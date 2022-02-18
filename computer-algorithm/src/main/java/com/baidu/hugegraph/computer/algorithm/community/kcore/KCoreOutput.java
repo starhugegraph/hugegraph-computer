@@ -19,27 +19,36 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.kcore;
 
+import com.baidu.hugegraph.backend.id.IdGenerator;
+import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
-import com.baidu.hugegraph.structure.constant.WriteType;
-import com.baidu.hugegraph.structure.graph.Vertex;
+import com.baidu.hugegraph.schema.VertexLabel;
+import com.baidu.hugegraph.structure.HugeVertex;
+import com.baidu.hugegraph.testutil.Whitebox;
+import com.baidu.hugegraph.type.define.WriteType;
 
 public class KCoreOutput extends HugeOutput {
 
     @Override
     public void prepareSchema() {
-        this.client().schema().propertyKey(this.name())
-            .asInt()
-            .writeType(WriteType.OLAP_COMMON)
-            .ifNotExist()
-            .create();
+        this.graph().schema().propertyKey(this.name())
+                             .asInt()
+                             .writeType(WriteType.OLAP_COMMON)
+                             .ifNotExist()
+                             .create();
     }
 
     @Override
-    public Vertex constructHugeVertex(
-           com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
-        com.baidu.hugegraph.structure.graph.Vertex hugeVertex =
-                new com.baidu.hugegraph.structure.graph.Vertex(null);
-        hugeVertex.id(vertex.id().asObject());
+    public HugeVertex constructHugeVertex(
+            com.baidu.hugegraph.computer.core.graph.vertex.Vertex vertex) {
+        /*HugeVertex hugeVertex = new HugeVertex(
+                this.graph(), IdGenerator.of(vertex.id().asObject()),
+                this.graph().vertexLabel(vertex.label()));*/
+        GraphTransaction gtx = Whitebox.invoke(this.graph().getClass(),
+                "graphTransaction", this.graph());
+        HugeVertex hugeVertex = HugeVertex.create(gtx,
+                IdGenerator.of(vertex.id().asObject()),
+                VertexLabel.OLAP_VL);
         KCoreValue value = vertex.value();
         hugeVertex.property(this.name(), value.core());
         return hugeVertex;

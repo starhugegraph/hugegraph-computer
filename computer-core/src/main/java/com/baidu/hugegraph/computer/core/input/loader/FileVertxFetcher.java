@@ -32,7 +32,7 @@ import com.baidu.hugegraph.loader.mapping.VertexMapping;
 import com.baidu.hugegraph.structure.graph.Vertex;
 
 public class FileVertxFetcher extends FileElementFetcher<Vertex>
-                              implements VertexFetcher {
+                              implements VertexFetcher<Vertex> {
 
     public FileVertxFetcher(Config config) {
         super(config);

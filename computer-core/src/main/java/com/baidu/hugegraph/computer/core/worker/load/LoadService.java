@@ -127,21 +127,9 @@ public class LoadService {
             if (!this.hasNext()) {
                 throw new NoSuchElementException();
             }
-            com.baidu.hugegraph.structure.graph.Vertex hugeVertex;
-            hugeVertex = fetcher.vertexFetcher().next();
-            return this.convert(hugeVertex);
-        }
-
-        private Vertex convert(com.baidu.hugegraph.structure.graph.Vertex
-                               vertex) {
-            vertex = inputFilter.filter(vertex);
-            Id id = HugeConverter.convertId(vertex.id());
-            String label = vertex.label();
-            Properties properties = HugeConverter.convertProperties(
-                                                  vertex.properties());
-            Vertex computerVertex = graphFactory.createVertex(label, id, null);
-            computerVertex.properties(properties);
-            return computerVertex;
+            VertexHolder hugeVertex;
+            hugeVertex = new VertexHolder(fetcher.vertexFetcher().next());
+            return hugeVertex.convert(inputFilter, graphFactory);
         }
     }
 
@@ -195,18 +183,18 @@ public class LoadService {
                 throw new NoSuchElementException();
             }
 
-            com.baidu.hugegraph.structure.graph.Edge hugeEdge;
+            EdgeHolder hugeEdge;
             EdgeFetcher edgeFetcher = fetcher.edgeFetcher();
             try {
                 while (edgeFetcher.hasNext()) {
-                    hugeEdge = edgeFetcher.next();
+                    hugeEdge = new EdgeHolder(edgeFetcher.next());
                     /*
                      * TODO: Restore the code after huge-server fix a problem
                      *       where id may not be a four-part problem
                     */
                     Edge edge;
                     try {
-                        edge = this.convert(hugeEdge);
+                        edge = hugeEdge.convert(inputFilter, graphFactory);
                     } catch (Exception e) {
                         LOG.error("Fail to convert edge: {}", hugeEdge, e);
                         continue;
@@ -242,21 +230,6 @@ public class LoadService {
             Vertex vertex = this.currentVertex;
             this.currentVertex = null;
             return vertex;
-        }
-
-        private Edge convert(com.baidu.hugegraph.structure.graph.Edge edge) {
-            edge = inputFilter.filter(edge);
-            Id targetId = HugeConverter.convertId(edge.targetId());
-            Properties properties = HugeConverter.convertProperties(
-                                    edge.properties());
-            properties.put("inv", new BooleanValue(false));
-            Edge computerEdge = graphFactory.createEdge(edge.label(),
-                                                        edge.name(), targetId
-            );
-            computerEdge.id(HugeConverter.convertId(edge.id()));
-            computerEdge.label(edge.label());
-            computerEdge.properties(properties);
-            return computerEdge;
         }
     }
 }

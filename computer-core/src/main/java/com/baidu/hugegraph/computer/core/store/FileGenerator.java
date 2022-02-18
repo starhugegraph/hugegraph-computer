@@ -64,5 +64,11 @@ public interface FileGenerator {
                     .toString();
     }
 
+    default String fixDirectory(int partition, String... paths) {
+        String filename = "" + partition;
+        return Paths.get(this.nextDirectory(paths),
+                         filename)
+                    .toString();
+    }
     List<String> dirs();
 }

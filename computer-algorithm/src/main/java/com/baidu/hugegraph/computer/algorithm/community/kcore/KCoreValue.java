@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import com.baidu.hugegraph.computer.core.graph.id.BytesId;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
@@ -36,6 +37,7 @@ public class KCoreValue implements Value<KCoreValue> {
 
     private int core;
     private Set<Id> deletedNeighbors;
+    private int shift;
 
     public KCoreValue() {
         this.core = 0;
@@ -84,6 +86,38 @@ public class KCoreValue implements Value<KCoreValue> {
         KCoreValue kcoreValue = new KCoreValue();
         kcoreValue.core = this.core;
         return kcoreValue;
+    }
+
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.shift = 0;
+        
+        int position = offset;
+        int[] vint = DataParser.parseVInt(buffer, position);
+        this.core = vint[0];
+        int shifti = vint[1];
+        position += shifti;
+        this.shift += shifti;
+
+        vint = DataParser.parseVInt(buffer, position);
+        int size = vint[0];
+        shifti = vint[1];
+        position += shifti;
+        this.shift += shifti;
+
+        this.deletedNeighbors = new HashSet<>((int)((float) size / 0.75 + 1));
+        for (int i = 0; i < size; i++) {
+            Id id = new BytesId();
+            id.parse(buffer, position);
+            position += id.getShift();
+            this.shift += id.getShift();
+            deletedNeighbors.add(id);
+        }
+    }
+
+    @Override
+    public int getShift() {
+        return 0;
     }
 
     @Override

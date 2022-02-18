@@ -19,8 +19,10 @@
 
 package com.baidu.hugegraph.computer.core.graph.value;
 
+import com.baidu.hugegraph.computer.core.dataparser.DataParser;
 import java.io.IOException;
 
+import com.baidu.hugegraph.computer.core.common.Constants;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.io.RandomAccessOutput;
 import com.baidu.hugegraph.util.E;
@@ -93,6 +95,16 @@ public class IntValue extends Number implements Value<IntValue> {
         return true;
     }
 
+    @Override
+    public void parse(byte[] buffer, int offset) {
+        this.value = DataParser.byte2int(buffer, offset);
+    }
+
+    @Override
+    public int getShift() {
+        return Constants.INT_LEN;
+    }
+    
     @Override
     public void read(RandomAccessInput in) throws IOException {
         this.value = in.readFixedInt();

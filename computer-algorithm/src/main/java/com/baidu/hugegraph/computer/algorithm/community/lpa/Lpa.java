@@ -38,7 +38,7 @@ public class Lpa implements Computation<Id> {
 
     @Override
     public String name() {
-        return "lpa";
+        return "olap_lpa";
     }
 
     @Override

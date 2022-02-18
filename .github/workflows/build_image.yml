@@ -47,9 +47,18 @@ jobs:
         env:
           TRAVIS_DIR: computer-dist/src/assembly/travis
         run: |
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-1.9.7.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=1.9.7 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.9.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.9 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/common-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.10.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.10 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/common-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-core-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-core -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-core-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-hstore-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-hstore -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-hstore-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pom.xml -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-loader -Dversion=0.11.3 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-client -Dversion=3.0.0 -Dpackaging=jar  -DpomFile=$TRAVIS_DIR/lib/hg-pd-client-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-common-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-common -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-common-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-grpc-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-grpc -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-grpc-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-client-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-term-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-term-pom.xml
 
       - name: Build images
         env:

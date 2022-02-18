@@ -81,6 +81,54 @@ public class Bsp4Master extends BspBase {
         LOG.info("Master set resume-done({})", superstep);
     }
 
+        /**
+     * Wait all workers ping pong to all workers
+     * then finsh send vertex
+     */
+    public void waitWorkersVertexFinished() {
+        LOG.info("Master is waiting for workers send vertex finished");
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_VERTEX_FINISHED);
+        this.waitOnWorkersEvent(path, this.barrierOnWorkersTimeout());
+        LOG.info("Master waited workers send vertex finished");
+    }
+
+    /**
+     * Wait all workers ping pong to all workers
+     * then finsh send edge
+     */
+    public void waitWorkersEdgeFinished() {
+        LOG.info("Master is waiting for workers send edge finished");
+        String path = this.constructPath(BspEvent.
+                                       BSP_WORKER_INPUT_EDGE_FINISHED);
+        this.waitOnWorkersEvent(path, this.barrierOnWorkersTimeout());
+        LOG.info("Master waited workers send edge finished");
+    }
+
+    /**
+     * Wait all workers ping pong to all workers
+     * then start send vertex
+     */
+    public void waitWorkersVertexStarted() {
+        LOG.info("Master is waiting for workers send vertex started");
+        String path = this.constructPath(BspEvent.
+                                    BSP_WORKER_INPUT_VERTEX_STARTED);
+        this.waitOnWorkersEvent(path, this.barrierOnWorkersTimeout());
+        LOG.info("Master waited workers send vertex started");
+    }
+
+    /**
+     * Wait all workers ping pong to all workers
+     * then start send edge
+     */
+    public void waitWorkersEdgeStarted() {
+        LOG.info("Master is waiting for workers send edge started");
+        String path = this.constructPath(BspEvent.
+                                       BSP_WORKER_INPUT_EDGE_STARTED);
+        this.waitOnWorkersEvent(path, this.barrierOnWorkersTimeout());
+        LOG.info("Master waited workers send edge started");
+    }
+
     /**
      * Wait all workers read input splits, and send all vertices and
      * edges to correspond workers. After this, master call masterInputDone.

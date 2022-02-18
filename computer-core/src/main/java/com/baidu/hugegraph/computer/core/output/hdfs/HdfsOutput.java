@@ -19,7 +19,6 @@
 
 package com.baidu.hugegraph.computer.core.output.hdfs;
 
-
 import java.io.IOException;
 import java.net.URI;
 

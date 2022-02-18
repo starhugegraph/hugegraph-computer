@@ -46,6 +46,7 @@ import com.baidu.hugegraph.computer.core.sort.sorting.SortManager;
 import com.baidu.hugegraph.computer.core.store.FileManager;
 import com.baidu.hugegraph.computer.core.store.SuperstepFileGenerator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 
@@ -149,6 +150,7 @@ public class MessageRecvManager implements Manager, MessageHandler {
         // TODO: implement failover
         LOG.warn("Exception caught for connection:{}, root cause:{}",
                  connectionId, cause);
+        WorkerService.setThrowable(cause);
     }
 
     public void waitReceivedAllMessages() {
