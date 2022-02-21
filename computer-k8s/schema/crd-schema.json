@@ -113,6 +113,9 @@
         "masterMemory": {
           "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity"
         },
+        "masterRequestMemory": {
+          "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity"
+        },
         "pullPolicy": {
           "type": "string"
         },
@@ -166,6 +169,9 @@
           "type": "integer"
         },
         "workerMemory": {
+          "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity"
+        },
+        "workerRequestMemory": {
           "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity"
         }
       },

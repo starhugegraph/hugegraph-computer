@@ -56,6 +56,10 @@ type ComputerJobSpec struct {
 
     WorkerMemory resource.Quantity `json:"workerMemory,omitempty"`
 
+    MasterRequestMemory resource.Quantity `json:"masterRequestMemory,omitempty"`
+
+    WorkerRequestMemory resource.Quantity `json:"workerRequestMemory,omitempty"`
+
     ComputerConf map[string]string `json:"computerConf"`
 
     Log4jXml *string `json:"log4jXml,omitempty"`

@@ -481,12 +481,15 @@ public class ComputerJobDeployer {
 
         Quantity cpu;
         Quantity memory;
+        Quantity requestMemory;
         if (name.contains("master")) {
             cpu = spec.getMasterCpu();
             memory = spec.getMasterMemory();
+            requestMemory = spec.getMasterReqeustMemory();
         } else {
             cpu = spec.getWorkerCpu();
             memory = spec.getWorkerMemory();
+            requestMemory = spec.getWorkerRequestMemory();
         }
 
         List<VolumeMount> volumeMounts = spec.getVolumeMounts();
@@ -548,6 +551,7 @@ public class ComputerJobDeployer {
                 .withNewResources()
                     .addToLimits(ResourceName.CPU.value(), cpu)
                     .addToLimits(ResourceName.MEMORY.value(), memory)
+                    .addToRequests(ResourceName.MEMORY.value(), requestMemory)
                 .endResources()
                 .build();
     }
