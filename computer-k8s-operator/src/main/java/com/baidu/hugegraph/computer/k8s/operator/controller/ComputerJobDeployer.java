@@ -485,7 +485,7 @@ public class ComputerJobDeployer {
         if (name.contains("master")) {
             cpu = spec.getMasterCpu();
             memory = spec.getMasterMemory();
-            requestMemory = spec.getMasterReqeustMemory();
+            requestMemory = spec.getMasterRequestMemory();
         } else {
             cpu = spec.getWorkerCpu();
             memory = spec.getWorkerMemory();
