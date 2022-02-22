@@ -85,6 +85,18 @@ public class KubeSpecOptions extends OptionHolder {
                     String.class
             );
 
+    public static final DriverConfigOption<String> MASTER_REQUEST_MEMORY =
+            new DriverConfigOption<>(
+                    "k8s.master_request_memory",
+                    "The memory request of master, the unit can be " +
+                            "one of Ei、Pi、Ti、Gi、Mi、Ki " +
+                            "detail please refer to：https://kubernetes " +
+                            ".io/zh/docs/concepts/configuration/" +
+                            "manage-resources-containers/#meaning-of-memory",
+                    KubeSpecOptions::checkQuantity,
+                    String.class
+            );
+
     public static final ConfigListOption<String> MASTER_COMMAND =
             new ConfigListOption<>(
                     "k8s.master_command",
@@ -122,6 +134,18 @@ public class KubeSpecOptions extends OptionHolder {
                     "detail please refer to：https://kubernetes " +
                     ".io/zh/docs/concepts/configuration/" +
                     "manage-resources-containers/#meaning-of-memory",
+                    KubeSpecOptions::checkQuantity,
+                    String.class
+            );
+
+    public static final DriverConfigOption<String> WORKER_REQUEST_MEMORY =
+            new DriverConfigOption<>(
+                    "k8s.worker_request_memory",
+                    "The memory request of worker, the unit can be " +
+                            "one of Ei、Pi、Ti、Gi、Mi、Ki " +
+                            "detail please refer to：https://kubernetes " +
+                            ".io/zh/docs/concepts/configuration/" +
+                            "manage-resources-containers/#meaning-of-memory",
                     KubeSpecOptions::checkQuantity,
                     String.class
             );
@@ -199,7 +223,9 @@ public class KubeSpecOptions extends OptionHolder {
                     .put(MASTER_CPU.name(), MASTER_CPU)
                     .put(WORKER_CPU.name(), WORKER_CPU)
                     .put(MASTER_MEMORY.name(), MASTER_MEMORY)
+                    .put(MASTER_REQUEST_MEMORY.name(), MASTER_REQUEST_MEMORY)
                     .put(WORKER_MEMORY.name(), WORKER_MEMORY)
+                    .put(WORKER_REQUEST_MEMORY.name(), WORKER_REQUEST_MEMORY)
                     .put(WORKER_INSTANCES.name(), WORKER_INSTANCES)
                     .put(JVM_OPTIONS.name(), JVM_OPTIONS)
                     .put(REMOTE_JAR_URI.name(), REMOTE_JAR_URI)
