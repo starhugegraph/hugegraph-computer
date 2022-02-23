@@ -250,7 +250,7 @@ public class HGModularityOptimizer {
         int i, j, nEdges;
         List<Integer> node1 = new ArrayList<>(this.initialCapacity);
         List<Integer> node2 = new ArrayList<>(this.initialCapacity);
-        List<Object> originalNode2 = new LinkedList<>();
+        //List<Object> originalNode2 = new LinkedList<>();
         List<Double> edgeWeight1 = new ArrayList<>();
         int nums = 0;
         long lastTime = 0;
@@ -263,6 +263,8 @@ public class HGModularityOptimizer {
             Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
                     hgFetcher.createIteratorFromEdge();
 
+            BufferedWriter bufferedWriter = new BufferedWriter(
+                    new FileWriter("targetid.dat"));
             while (iterator.hasNext()) {
                 com.baidu.hugegraph.structure.HugeEdge edge = iterator.next();
                 if (System.currentTimeMillis() - lastTime >=
@@ -275,9 +277,12 @@ public class HGModularityOptimizer {
                         .asObject());
 
                 node1.add(sourceId);
-                originalNode2.add(HugeConverter.convertId(
+                /*originalNode2.add(HugeConverter.convertId(
                                 edge.targetVertex().id().asObject())
-                        .asObject());
+                        .asObject());*/
+                bufferedWriter.write(HugeConverter.convertId(
+                        edge.targetVertex().id().asObject()).asObject()
+                        .toString() + "\n");
 
                 Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
                 if (StringUtils.isNotBlank(this.weightKey)) {
@@ -290,15 +295,23 @@ public class HGModularityOptimizer {
                 edgeWeight1.add(weight);
                 nums++;
             }
+            bufferedWriter.close();
 
             // Covert targetId
+            /*
             Iterator<Object> iterator2 = originalNode2.iterator();
             while (iterator2.hasNext()) {
                 Object id = iterator2.next();
                 node2.add(this.covertId(id));
                 iterator2.remove();
             }
-            originalNode2 = null;
+            originalNode2 = null;*/
+            BufferedReader bufferedReader = new
+                    BufferedReader(new FileReader("targetid.dat"));
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                node2.add(this.covertId(line));
+            }
 
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
                     hgFetcher.createIteratorFromVertex();

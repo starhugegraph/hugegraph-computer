@@ -91,7 +91,7 @@ public class WorkerServiceLouvain implements Closeable {
 
         this.closed = true;
         LOG.info("{} WorkerService closed", this);
-        System.exit(1);
+        System.exit(0);
     }
 
     private void stopServiceThread() {
