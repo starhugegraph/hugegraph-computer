@@ -88,6 +88,7 @@ public class HugeGraphFetcher implements GraphFetcher {
             throw e;
         }
         this.hugeGraph.graphSpace(parts[0]);
+        LOG.info("graphSpace {}", graph);
 
         this.vertexFetcher = new HugeVertexFetcher(config, this.hugeGraph);
         this.edgeFetcher = new HugeEdgeFetcher(config, this.hugeGraph);

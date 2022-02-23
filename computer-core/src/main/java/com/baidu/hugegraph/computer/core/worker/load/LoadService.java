@@ -115,6 +115,7 @@ public class LoadService {
                     vertexFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                LOG.error("vertex fetch:", e);
             }
             return true;
         }
@@ -170,6 +171,7 @@ public class LoadService {
                     edgeFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                LOG.error("edge fetch:", e);
             }
             return true;
         }

@@ -23,6 +23,10 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,12 +67,13 @@ public class HGModularityOptimizer {
     private final int initialCapacity;
 
     private final Config config;
-    private final BiMap<Object, Integer> idMap;
+    private BiMap<Object, Integer> idMap;
     private final String weightKey;
     private final String delimiter;
     private int maxId;
     private final ComputerContext context;
     private final Vertex vertex;
+    private final String idFileName;
 
     public static final String OPTION_CAPACITY = "louvain.capacity";
     public static final String OPTION_WEIGHTKEY = "louvain.weightkey";
@@ -94,6 +99,7 @@ public class HGModularityOptimizer {
         this.idMap = HashBiMap.create(this.initialCapacity);
         this.weightKey = config.getString(OPTION_WEIGHTKEY,"");
         this.delimiter = config.getString(OPTION_DELIMITER," ");
+        this.idFileName = "idfile.dat";
     }
 
     public void runAlgorithm() throws IOException {
@@ -130,6 +136,10 @@ public class HGModularityOptimizer {
                 throw new NotSupportedException(
                         "not support inputType: " + inputType);
         }
+
+        writeIdFile(this.idFileName, network.getNNodes());
+        this.idMap = null;
+        System.gc();
 
         watcher.stop();
         LOG.info("Number of nodes: {}", network.getNNodes());
@@ -240,7 +250,7 @@ public class HGModularityOptimizer {
         int i, j, nEdges;
         List<Integer> node1 = new ArrayList<>(this.initialCapacity);
         List<Integer> node2 = new ArrayList<>(this.initialCapacity);
-        List<Object> originalNode2 = new LinkedList<>();
+        //List<Object> originalNode2 = new LinkedList<>();
         List<Double> edgeWeight1 = new ArrayList<>();
         int nums = 0;
         long lastTime = 0;
@@ -253,6 +263,8 @@ public class HGModularityOptimizer {
             Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
                     hgFetcher.createIteratorFromEdge();
 
+            BufferedWriter bufferedWriter = new BufferedWriter(
+                    new FileWriter("targetid.dat"));
             while (iterator.hasNext()) {
                 com.baidu.hugegraph.structure.HugeEdge edge = iterator.next();
                 if (System.currentTimeMillis() - lastTime >=
@@ -265,9 +277,12 @@ public class HGModularityOptimizer {
                         .asObject());
 
                 node1.add(sourceId);
-                originalNode2.add(HugeConverter.convertId(
+                /*originalNode2.add(HugeConverter.convertId(
                                 edge.targetVertex().id().asObject())
-                        .asObject());
+                        .asObject());*/
+                bufferedWriter.write(HugeConverter.convertId(
+                        edge.targetVertex().id().asObject()).asObject()
+                        .toString() + "\n");
 
                 Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
                 if (StringUtils.isNotBlank(this.weightKey)) {
@@ -280,15 +295,23 @@ public class HGModularityOptimizer {
                 edgeWeight1.add(weight);
                 nums++;
             }
+            bufferedWriter.close();
 
             // Covert targetId
+            /*
             Iterator<Object> iterator2 = originalNode2.iterator();
             while (iterator2.hasNext()) {
                 Object id = iterator2.next();
                 node2.add(this.covertId(id));
                 iterator2.remove();
             }
-            originalNode2 = null;
+            originalNode2 = null;*/
+            BufferedReader bufferedReader = new
+                    BufferedReader(new FileReader("targetid.dat"));
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null) {
+                node2.add(this.covertId(line));
+            }
 
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
                     hgFetcher.createIteratorFromVertex();
@@ -501,17 +524,47 @@ public class HGModularityOptimizer {
         int nClusters = clustering.getNClusters();
         LOG.info("nClusters: {}", nClusters);
         LOG.info("nNodes: {}", nNodes);
-        BiMap<Integer, Object> biMap = this.idMap.inverse();
+        //BiMap<Integer, Object> biMap = this.idMap.inverse();
+        try {
+            List<String> idList = new ArrayList<>(this.initialCapacity);
+            readIdFile(this.idFileName, nNodes, idList);
 
-        for (i = 0; i < nNodes; i++) {
-            //LOG.info("id: {}, cluster:{}", biMap.get(i),
-            //         clustering.getCluster(i));
-            this.vertex.id(this.context.graphFactory().
-                    createId(biMap.get(i).toString()));
-            this.vertex.value(new StringValue(
-                    Integer.toString(clustering.getCluster(i))));
-            output.write(this.vertex);
+            for (i = 0; i < nNodes; i++) {
+                //LOG.info("id: {}, cluster:{}", biMap.get(i),
+                //         clustering.getCluster(i));
+                this.vertex.id(this.context.graphFactory().
+                        createId(idList.get(i)));
+                this.vertex.value(new StringValue(
+                        Integer.toString(clustering.getCluster(i))));
+                output.write(this.vertex);
+            }
+        } catch (Exception e) {
+            LOG.error("writeOutput:", e);
         }
+    }
+
+    private void writeIdFile(String fileName, int nNodes) throws IOException {
+        BufferedWriter bufferedWriter;
+        int i;
+        BiMap<Integer, Object> biMap = this.idMap.inverse();
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+        for (i = 0; i < nNodes; i++) {
+            bufferedWriter.write(biMap.get(i).toString());
+            bufferedWriter.newLine();
+        }
+        bufferedWriter.close();
+    }
+
+    private void readIdFile(String fileName, int nNodes, List<String> idList)
+            throws IOException {
+        BufferedReader bufferedReader;
+        int i;
+        bufferedReader = new BufferedReader(new FileReader(fileName));
+        for (i = 0; i < nNodes; i++) {
+            String id = bufferedReader.readLine();
+            idList.add(id);
+        }
+        bufferedReader.close();
     }
 
     /*
