@@ -95,6 +95,13 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph"
             );
 
+    public static final ConfigOption<Integer> INPUT_PARALLEL_NUM =
+            new ConfigOption<>(
+                    "input.parallel_num",
+                    "The number of parallel input",
+                    4
+            );
+
     public static final ConfigOption<Integer> INPUT_SPLIT_FETCH_TIMEOUT =
             new ConfigOption<>(
                     "input.split_fetch_timeout",

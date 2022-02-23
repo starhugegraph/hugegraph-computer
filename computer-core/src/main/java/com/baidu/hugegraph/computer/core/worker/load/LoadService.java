@@ -117,6 +117,7 @@ public class LoadService {
                     vertexFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
             }
             return true;
         }
