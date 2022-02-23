@@ -19,9 +19,14 @@
 
 package com.baidu.hugegraph.computer.core.input;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.GraphFactory;
@@ -31,11 +36,12 @@ import com.baidu.hugegraph.computer.core.graph.properties.Properties;
 import com.baidu.hugegraph.computer.core.graph.vertex.DefaultVertex;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.manager.Manager;
-import com.baidu.hugegraph.computer.core.network.message.MessageType;
+//import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.rpc.InputSplitRpcService;
 import com.baidu.hugegraph.computer.core.sender.MessageSendManager;
 import com.baidu.hugegraph.computer.core.worker.load.LoadService;
 import com.baidu.hugegraph.computer.core.graph.value.BooleanValue;
+import com.baidu.hugegraph.util.ExecutorUtil;
 
 public class WorkerInputManager implements Manager {
 
@@ -45,7 +51,8 @@ public class WorkerInputManager implements Manager {
      * Fetch vertices and edges from the data source and convert them
      * to computer-vertices and computer-edges
      */
-    private final LoadService loadService;
+    private final List<LoadService> loadServices;
+    private final ExecutorService loadExecutor;
     private final GraphFactory graphFactory;
     /*
      * Send vertex/edge or message to target worker
@@ -55,9 +62,19 @@ public class WorkerInputManager implements Manager {
 
     public WorkerInputManager(ComputerContext context,
                               MessageSendManager sendManager) {
-        this.loadService = new LoadService(context);
+        this.loadServices = new ArrayList<>();
+
         this.sendManager = sendManager;
         this.graphFactory = context.graphFactory();
+
+        Integer parallelNum = context.config().get(
+                ComputerOptions.INPUT_PARALLEL_NUM);
+        this.loadExecutor = ExecutorUtil.newFixedThreadPool(parallelNum,
+                "load-data-%d");
+        for (int i = 0; i < parallelNum; i++) {
+            LoadService loadService = new LoadService(context);
+            this.loadServices.add(loadService);
+        }
     }
 
     @Override
@@ -67,19 +84,25 @@ public class WorkerInputManager implements Manager {
 
     @Override
     public void init(Config config) {
-        this.loadService.init();
+        for (LoadService loadService : this.loadServices) {
+            loadService.init();
+        }
         this.sendManager.init(config);
         this.config = config;
     }
 
     @Override
     public void close(Config config) {
-        this.loadService.close();
+        for (LoadService loadService : this.loadServices) {
+            loadService.close();
+        }
         this.sendManager.close(config);
     }
 
     public void service(InputSplitRpcService rpcService) {
-        this.loadService.rpcService(rpcService);
+        for (LoadService loadService : this.loadServices) {
+            loadService.rpcService(rpcService);
+        }
     }
 
     /**
@@ -88,57 +111,88 @@ public class WorkerInputManager implements Manager {
      * but there is no guarantee that all of them has been received.
      */
     public void loadVertex() {
-        Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
-        while (iterator.hasNext()) {
-            Vertex vertex = iterator.next();
-            if (vertex.id().length() >= 256) {
-                //filter too long id
-                System.out.printf("too long id");
-                continue;
-            }
-            this.sendManager.sendVertex(vertex);
+        List<Future<?>> futures = new ArrayList<>(this.loadServices.size());
+
+        for (LoadService service : this.loadServices) {
+            Future<?> future = this.loadExecutor.submit(() -> {
+                Iterator<Vertex> iterator = service.createIteratorFromVertex();
+                while (iterator.hasNext()) {
+                    Vertex vertex = iterator.next();
+                    this.sendManager.sendVertex(vertex);
+                }
+            });
+            futures.add(future);
         }
+
+        try {
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        } catch (Throwable t) {
+            throw new ComputerException("An exception occurred when" +
+                    "parallel load vertex", t);
+        }
+
+        //this.loadExecutor.shutdown();
     }
 
     public void loadEdge() {
-        Iterator<Vertex>  iterator = this.loadService.createIteratorFromEdge();
-        while (iterator.hasNext()) {
-            Vertex vertex = iterator.next();
-            this.sendManager.sendEdge(vertex);
-            //inverse edge here
-            if (!this.config.get(ComputerOptions.
-                                     USE_ID_FIXLENGTH)) {
-                if (!this.config.get(
-                       ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION)) {
-                    continue;
-                }
-            }
-            for (Edge edge:vertex.edges()) {
-                Id targetId = edge.targetId();
-                Id sourceId = vertex.id();
+        List<Future<?>> futures = new ArrayList<>(this.loadServices.size());
+        for (LoadService service : this.loadServices) {
+            Future<?> future = this.loadExecutor.submit(() -> {
+                Iterator<Vertex> iterator = service.createIteratorFromEdge();
+                while (iterator.hasNext()) {
+                    Vertex vertex = iterator.next();
+                    this.sendManager.sendEdge(vertex);
+                    //inverse edge here
+                    if (!this.config.get(ComputerOptions.
+                                             USE_ID_FIXLENGTH)) {
+                        if (!this.config.get(ComputerOptions.
+                                VERTEX_WITH_EDGES_BOTHDIRECTION)) {
+                            continue;
+                        }
+                    }
+                    for (Edge edge:vertex.edges()) {
+                        Id targetId = edge.targetId();
+                        Id sourceId = vertex.id();
 
-                if (targetId.length() >= 256 ||
-                    sourceId.length() >= 256 ||
-                    edge.id().length() >= 256) {
-                    //filter too long id
-                    System.out.printf("too long id");
-                    continue;
-                }
+                        if (targetId.length() >= 256 ||
+                            sourceId.length() >= 256 ||
+                            edge.id().length() >= 256) {
+                            //filter too long id
+                            System.out.printf("too long id");
+                            continue;
+                        }
 
-                Vertex vertexInv = new DefaultVertex(graphFactory,
-                                                  targetId, null);
-                Edge edgeInv = graphFactory.
-                               createEdge(edge.label(), edge.name(), sourceId
-                );
-                Properties properties = edge.properties();
-                properties.put("inv", new BooleanValue(true));
-                edgeInv.properties(properties);
-                vertexInv.addEdge(edgeInv);
-                this.sendManager.sendEdge(vertexInv);
-           }
+                        Vertex vertexInv = new DefaultVertex(graphFactory,
+                                                          targetId, null);
+                        Edge edgeInv = graphFactory.createEdge(edge.label(),
+                                edge.name(), sourceId
+                        );
+                        Properties properties = edge.properties();
+                        properties.put("inv", new BooleanValue(true));
+                        edgeInv.properties(properties);
+                        vertexInv.addEdge(edgeInv);
+                        this.sendManager.sendEdge(vertexInv);
+                   }
+                }
+            });
+            futures.add(future);
         }
+
+        try {
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        } catch (Throwable t) {
+            throw new ComputerException("An exception occurred when" +
+                    "parallel load edge", t);
+        }
+
+        this.loadExecutor.shutdown();
     }
 
+    /*
     public void loadGraph() {
         this.sendManager.startSend(MessageType.VERTEX);
         Iterator<Vertex> iterator = this.loadService.createIteratorFromVertex();
@@ -178,5 +232,5 @@ public class WorkerInputManager implements Manager {
            }
         }
         this.sendManager.finishSend(MessageType.EDGE);
-    }
+    }*/
 }
