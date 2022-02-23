@@ -43,6 +43,7 @@ public class HugeVertexFetcher extends HugeElementFetcher<Vertex>
     public Iterator<Vertex> fetch(InputSplit split) {
         Shard shard = toShard(split);
         ConditionQuery query = new ConditionQuery(HugeType.VERTEX);
+        query.capacity(query.NO_CAPACITY);
         query.scan(shard.start(), shard.end());
 
         String filterClassName = this.config().get(

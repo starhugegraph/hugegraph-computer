@@ -43,7 +43,9 @@ public class HugeEdgeFetcher extends HugeElementFetcher<Edge>
     public Iterator<Edge> fetch(InputSplit split) {
         Shard shard = toShard(split);
         ConditionQuery query = new ConditionQuery(HugeType.EDGE);
+        query.capacity(query.NO_CAPACITY);
         query.scan(shard.start(), shard.end());
+        
         String filterClassName = this.config().get(
                 ComputerOptions.INPUT_FILTER_CLASS).getName();
         if (filterClassName.contains("DefaultInputFilter"))
