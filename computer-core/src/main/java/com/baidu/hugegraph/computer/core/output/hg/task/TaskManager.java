@@ -78,6 +78,8 @@ public final class TaskManager {
         String graphName = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
         String[] parts = graphName.split("/");
 
+        propConfig.setProperty(CoreOptions.GRAPH_SPACE.name(),
+                parts[0]);
         propConfig.setProperty(CoreOptions.STORE.name(),
                                parts[parts.length - 1]);
         HugeConfig hugeConfig = new HugeConfig(propConfig);
