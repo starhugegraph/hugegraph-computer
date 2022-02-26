@@ -488,6 +488,7 @@ public class WorkerService implements Closeable {
      * can exit successfully.
      */
     private void outputstep() {
+        this.bsp4Worker.waitMasterOutputInit();
         this.computeManager.output();
         this.bsp4Worker.workerOutputDone();
         LOG.info("{} WorkerService outputstep finished", this);

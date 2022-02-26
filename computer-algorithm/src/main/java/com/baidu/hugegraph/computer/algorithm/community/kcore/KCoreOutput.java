@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.kcore;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
@@ -30,8 +31,8 @@ import com.baidu.hugegraph.type.define.WriteType;
 public class KCoreOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asInt()
                              .writeType(WriteType.OLAP_COMMON)
                              .ifNotExist()

@@ -23,6 +23,8 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import com.baidu.hugegraph.backend.store.BackendProviderFactory;
+import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
@@ -73,6 +75,15 @@ public class MasterService implements Closeable {
 
     private final ShutdownHook shutdownHook;
     private volatile Thread serviceThread;
+
+    static {
+        // Register config
+        OptionSpace.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
+        // Register backend
+        BackendProviderFactory.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
+    }
 
     public MasterService() {
         this.context = ComputerContext.instance();
@@ -163,6 +174,7 @@ public class MasterService implements Closeable {
 
         this.closed = true;
         LOG.info("{} MasterService closed", this);
+        System.exit(0);
     }
 
     private void cleanAndCloseBsp() {
@@ -396,10 +408,12 @@ public class MasterService implements Closeable {
     private void outputstep() {
         LOG.info("{} MasterService outputstep started", this);
         this.masterComputation.output();
+        ComputerOutput output = this.config.createObject(
+                ComputerOptions.OUTPUT_CLASS);
+        output.masterInit(this.config);
+        this.bsp4Master.masterOutputInit();
         this.bsp4Master.waitWorkersOutputDone();
         // Merge output files of multiple partitions
-        ComputerOutput output = this.config.createObject(
-                                ComputerOptions.OUTPUT_CLASS);
         output.mergePartitions(this.config);
         LOG.info("{} MasterService outputstep finished", this);
     }

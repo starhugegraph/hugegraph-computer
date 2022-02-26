@@ -46,6 +46,10 @@ public interface ComputerOutput {
         // pass
     }
 
+    default void masterInit(Config config) {
+        // pass
+    }
+
     /**
      * Close the connection to target output system. Commit if target output
      * required.

@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.cc;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
@@ -36,8 +37,8 @@ public class ClusteringCoefficientOutput extends HugeOutput {
     private static final int SINGLE_NODE_DEGREE = 1;
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asFloat()
                              .writeType(WriteType.OLAP_RANGE)
                              .ifNotExist()

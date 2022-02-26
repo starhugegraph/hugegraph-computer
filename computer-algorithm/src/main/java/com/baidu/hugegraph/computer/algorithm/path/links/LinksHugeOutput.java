@@ -1,5 +1,6 @@
 package com.baidu.hugegraph.computer.algorithm.path.links;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
@@ -14,8 +15,8 @@ import java.util.List;
 public class LinksHugeOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asText()
                              .writeType(WriteType.OLAP_COMMON)
                              .valueList()
