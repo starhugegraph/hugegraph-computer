@@ -22,6 +22,7 @@ package com.baidu.hugegraph.computer.algorithm.path.subgraph;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.graph.value.IdListList;
@@ -34,8 +35,8 @@ import com.baidu.hugegraph.type.define.WriteType;
 public class SubGraphMatchHugeOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asText()
                              .writeType(WriteType.OLAP_COMMON)
                              .valueList()

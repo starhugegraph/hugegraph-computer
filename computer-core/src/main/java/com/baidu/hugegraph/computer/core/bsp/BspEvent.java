@@ -39,7 +39,8 @@ public enum BspEvent {
     BSP_WORKER_STEP_DONE(15, "/worker/step_done"),
     BSP_MASTER_STEP_DONE(16, "/master/step_done"),
     BSP_WORKER_OUTPUT_DONE(17, "/worker/output_done"),
-    BSP_WORKER_CLOSE_DONE(18, "/worker/close_done");
+    BSP_WORKER_CLOSE_DONE(18, "/worker/close_done"),
+    BSP_MASTER_OUTPUT_INIT(19, "/master/output_init");
 
     private byte code;
     private String key;

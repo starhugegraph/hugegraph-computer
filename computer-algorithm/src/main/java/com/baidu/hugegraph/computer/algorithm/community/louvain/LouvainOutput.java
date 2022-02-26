@@ -19,9 +19,11 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 //import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.value.StringValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
@@ -35,8 +37,14 @@ import com.baidu.hugegraph.testutil.Whitebox;
 public class LouvainOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void init(Config config, int partition) {
+        super.init(config, partition);
+        this.prepareSchema(this.graph());
+    }
+
+    @Override
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asText()
                              .writeType(WriteType.OLAP_COMMON)
                              .ifNotExist()

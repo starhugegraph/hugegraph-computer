@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.betweenness;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.schema.VertexLabel;
 import com.baidu.hugegraph.testutil.Whitebox;
@@ -32,8 +33,8 @@ import com.baidu.hugegraph.type.define.WriteType;
 public class BetweennessCentralityOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asDouble()
                              .writeType(WriteType.OLAP_RANGE)
                              .ifNotExist()
