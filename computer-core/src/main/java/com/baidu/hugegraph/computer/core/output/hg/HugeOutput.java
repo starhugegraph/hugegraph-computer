@@ -20,10 +20,17 @@
 package com.baidu.hugegraph.computer.core.output.hg;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.config.CoreOptions;
+import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.testutil.Whitebox;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.MapConfiguration;
+import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeGraph;
@@ -52,18 +59,57 @@ public abstract class HugeOutput extends AbstractComputerOutput {
         this.vertexBatch = new ArrayList<>();
         this.batchSize = config.get(ComputerOptions.OUTPUT_BATCH_SIZE);
 
-        this.prepareSchema();
-
         SchemaTransaction stx = Whitebox.invoke(this.graph().getClass(),
                 "schemaTransaction", this.graph());
         stx.initAndRegisterOlapTables();
+    }
+
+    @Override
+    public void masterInit(Config config) {
+        super.init(config, 1);
+
+        Map<String, Object> configs = new HashMap<>();
+        String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
+        // TODO: add auth check
+        configs.put("pd.peers", pdPeers);
+        configs.put("backend", "hstore");
+        configs.put("serializer", "binary");
+        configs.put("search.text_analyzer", "jieba");
+        configs.put("search.text_analyzer_mode", "INDEX");
+        configs.put("gremlin.graph", "com.baidu.hugegraph.HugeFactory");
+
+        Configuration propConfig = new MapConfiguration(configs);
+        String graphName = config.get(ComputerOptions.HUGEGRAPH_GRAPH_NAME);
+        String[] parts = graphName.split("/");
+
+        propConfig.setProperty(CoreOptions.GRAPH_SPACE.name(),
+                parts[0]);
+        propConfig.setProperty(CoreOptions.STORE.name(),
+                parts[parts.length - 1]);
+        HugeConfig hugeConfig = new HugeConfig(propConfig);
+        HugeGraph graph;
+        try {
+            graph = (HugeGraph) GraphFactory.open(hugeConfig);
+        } catch (Throwable e) {
+            LOG.error("Exception occur when open graph", e);
+            throw e;
+        }
+        graph.graphSpace(parts[0]);
+
+        try {
+            this.prepareSchema(graph);
+            graph.close();
+        } catch (Throwable e) {
+            LOG.error("prepareSchema {}", e);
+        }
+
     }
 
     public HugeGraph graph() {
         return this.taskManager.graph();
     }
 
-    public abstract void prepareSchema();
+    public abstract void prepareSchema(HugeGraph graph);
 
     @Override
     public void write(Vertex vertex) {

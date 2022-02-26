@@ -182,6 +182,15 @@ public class Bsp4Worker extends BspBase {
         LOG.info("Worker({}) waited master input-done", this.workerInfo.id());
     }
 
+    public void waitMasterOutputInit() {
+        LOG.info("Worker({}) is waiting for master output-init",
+                this.workerInfo.id());
+        String path = this.constructPath(BspEvent.BSP_MASTER_OUTPUT_INIT);
+        this.bspClient().get(path, this.barrierOnMasterTimeout(),
+                this.logInterval());
+        LOG.info("Worker({}) waited master output-init", this.workerInfo.id());
+    }
+
     /**
      * Worker set this signal to indicate the worker is ready to receive
      * messages from other workers.

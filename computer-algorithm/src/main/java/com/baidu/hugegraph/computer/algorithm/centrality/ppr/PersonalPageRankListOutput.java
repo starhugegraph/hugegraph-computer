@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.ppr;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.edge.Edges;
 import com.baidu.hugegraph.computer.core.graph.id.Id;
@@ -36,8 +37,8 @@ public class PersonalPageRankListOutput extends HugeOutput {
     public static final int TOP_N = 100;
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                      .asText()
                      .writeType(WriteType.OLAP_COMMON)
                      .ifNotExist()

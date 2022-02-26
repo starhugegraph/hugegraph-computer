@@ -150,6 +150,12 @@ public class Bsp4Master extends BspBase {
         this.bspClient().put(path, Constants.EMPTY_BYTES);
     }
 
+    public void masterOutputInit() {
+        LOG.info("Master set output-init");
+        String path = this.constructPath(BspEvent.BSP_MASTER_OUTPUT_INIT);
+        this.bspClient().put(path, Constants.EMPTY_BYTES);
+    }
+
     /**
      * Wait workers finish specified superstep. The master receives the
      * worker stat from all workers, calls algorithm's master computation,

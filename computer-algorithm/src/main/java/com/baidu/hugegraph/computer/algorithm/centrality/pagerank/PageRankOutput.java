@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.pagerank;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 //import com.baidu.hugegraph.backend.tx.SchemaTransaction;
@@ -35,8 +36,8 @@ import com.baidu.hugegraph.testutil.Whitebox;
 public class PageRankOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                              .asDouble()
                              .writeType(WriteType.OLAP_RANGE)
                              .ifNotExist()

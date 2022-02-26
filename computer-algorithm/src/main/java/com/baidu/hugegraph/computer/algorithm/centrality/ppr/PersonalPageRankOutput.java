@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.computer.algorithm.centrality.ppr;
 
+import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.type.define.WriteType;
@@ -31,8 +32,8 @@ import com.baidu.hugegraph.backend.id.IdGenerator;
 public class PersonalPageRankOutput extends HugeOutput {
 
     @Override
-    public void prepareSchema() {
-        this.graph().schema().propertyKey(this.name())
+    public void prepareSchema(HugeGraph graph) {
+        graph.schema().propertyKey(this.name())
                      .asDouble()
                      .writeType(WriteType.OLAP_COMMON)
                      .ifNotExist()
