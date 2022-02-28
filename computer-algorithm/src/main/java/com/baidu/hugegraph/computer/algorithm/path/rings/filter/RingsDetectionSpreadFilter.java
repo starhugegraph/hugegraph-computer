@@ -45,6 +45,7 @@ public class RingsDetectionSpreadFilter {
     private static final String IN = "$in";
     private static final String OUT = "$out";
 
+    private final Map<String, Expression> startVertexFilter;
     private final Map<String, Expression> vertexFilter;
     private final Map<String, Expression> edgeFilter;
 
@@ -52,9 +53,11 @@ public class RingsDetectionSpreadFilter {
         RingsDetectionFilterDescribe filter =
                                      RingsDetectionFilterDescribe.of(describe);
 
+        this.startVertexFilter = new HashMap<>();
         this.vertexFilter = new HashMap<>();
         this.edgeFilter = new HashMap<>();
 
+        this.init(this.startVertexFilter, filter.startVertexFilter());
         this.init(this.vertexFilter, filter.vertexFilter());
         this.init(this.edgeFilter, filter.edgeFilter());
     }
@@ -76,12 +79,20 @@ public class RingsDetectionSpreadFilter {
         }
     }
 
+    public boolean filterStartVertex(Vertex vertex) {
+        return this.filter(this.startVertexFilter, vertex);
+    }
+
     public boolean filter(Vertex vertex) {
+        return this.filter(this.vertexFilter, vertex);
+    }
+
+    private boolean filter(Map<String, Expression> filter, Vertex vertex) {
         if (isLabelCannotSpread(this.vertexFilter, vertex.label())) {
             return false;
         }
 
-        List<Expression> expressions = expressions(this.vertexFilter,
+        List<Expression> expressions = expressions(filter,
                                                    vertex.label(),
                                                    expression -> true);
         if (CollectionUtils.isEmpty(expressions)) {
