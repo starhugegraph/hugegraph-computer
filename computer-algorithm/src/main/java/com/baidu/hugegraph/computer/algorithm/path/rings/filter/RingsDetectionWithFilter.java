@@ -56,7 +56,8 @@ public class RingsDetectionWithFilter implements
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
         vertex.value(new IdListList());
-        if (vertex.edges().size() == 0 || !this.filter.filter(vertex)) {
+        if (vertex.edges().size() == 0 ||
+            !this.filter.filterStartVertex(vertex)) {
             return;
         }
 
