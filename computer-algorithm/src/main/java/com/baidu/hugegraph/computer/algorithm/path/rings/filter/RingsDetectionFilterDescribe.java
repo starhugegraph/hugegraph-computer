@@ -31,15 +31,21 @@ import com.google.common.collect.ImmutableList;
 
 public class RingsDetectionFilterDescribe {
 
+    private final List<PropertyFilterDescribe> startVertexFilter;
     private final List<PropertyFilterDescribe> vertexFilter;
     private final List<PropertyFilterDescribe> edgeFilter;
 
     @JsonCreator
     private RingsDetectionFilterDescribe(
+            @JsonProperty("start_vertex_filter")
+            List<PropertyFilterDescribe> startVertexFilter,
             @JsonProperty("vertex_filter")
             List<PropertyFilterDescribe> vertexFilter,
             @JsonProperty("edge_filter")
             List<PropertyFilterDescribe> edgeFilter) {
+        this.startVertexFilter = CollectionUtils.isEmpty(startVertexFilter) ?
+                                 ImmutableList.of() :
+                                 ImmutableList.copyOf(startVertexFilter);
         this.vertexFilter = CollectionUtils.isEmpty(vertexFilter) ?
                             ImmutableList.of() :
                             ImmutableList.copyOf(vertexFilter);
@@ -50,6 +56,10 @@ public class RingsDetectionFilterDescribe {
 
     public static RingsDetectionFilterDescribe of(String describe) {
         return JsonUtil.fromJson(describe, RingsDetectionFilterDescribe.class);
+    }
+
+    public List<PropertyFilterDescribe> startVertexFilter() {
+        return this.startVertexFilter;
     }
 
     public List<PropertyFilterDescribe> vertexFilter() {
