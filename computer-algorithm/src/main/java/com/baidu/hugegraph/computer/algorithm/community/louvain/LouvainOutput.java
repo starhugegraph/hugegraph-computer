@@ -23,6 +23,7 @@ import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
 //import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.backend.tx.SchemaTransaction;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.value.StringValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
@@ -32,14 +33,26 @@ import com.baidu.hugegraph.structure.HugeVertex;
 import com.baidu.hugegraph.type.define.WriteType;
 //import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import com.baidu.hugegraph.testutil.Whitebox;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 
 public class LouvainOutput extends HugeOutput {
+    private static final Logger LOG = Log.logger(LouvainOutput.class);
 
     @Override
     public void init(Config config, int partition) {
         super.init(config, partition);
-        this.prepareSchema(this.graph());
+
+        try {
+            this.prepareSchema(this.graph());
+        } catch (Throwable e) {
+            LOG.error("prepareSchema {}", e);
+        }
+
+        SchemaTransaction stx = Whitebox.invoke(this.graph().getClass(),
+                "schemaTransaction", this.graph());
+        stx.initAndRegisterOlapTables();
     }
 
     @Override
