@@ -288,10 +288,23 @@ public class ComputeManager {
 
     public void output() {
         // TODO: Write results back parallel
-        for (FileGraphPartition partition : this.partitions.values()) {
+        Consumer<FileGraphPartition> consumer = partition -> {
             PartitionStat stat = partition.output();
             LOG.info("Output partition {} complete, stat='{}'",
                      partition.partition(), stat);
+        };
+        Consumers<FileGraphPartition> consumers =
+                new Consumers<>(this.partitionExecutor, consumer);
+
+        try {
+            for (FileGraphPartition partition : this.partitions.values()) {
+                consumers.provide(partition);
+            }
+            consumers.start("partitions-output");
+
+            consumers.await();
+        } catch (Throwable t) {
+            LOG.error("FileGraphPartition output {}", t);
         }
     }
 
