@@ -58,8 +58,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -482,13 +482,8 @@ public class FileGraphPartition {
 
         Value<?> result = this.context.config().createObject(
                           ComputerOptions.ALGORITHM_RESULT_CLASS);
-        while (true) {
-            byte[] data = this.edgesInput.getOneVertexBuffer();
-            if (data == null) {
-                break;
-            }
-            Vertex vertex = this.edgesInput.
-                    composeVertex(data, true);
+        while (this.vertexInput.hasNext()) {
+            Vertex vertex = this.vertexInput.next();
             this.readVertexStatusAndValue(vertex, result);
 
             if (!this.useVariableLengthOnly) {
@@ -497,6 +492,8 @@ public class FileGraphPartition {
                     vertex.id(vertex1.id());
                 }
             }
+            Edges edges = this.edgesInput.edges(this.vertexInput.idPointer());
+            vertex.edges(edges);
             output.write(vertex);
         }
 
