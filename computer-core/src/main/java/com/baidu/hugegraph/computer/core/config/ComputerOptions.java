@@ -104,6 +104,13 @@ public class ComputerOptions extends OptionHolder {
                     "localhost"
             );
 
+    public static final ConfigOption<Integer> INPUT_PARALLEL_NUM =
+            new ConfigOption<>(
+                    "input.parallel_num",
+                    "The number of parallel input",
+                    4
+            );
+
     public static final ConfigOption<Integer> INPUT_SPLIT_FETCH_TIMEOUT =
             new ConfigOption<>(
                     "input.split_fetch_timeout",
@@ -664,7 +671,7 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph.name",
                     "The graph name to load data and write results back.",
                     disallowEmpty(),
-                    "hugegraph"
+                    "DEFAULT/hugegraph"
             );
 
     public static final ConfigOption<String> TRANSPORT_SERVER_HOST =
