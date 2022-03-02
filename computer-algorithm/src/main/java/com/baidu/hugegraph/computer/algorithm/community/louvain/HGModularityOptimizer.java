@@ -248,8 +248,8 @@ public class HGModularityOptimizer {
 
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
-        List<Integer> node1 = new ArrayList<>(this.initialCapacity);
-        List<Integer> node2 = new ArrayList<>(this.initialCapacity);
+        List<Integer> node1 = new ArrayList<>(); //(this.initialCapacity);
+        List<Integer> node2 = new ArrayList<>();
         //List<Object> originalNode2 = new LinkedList<>();
         List<Double> edgeWeight1 = new ArrayList<>();
         int nums = 0;
@@ -263,8 +263,12 @@ public class HGModularityOptimizer {
             Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
                     hgFetcher.createIteratorFromEdge();
 
-            BufferedWriter bufferedWriter = new BufferedWriter(
+            BufferedWriter bufferedWriterTarget = new BufferedWriter(
                     new FileWriter("targetid.dat"));
+            BufferedWriter bufferedWriterSource = new BufferedWriter(
+                    new FileWriter("sourceid.dat"));
+            BufferedWriter bufferedWriterWeight = new BufferedWriter(
+                    new FileWriter("weight.dat"));
             while (iterator.hasNext()) {
                 com.baidu.hugegraph.structure.HugeEdge edge = iterator.next();
                 if (System.currentTimeMillis() - lastTime >=
@@ -276,11 +280,12 @@ public class HGModularityOptimizer {
                                 edge.sourceVertex().id().asObject())
                         .asObject());
 
-                node1.add(sourceId);
+                //node1.add(sourceId);
+                bufferedWriterSource.write(sourceId.toString() + "\n");
                 /*originalNode2.add(HugeConverter.convertId(
                                 edge.targetVertex().id().asObject())
                         .asObject());*/
-                bufferedWriter.write(HugeConverter.convertId(
+                bufferedWriterTarget.write(HugeConverter.convertId(
                         edge.targetVertex().id().asObject()).asObject()
                         .toString() + "\n");
 
@@ -292,10 +297,13 @@ public class HGModularityOptimizer {
                         weight = weight_;
                     }
                 }
-                edgeWeight1.add(weight);
+                //edgeWeight1.add(weight);
+                bufferedWriterWeight.write(weight.toString() + "\n");
                 nums++;
             }
-            bufferedWriter.close();
+            bufferedWriterTarget.close();
+            bufferedWriterSource.close();
+            bufferedWriterWeight.close();
 
             // Covert targetId
             /*
@@ -306,13 +314,30 @@ public class HGModularityOptimizer {
                 iterator2.remove();
             }
             originalNode2 = null;*/
-            BufferedReader bufferedReader = new
-                    BufferedReader(new FileReader("targetid.dat"));
+            LOG.info("start load edge id and weight from file");
             String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
+            node2 = new ArrayList<>(nums + 100);
+            BufferedReader bufferedReaderTarget = new
+                    BufferedReader(new FileReader("targetid.dat"));
+            while ((line = bufferedReaderTarget.readLine()) != null) {
                 node2.add(this.covertId(line));
             }
 
+            node1 = new ArrayList<>(nums + 100);
+            BufferedReader bufferedReaderSource = new
+                    BufferedReader(new FileReader("sourceid.dat"));
+            while ((line = bufferedReaderSource.readLine()) != null) {
+                node1.add(Integer.valueOf(line));
+            }
+
+            edgeWeight1 = new ArrayList<>(nums + 100);
+            BufferedReader bufferedReaderWeight = new
+                    BufferedReader(new FileReader("weight.dat"));
+            while ((line = bufferedReaderWeight.readLine()) != null) {
+                edgeWeight1.add(Double.valueOf(line));
+            }
+
+            LOG.info("start load vertex from hugegraph");
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
                     hgFetcher.createIteratorFromVertex();
             while (iteratorV.hasNext()) {
@@ -365,6 +390,7 @@ public class HGModularityOptimizer {
 
         node1 = null;
         node2 = null;
+        edgeWeight1 = null;
         System.gc();
 
         double[] nodeWeight = new double[nNodes];
