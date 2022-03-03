@@ -24,8 +24,8 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.baidu.hugegraph.computer.algorithm.path.filter.PropertyFilterDescribe;
+import com.baidu.hugegraph.computer.core.util.JsonUtil;
 import com.baidu.hugegraph.util.E;
-import com.baidu.hugegraph.util.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
