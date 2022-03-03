@@ -249,8 +249,7 @@ public class HGModularityOptimizer {
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
         List<Integer> node1 = new ArrayList<>(); //(this.initialCapacity);
-        //List<Integer> node2 = new ArrayList<>();
-        int[] node2 = new int[10];
+        List<Integer> node2 = new ArrayList<>();
         //List<Object> originalNode2 = new LinkedList<>();
         List<Double> edgeWeight1 = new ArrayList<>();
         int nums = 0;
@@ -315,17 +314,15 @@ public class HGModularityOptimizer {
                 iterator2.remove();
             }
             originalNode2 = null;*/
-            LOG.info("start load edge target id from file");
+            LOG.info("start load edge id and weight from file");
             String line = null;
-            node2 = new int[nums + 100];
+            node2 = new ArrayList<>(nums + 100);
             BufferedReader bufferedReaderTarget = new
                     BufferedReader(new FileReader("targetid.dat"));
-            i = 0;
             while ((line = bufferedReaderTarget.readLine()) != null) {
-                node2[i++] = this.covertId(line);
+                node2.add(this.covertId(line));
             }
 
-            LOG.info("start load edge source id from file");
             node1 = new ArrayList<>(nums + 100);
             BufferedReader bufferedReaderSource = new
                     BufferedReader(new FileReader("sourceid.dat"));
@@ -333,7 +330,6 @@ public class HGModularityOptimizer {
                 node1.add(Integer.valueOf(line));
             }
 
-            LOG.info("start load edge weight from file");
             edgeWeight1 = new ArrayList<>(nums + 100);
             BufferedReader bufferedReaderWeight = new
                     BufferedReader(new FileReader("weight.dat"));
@@ -362,9 +358,9 @@ public class HGModularityOptimizer {
         int nNodes = this.maxId + 1;
         int[] nNeighbors = new int[nNodes];
         for (i = 0; i < nums; i++) {
-            if (node1.get(i) < node2[i]) {
+            if (node1.get(i) < node2.get(i)) {
                 nNeighbors[node1.get(i)]++;
-                nNeighbors[node2[i]]++;
+                nNeighbors[node2.get(i)]++;
             }
         }
 
@@ -380,15 +376,15 @@ public class HGModularityOptimizer {
         double[] edgeWeight2 = new double[nEdges];
         Arrays.fill(nNeighbors, 0);
         for (i = 0; i < nums; i++) {
-            if (node1.get(i) < node2[i]) {
+            if (node1.get(i) < node2.get(i)) {
                 j = firstNeighborIndex[node1.get(i)] + nNeighbors[node1.get(i)];
-                neighbor[j] = node2[i];
+                neighbor[j] = node2.get(i);
                 edgeWeight2[j] = edgeWeight1.get(i);
                 nNeighbors[node1.get(i)]++;
-                j = firstNeighborIndex[node2[i]] + nNeighbors[node2[i]];
+                j = firstNeighborIndex[node2.get(i)] + nNeighbors[node2.get(i)];
                 neighbor[j] = node1.get(i);
                 edgeWeight2[j] = edgeWeight1.get(i);
-                nNeighbors[node2[i]]++;
+                nNeighbors[node2.get(i)]++;
             }
         }
 
