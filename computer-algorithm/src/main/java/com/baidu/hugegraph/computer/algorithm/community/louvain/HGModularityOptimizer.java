@@ -248,7 +248,8 @@ public class HGModularityOptimizer {
 
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
-        List<Integer> node1 = new LinkedList<>(); //(this.initialCapacity);
+        List<Integer> node1 = new ArrayList<>(1470000000);
+        //(this.initialCapacity);
         List<Integer> node2 = new LinkedList<>();
         //List<Object> originalNode2 = new LinkedList<>();
         List<Double> edgeWeight1 = new LinkedList<>();
@@ -289,7 +290,7 @@ public class HGModularityOptimizer {
                 Integer targetId = this.covertId(HugeConverter.convertId(
                         edge.targetVertex().id().asObject())
                         .asObject());
-                node2.add(targetId);
+                //node2.add(targetId);
                 //bufferedWriterTarget.write(targetId.toString() + "\n");
 
                 Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
@@ -300,7 +301,7 @@ public class HGModularityOptimizer {
                         weight = weight_;
                     }
                 }
-                edgeWeight1.add(weight);
+                //edgeWeight1.add(weight);
                 //bufferedWriterWeight.write(weight.toString() + "\n");
                 nums++;
             }
