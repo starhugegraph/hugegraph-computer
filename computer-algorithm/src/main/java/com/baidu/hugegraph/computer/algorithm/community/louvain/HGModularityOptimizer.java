@@ -28,14 +28,13 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NotSupportedException;
@@ -44,6 +43,8 @@ import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.value.StringValue;
 import com.baidu.hugegraph.computer.core.input.HugeConverter;
+import com.baidu.hugegraph.computer.core.io.BufferedFileInput;
+import com.baidu.hugegraph.computer.core.io.BufferedFileOutput;
 import com.baidu.hugegraph.computer.core.output.ComputerOutput;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -262,7 +263,8 @@ public class HGModularityOptimizer {
 
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
-        List<Entry> edgeList = new ArrayList<>(1470000000);
+        Entry[] edgeList = new Entry[1];
+        //List<Entry> edgeList = new ArrayList<>(1470000000);
         //List<Integer> node1 = new ArrayList<>(1470000000);
         //(this.initialCapacity);
         //List<Integer> node2 = new LinkedList<>();
@@ -278,12 +280,8 @@ public class HGModularityOptimizer {
             Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
                     hgFetcher.createIteratorFromEdge();
 
-            /*BufferedWriter bufferedWriterTarget = new BufferedWriter(
-                    new FileWriter("targetid.dat"));
-            BufferedWriter bufferedWriterSource = new BufferedWriter(
-                    new FileWriter("sourceid.dat"));
-            BufferedWriter bufferedWriterWeight = new BufferedWriter(
-                    new FileWriter("weight.dat"));*/
+            BufferedFileOutput bufferedWriterEdge = new BufferedFileOutput(
+                    new File("edgelist.dat"));
             while (iterator.hasNext()) {
                 com.baidu.hugegraph.structure.HugeEdge edge = iterator.next();
                 if (System.currentTimeMillis() - lastTime >=
@@ -316,17 +314,18 @@ public class HGModularityOptimizer {
                     }
                 }
 
-                edgeList.add(new Entry(sourceId,targetId,weight));
+                //edgeList.add(new Entry(sourceId,targetId,weight));
                 //edgeWeight1.add(weight);
-                //bufferedWriterWeight.write(weight.toString() + "\n");
+                bufferedWriterEdge.writeInt(sourceId);
+                bufferedWriterEdge.writeInt(targetId);
+                bufferedWriterEdge.writeFloat(weight);
+
                 nums++;
             }
-            /*bufferedWriterTarget.close();
-            bufferedWriterSource.close();
-            bufferedWriterWeight.close();
+            bufferedWriterEdge.close();
 
             // Covert targetId
-
+            /*
             Iterator<Object> iterator2 = originalNode2.iterator();
             while (iterator2.hasNext()) {
                 Object id = iterator2.next();
@@ -334,8 +333,18 @@ public class HGModularityOptimizer {
                 iterator2.remove();
             }
             originalNode2 = null;*/
-            /*LOG.info("start load edge id and weight from file");
-            String line = null;
+            LOG.info("start load edge id and weight from file");
+            edgeList = new Entry[nums];
+            BufferedFileInput bufferedReaderEdge = new BufferedFileInput(
+                    new File("edgelist.dat"));
+            for (i = 0; i < nums; i++) {
+                int sourceid = bufferedReaderEdge.readInt();
+                int targetid = bufferedReaderEdge.readInt();
+                float weight = bufferedReaderEdge.readFloat();
+                edgeList[i] = new Entry(sourceid,targetid,weight);
+            }
+
+            /*String line = null;
             node2 = new ArrayList<>(nums + 100);
             BufferedReader bufferedReaderTarget = new
                     BufferedReader(new FileReader("targetid.dat"));
@@ -358,15 +367,13 @@ public class HGModularityOptimizer {
             }*/
 
             LOG.info("sort edgelist");
-            Collections.sort(edgeList, new Comparator<Entry>() {
-
+            /*Collections.sort(edgeList, new Comparator<Entry>() {
                 @Override
                 public int compare(Entry data1, Entry data2) {
                     // TODO Auto-generated method stub
                     return data1.srcid - data2.srcid;
                 }
-
-            });
+            });*/
 
             LOG.info("start load vertex from hugegraph");
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
@@ -378,20 +385,22 @@ public class HGModularityOptimizer {
                         vertex.id().asObject()).asObject());
             }
             hgFetcher.close();
+
         } catch (Exception e) {
             LOG.error("readFromHG:", e);
         }
         watcher.stop();
+
         LOG.info("Load data complete, cost: {}, nums: {}",
-                 TimeUtil.readableTime(watcher.getTime()),
-                 nums);
+                TimeUtil.readableTime(watcher.getTime()),
+                nums);
 
         int nNodes = this.maxId + 1;
         int[] nNeighbors = new int[nNodes];
         for (i = 0; i < nums; i++) {
-            if (edgeList.get(i).srcid < edgeList.get(i).targetid) {
-                nNeighbors[edgeList.get(i).srcid]++;
-                nNeighbors[edgeList.get(i).targetid]++;
+            if (edgeList[i].srcid < edgeList[i].targetid) {
+                nNeighbors[edgeList[i].srcid]++;
+                nNeighbors[edgeList[i].targetid]++;
             }
         }
 
@@ -407,16 +416,16 @@ public class HGModularityOptimizer {
         double[] edgeWeight2 = new double[nEdges];
         Arrays.fill(nNeighbors, 0);
         for (i = 0; i < nums; i++) {
-            int sourceid = edgeList.get(i).srcid;
-            int targetid = edgeList.get(i).targetid;
+            int sourceid = edgeList[i].srcid;
+            int targetid = edgeList[i].targetid;
             if (sourceid < targetid) {
                 j = firstNeighborIndex[sourceid] + nNeighbors[sourceid];
                 neighbor[j] = targetid;
-                edgeWeight2[j] = edgeList.get(i).weight;
+                edgeWeight2[j] = edgeList[i].weight;
                 nNeighbors[sourceid]++;
                 j = firstNeighborIndex[targetid] + nNeighbors[targetid];
                 neighbor[j] = sourceid;
-                edgeWeight2[j] = edgeList.get(i).weight;
+                edgeWeight2[j] = edgeList[i].weight;
                 nNeighbors[targetid]++;
             }
         }
