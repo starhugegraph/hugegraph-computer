@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NotSupportedException;
@@ -247,24 +248,15 @@ public class HGModularityOptimizer {
                  TimeUtil.readableTime(watcher.getTime()));
     }
 
-    public class Entry implements Comparable<Entry> {
+    public class Entry {
         public int srcid;
         public int targetid;
-        public double weight;
+        public float weight;
 
-        public Entry(int srcid, int targetid, double weight) {
+        public Entry(int srcid, int targetid, float weight) {
             this.srcid = srcid;
             this.targetid = targetid;
             this.weight = weight;
-        }
-
-        @Override
-        public int compareTo(Entry o) {
-            // TODO Auto-generated method stub
-            //sort by srcid
-            int result1 = this.srcid - o.srcid;
-            return result1;
-
         }
     }
 
@@ -315,9 +307,9 @@ public class HGModularityOptimizer {
                 //node2.add(targetId);
                 //bufferedWriterTarget.write(targetId.toString() + "\n");
 
-                Double weight = 1.0;//ComputerOptions.DEFAULT_WEIGHT;
+                Float weight = 1.0f;//ComputerOptions.DEFAULT_WEIGHT;
                 if (StringUtils.isNotBlank(this.weightKey)) {
-                    Double weight_ = (Double)
+                    Float weight_ = (Float)
                             edge.property(this.weightKey).value();
                     if (weight_ != null) {
                         weight = weight_;
@@ -366,7 +358,15 @@ public class HGModularityOptimizer {
             }*/
 
             LOG.info("sort edgelist");
-            Collections.sort(edgeList);
+            Collections.sort(edgeList, new Comparator<Entry>() {
+
+                @Override
+                public int compare(Entry data1, Entry data2) {
+                    // TODO Auto-generated method stub
+                    return data1.srcid - data2.srcid;
+                }
+
+            });
 
             LOG.info("start load vertex from hugegraph");
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
