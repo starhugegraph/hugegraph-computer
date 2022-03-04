@@ -246,13 +246,34 @@ public class HGModularityOptimizer {
                  TimeUtil.readableTime(watcher.getTime()));
     }
 
+    public class Entry implements Comparable<Entry> {
+        public int srcid;
+        public int targetid;
+        public double weight;
+
+        public Entry(int srcid, int targetid, double weight) {
+            this.srcid = srcid;
+            this.targetid = targetid;
+            this.weight = weight;
+        }
+
+        @Override
+        public int compareTo(Entry o) {
+            // TODO Auto-generated method stub
+            //sort by srcid
+            int result1 = this.srcid - o.srcid;
+            return result1;
+
+        }
+    }
+
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
-        List<Integer> node1 = new ArrayList<>(1470000000);
+        List<Entry> edgeList = new ArrayList<>(1470000000);
+        //List<Integer> node1 = new ArrayList<>(1470000000);
         //(this.initialCapacity);
-        List<Integer> node2 = new LinkedList<>();
-        //List<Object> originalNode2 = new LinkedList<>();
-        List<Double> edgeWeight1 = new LinkedList<>();
+        //List<Integer> node2 = new LinkedList<>();
+        //List<Double> edgeWeight1 = new LinkedList<>();
         int nums = 0;
         long lastTime = 0;
 
@@ -281,7 +302,7 @@ public class HGModularityOptimizer {
                                 edge.sourceVertex().id().asObject())
                         .asObject());
 
-                node1.add(sourceId);
+                //node1.add(sourceId);
                 //bufferedWriterSource.write(sourceId.toString() + "\n");
                 /*originalNode2.add(HugeConverter.convertId(
                                 edge.targetVertex().id().asObject())
@@ -301,6 +322,8 @@ public class HGModularityOptimizer {
                         weight = weight_;
                     }
                 }
+
+                edgeList.add(new Entry(sourceId,targetId,weight));
                 //edgeWeight1.add(weight);
                 //bufferedWriterWeight.write(weight.toString() + "\n");
                 nums++;
@@ -362,9 +385,9 @@ public class HGModularityOptimizer {
         int nNodes = this.maxId + 1;
         int[] nNeighbors = new int[nNodes];
         for (i = 0; i < nums; i++) {
-            if (node1.get(i) < node2.get(i)) {
-                nNeighbors[node1.get(i)]++;
-                nNeighbors[node2.get(i)]++;
+            if (edgeList.get(i).srcid < edgeList.get(i).targetid) {
+                nNeighbors[edgeList.get(i).srcid]++;
+                nNeighbors[edgeList.get(i).targetid]++;
             }
         }
 
@@ -380,21 +403,21 @@ public class HGModularityOptimizer {
         double[] edgeWeight2 = new double[nEdges];
         Arrays.fill(nNeighbors, 0);
         for (i = 0; i < nums; i++) {
-            if (node1.get(i) < node2.get(i)) {
-                j = firstNeighborIndex[node1.get(i)] + nNeighbors[node1.get(i)];
-                neighbor[j] = node2.get(i);
-                edgeWeight2[j] = edgeWeight1.get(i);
-                nNeighbors[node1.get(i)]++;
-                j = firstNeighborIndex[node2.get(i)] + nNeighbors[node2.get(i)];
-                neighbor[j] = node1.get(i);
-                edgeWeight2[j] = edgeWeight1.get(i);
-                nNeighbors[node2.get(i)]++;
+            int sourceid = edgeList.get(i).srcid;
+            int targetid = edgeList.get(i).targetid;
+            if (sourceid < targetid) {
+                j = firstNeighborIndex[sourceid] + nNeighbors[sourceid];
+                neighbor[j] = targetid;
+                edgeWeight2[j] = edgeList.get(i).weight;
+                nNeighbors[sourceid]++;
+                j = firstNeighborIndex[targetid] + nNeighbors[targetid];
+                neighbor[j] = sourceid;
+                edgeWeight2[j] = edgeList.get(i).weight;
+                nNeighbors[targetid]++;
             }
         }
 
-        node1 = null;
-        node2 = null;
-        edgeWeight1 = null;
+        edgeList = null;
         System.gc();
 
         double[] nodeWeight = new double[nNodes];
