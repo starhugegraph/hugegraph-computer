@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NotSupportedException;
@@ -363,6 +364,9 @@ public class HGModularityOptimizer {
             while ((line = bufferedReaderWeight.readLine()) != null) {
                 edgeWeight1.add(Double.valueOf(line));
             }*/
+
+            LOG.info("sort edgelist");
+            Collections.sort(edgeList);
 
             LOG.info("start load vertex from hugegraph");
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
