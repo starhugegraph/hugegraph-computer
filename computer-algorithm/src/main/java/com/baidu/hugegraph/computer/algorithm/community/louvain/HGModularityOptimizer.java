@@ -392,7 +392,7 @@ public class HGModularityOptimizer {
             }
 
             futures.clear();
-            handler=null;
+            handler = null;
 
         } catch (Exception e) {
             LOG.error("readFromHG:", e);
@@ -425,6 +425,7 @@ public class HGModularityOptimizer {
                     float weight = bufferedReaderEdge.readFloat();
                     edgeList[i++] = new Entry(sourceid, targetid, weight);
                 }
+                bufferedReaderEdge.close();
             }
             LOG.info("read from tempfile, edge num=" + i);
 
