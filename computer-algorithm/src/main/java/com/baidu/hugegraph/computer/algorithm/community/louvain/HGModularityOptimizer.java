@@ -391,10 +391,15 @@ public class HGModularityOptimizer {
                 hgFetcher.close();
             }
 
+            futures.clear();
+            handler=null;
+
         } catch (Exception e) {
             LOG.error("readFromHG:", e);
         }
         watcher.stop();
+
+        System.gc();
 
         int nums = edgenums.get();
         LOG.info("Load data complete, cost: {}, nums: {}",
