@@ -26,13 +26,13 @@ import java.util.NoSuchElementException;
 
 import com.baidu.hugegraph.backend.query.Query;
 import com.baidu.hugegraph.backend.store.BackendProviderFactory;
-import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
+//import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
 import com.baidu.hugegraph.computer.core.input.MasterInputHandler;
 import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
-import com.baidu.hugegraph.computer.core.input.hg.HugeInputSplitFetcher;
+//import com.baidu.hugegraph.computer.core.input.hg.HugeInputSplitFetcher;
 import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
@@ -71,7 +71,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
     private final EdgeFetcher edgeFetcher;
     private MasterInputHandler handler;
 
-    public HugeGraphFetcherLocal(Config config) {
+    public HugeGraphFetcherLocal(Config config, MasterInputHandler handler) {
         Map<String, Object> configs = new HashMap<>();
         String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
 
@@ -103,12 +103,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
         this.vertexFetcher = new HugeVertexFetcher(config, this.hugeGraph);
         this.edgeFetcher = new HugeEdgeFetcher(config, this.hugeGraph);
 
-        InputSplitFetcher fetcher = new HugeInputSplitFetcher(config);
-        this.handler = new MasterInputHandler(fetcher);
-        int vertexSplitSize = this.handler.createVertexInputSplits();
-        int edgeSplitSize = this.handler.createEdgeInputSplits();
-        LOG.info("Master create {} vertex splits, {} edge splits",
-                vertexSplitSize, edgeSplitSize);
+        this.handler = handler;
     }
 
     @Override
