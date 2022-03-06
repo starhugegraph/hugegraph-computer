@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -333,47 +334,7 @@ public class HGModularityOptimizer {
                 iterator2.remove();
             }
             originalNode2 = null;*/
-            LOG.info("start load edge id and weight from file");
-            edgeList = new Entry[nums];
-            BufferedFileInput bufferedReaderEdge = new BufferedFileInput(
-                    new File("edgelist.dat"));
-            for (i = 0; i < nums; i++) {
-                int sourceid = bufferedReaderEdge.readInt();
-                int targetid = bufferedReaderEdge.readInt();
-                float weight = bufferedReaderEdge.readFloat();
-                edgeList[i] = new Entry(sourceid,targetid,weight);
-            }
 
-            /*String line = null;
-            node2 = new ArrayList<>(nums + 100);
-            BufferedReader bufferedReaderTarget = new
-                    BufferedReader(new FileReader("targetid.dat"));
-            while ((line = bufferedReaderTarget.readLine()) != null) {
-                node2.add(this.covertId(line));
-            }
-
-            node1 = new ArrayList<>(nums + 100);
-            BufferedReader bufferedReaderSource = new
-                    BufferedReader(new FileReader("sourceid.dat"));
-            while ((line = bufferedReaderSource.readLine()) != null) {
-                node1.add(Integer.valueOf(line));
-            }
-
-            edgeWeight1 = new ArrayList<>(nums + 100);
-            BufferedReader bufferedReaderWeight = new
-                    BufferedReader(new FileReader("weight.dat"));
-            while ((line = bufferedReaderWeight.readLine()) != null) {
-                edgeWeight1.add(Double.valueOf(line));
-            }*/
-
-            LOG.info("sort edgelist");
-            /*Collections.sort(edgeList, new Comparator<Entry>() {
-                @Override
-                public int compare(Entry data1, Entry data2) {
-                    // TODO Auto-generated method stub
-                    return data1.srcid - data2.srcid;
-                }
-            });*/
 
             LOG.info("start load vertex from hugegraph");
             Iterator<com.baidu.hugegraph.structure.HugeVertex> iteratorV =
@@ -394,6 +355,35 @@ public class HGModularityOptimizer {
         LOG.info("Load data complete, cost: {}, nums: {}",
                 TimeUtil.readableTime(watcher.getTime()),
                 nums);
+
+        try {
+            LOG.info("start load edge id and weight from file");
+            edgeList = new Entry[nums];
+            BufferedFileInput bufferedReaderEdge = new BufferedFileInput(
+                    new File("edgelist.dat"));
+            for (i = 0; i < nums; i++) {
+                if (System.currentTimeMillis() - lastTime >=
+                        TimeUnit.SECONDS.toMillis(30L)) {
+                    LOG.info("Loading nums:{}", i + 1);
+                    lastTime = System.currentTimeMillis();
+                }
+                int sourceid = bufferedReaderEdge.readInt();
+                int targetid = bufferedReaderEdge.readInt();
+                float weight = bufferedReaderEdge.readFloat();
+                edgeList[i] = new Entry(sourceid, targetid, weight);
+            }
+
+            LOG.info("sort edgelist");
+            Arrays.sort(edgeList, new Comparator<Entry>() {
+                @Override
+                public int compare(Entry data1, Entry data2) {
+                    // TODO Auto-generated method stub
+                    return data1.srcid - data2.srcid;
+                }
+            });
+        } catch (Exception e) {
+                LOG.error("bufferedReaderEdge:", e);
+        }
 
         int nNodes = this.maxId + 1;
         int[] nNeighbors = new int[nNodes];
