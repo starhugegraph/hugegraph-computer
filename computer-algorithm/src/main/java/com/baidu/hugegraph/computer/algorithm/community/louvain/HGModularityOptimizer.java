@@ -32,7 +32,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 //import java.util.Comparator;
 import java.util.Random;
@@ -43,10 +42,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.NotSupportedException;
 
+import com.baidu.hugegraph.computer.algorithm.community.louvain.input.GraphFetcherLocal;
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.value.StringValue;
-//import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.HugeConverter;
 import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
 import com.baidu.hugegraph.computer.core.input.MasterInputHandler;
@@ -61,7 +60,6 @@ import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.algorithm.community.louvain.input.HugeGraphFetcherLocal;
 import com.baidu.hugegraph.computer.algorithm.community.louvain.input.LoaderFileGraphFetcherLocal;
-//import com.baidu.hugegraph.computer.algorithm.community.louvain.hg.HugeOutput;
 import com.baidu.hugegraph.computer.core.config.Config;
 //import com.baidu.hugegraph.structure.graph.Edge;
 //import com.baidu.hugegraph.structure.graph.Vertex;
@@ -96,11 +94,6 @@ public class HGModularityOptimizer {
     public static final String OPTION_ITERATIONS = "louvain.iterations";
     public static final String OPTION_RANDOMSEED = "louvain.randomseed";
 
-    //public static final String OPTION_INPUTTYPE = "louvain.inputtype";
-    //public static final String OPTION_INPUTPATH = "louvain.inputpath";
-    //public static final String OPTION_OUTPUTTYPE = "louvain.outputtype";
-    //public static final String OPTION_OUTPUTPATH = "louvain.outputpath";
-
     public HGModularityOptimizer(Config config) {
         this.context = ComputerContext.instance();
         this.vertex = context.graphFactory().createVertex();
@@ -119,7 +112,7 @@ public class HGModularityOptimizer {
         int modularityFunction = config.getInt(OPTION_MODULARITY,1);
         double resolution = config.getDouble(OPTION_RESOLUTION,1.0);
         int nRandomStarts = config.getInt(OPTION_RANDOMSTART,1);
-        int nIterations = config.getInt(OPTION_ITERATIONS,10);
+        int nIterations = config.getInt(OPTION_ITERATIONS,1);
         long randomSeed = config.getLong(OPTION_RANDOMSEED,100);
 
         VOSClusteringTechnique vOSClusteringTechnique;
@@ -138,11 +131,11 @@ public class HGModularityOptimizer {
         Network network;
         switch (inputType) {
             case "hugegraph":
-                network = this.readFromHG(modularityFunction);
+                network = this.readFromHG(modularityFunction, 0);
                 break;
             case "loader":
-                //String inputFilePath = config.getString(OPTION_INPUTPATH,"");
-                network = this.readFromHdfs(modularityFunction);
+                //network = this.readFromHdfs(modularityFunction);
+                network = this.readFromHG(modularityFunction, 1);
                 break;
             default:
                 throw new NotSupportedException(
@@ -266,7 +259,7 @@ public class HGModularityOptimizer {
         }
     }
 
-    private Network readFromHG(int modularityFunction) {
+    private Network readFromHG(int modularityFunction, int inputType) {
         int i, j, nEdges;
         //Entry[] edgeList = new Entry[1];
         //List<Entry> edgeList = new ArrayList<>(1470000000);
@@ -291,21 +284,23 @@ public class HGModularityOptimizer {
 
             ExecutorService loadExecutor = ExecutorUtil.newFixedThreadPool(
                     parallelNum, "load-data-%d");
-            List<HugeGraphFetcherLocal> hgFetchers = new ArrayList<>();
+            List<GraphFetcherLocal> hgFetchers = new ArrayList<>();
             for (int t = 0; t < parallelNum; t++) {
-                hgFetchers.add(
+                if (inputType == 0)
+                    hgFetchers.add(
                         new HugeGraphFetcherLocal(this.config, handler));
+                else
+                    hgFetchers.add(new
+                            LoaderFileGraphFetcherLocal(this.config, handler));
             }
 
             List<Future<?>> futures = new ArrayList<>(parallelNum);
             for (int t = 0; t < parallelNum; t++) {
                 final int[] tArray = new int[]{t};
-                HugeGraphFetcherLocal hgFetcher = hgFetchers.get(t);
+                GraphFetcherLocal hgFetcher = hgFetchers.get(t);
                 Future<?> future = loadExecutor.submit(() -> {
-
-                    Iterator<com.baidu.hugegraph.structure.HugeEdge> iterator =
+                    Iterator<Object> iterator =
                             hgFetcher.createIteratorFromEdge();
-
                     try {
                         File file = new File("edgelist.dat" + tArray[0]);
                         if (file.exists()) {
@@ -315,39 +310,54 @@ public class HGModularityOptimizer {
                                 new BufferedFileOutput(file);
                         long lasthgTime = 0;
                         while (iterator.hasNext()) {
-                            com.baidu.hugegraph.structure.HugeEdge edge =
-                                    iterator.next();
+                            Integer sourceId = 0;
+                            Integer targetId = 0;
+                            Float weight = 1.0f;
+
+                            Object edgeobj = iterator.next();
                             if (System.currentTimeMillis() - lasthgTime >=
                                     TimeUnit.SECONDS.toMillis(30L)) {
-                                LOG.info("Loading edge: {}, nums:{}", edge,
+                                LOG.info("Loading edge: {}, nums:{}", edgeobj,
                                         edgenums.get() + 1);
                                 lasthgTime = System.currentTimeMillis();
                             }
-                            Integer sourceId = this.covertId(HugeConverter.
-                                    convertId(edge.sourceVertex().id().
-                                            asObject()).asObject());
 
-                            //node1.add(sourceId);
-                            /*originalNode2.add(HugeConverter.convertId(
-                                    edge.targetVertex().id().asObject())
-                            .asObject());*/
+                            if (inputType == 0) {
+                                com.baidu.hugegraph.structure.HugeEdge edge =
+                                        (com.baidu.hugegraph.structure.HugeEdge)
+                                                edgeobj;
+                                sourceId = this.covertId(HugeConverter.
+                                        convertId(edge.sourceVertex().id().
+                                                asObject()).asObject());
 
-                            Integer targetId = this.covertId(HugeConverter.
-                                    convertId(edge.targetVertex().id().
-                                            asObject()).asObject());
-                            //node2.add(targetId);
+                                targetId = this.covertId(HugeConverter.
+                                        convertId(edge.targetVertex().id().
+                                                asObject()).asObject());
 
-                            Float weight = 1.0f;
-                            if (StringUtils.isNotBlank(this.weightKey)) {
-                                Float weight_ = (Float)
+                                if (StringUtils.isNotBlank(this.weightKey)) {
+                                    Float weight_ = (Float)
                                         edge.property(this.weightKey).value();
-                                if (weight_ != null) {
-                                    weight = weight_;
+                                    if (weight_ != null) {
+                                        weight = weight_;
+                                    }
+                                }
+                            }
+                            else {
+                                com.baidu.hugegraph.structure.graph.Edge edge =
+                                    (com.baidu.hugegraph.structure.graph.Edge)
+                                            edgeobj;
+                                sourceId = this.covertId(edge.sourceId());
+                                targetId = this.covertId(edge.targetId());
+
+                                if (StringUtils.isNotBlank(this.weightKey)) {
+                                    Float weight_ = (Float)
+                                            edge.property(this.weightKey);
+                                    if (weight_ != null) {
+                                        weight = weight_;
+                                    }
                                 }
                             }
 
-                            //edgeList.add(new Entry(sourceId,targetId,weight));
-                            //edgeWeight1.add(weight);
                             bufferedWriterEdge.writeInt(sourceId);
                             bufferedWriterEdge.writeInt(targetId);
                             bufferedWriterEdge.writeFloat(weight);
@@ -368,15 +378,24 @@ public class HGModularityOptimizer {
 
             LOG.info("start load vertex from hugegraph");
             futures.clear();
-            for (HugeGraphFetcherLocal hgFetcher : hgFetchers) {
+            for (GraphFetcherLocal hgFetcher : hgFetchers) {
                 Future<?> future = loadExecutor.submit(() -> {
-                    Iterator<com.baidu.hugegraph.structure.HugeVertex>
+                    Iterator<Object>
                             iteratorV = hgFetcher.createIteratorFromVertex();
                     while (iteratorV.hasNext()) {
-                        com.baidu.hugegraph.structure.HugeVertex vertex =
-                                iteratorV.next();
-                        this.covertId(HugeConverter.convertId(
-                                vertex.id().asObject()).asObject());
+                        if (inputType == 0) {
+                            com.baidu.hugegraph.structure.HugeVertex vertex =
+                                    (com.baidu.hugegraph.structure.HugeVertex)
+                                            iteratorV.next();
+                            this.covertId(HugeConverter.convertId(
+                                    vertex.id().asObject()).asObject());
+                        }
+                        else {
+                            com.baidu.hugegraph.structure.graph.Vertex vertex =
+                                    (com.baidu.hugegraph.structure.graph.Vertex)
+                                            iteratorV.next();
+                                this.covertId(vertex.id());
+                        }
                     }
                 });
                 futures.add(future);
@@ -386,7 +405,7 @@ public class HGModularityOptimizer {
             }
             loadExecutor.shutdown();
 
-            for (HugeGraphFetcherLocal hgFetcher : hgFetchers) {
+            for (GraphFetcherLocal hgFetcher : hgFetchers) {
                 hgFetcher.close();
             }
 
@@ -504,7 +523,109 @@ public class HGModularityOptimizer {
 
         return network;
     }
-  
+
+    public int idGenerator() {
+        return ++maxId;
+    }
+
+    public synchronized int covertId(Object hgId) {
+        return this.idMap.computeIfAbsent(hgId, k -> this.idGenerator());
+    }
+
+
+    private void writeOutput(Clustering clustering, ComputerOutput output) {
+        int i, nNodes;
+        nNodes = clustering.getNNodes();
+        clustering.orderClustersByNNodes();
+        int nClusters = clustering.getNClusters();
+        LOG.info("nClusters: {}", nClusters);
+        LOG.info("nNodes: {}", nNodes);
+        //BiMap<Integer, Object> biMap = this.idMap.inverse();
+        try {
+            List<String> idList = new ArrayList<>(this.initialCapacity);
+            readIdFile(this.idFileName, nNodes, idList);
+
+            for (i = 0; i < nNodes; i++) {
+                //LOG.info("id: {}, cluster:{}", biMap.get(i),
+                //         clustering.getCluster(i));
+                this.vertex.id(this.context.graphFactory().
+                        createId(idList.get(i)));
+                this.vertex.value(new StringValue(
+                        Integer.toString(clustering.getCluster(i))));
+                output.write(this.vertex);
+            }
+        } catch (Exception e) {
+            LOG.error("writeOutput:", e);
+        }
+    }
+
+    private void writeIdFile(String fileName, int nNodes) throws IOException {
+        BufferedWriter bufferedWriter;
+        int i;
+        BiMap<Integer, Object> biMap = this.idMap.inverse();
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+        for (i = 0; i < nNodes; i++) {
+            bufferedWriter.write(biMap.get(i).toString());
+            bufferedWriter.newLine();
+        }
+        bufferedWriter.close();
+    }
+
+    private void readIdFile(String fileName, int nNodes, List<String> idList)
+            throws IOException {
+        BufferedReader bufferedReader;
+        int i;
+        bufferedReader = new BufferedReader(new FileReader(fileName));
+        for (i = 0; i < nNodes; i++) {
+            String id = bufferedReader.readLine();
+            idList.add(id);
+        }
+        bufferedReader.close();
+    }
+
+    /*
+    private void writeOutputHg(Clustering clustering) {
+        int i, nNodes;
+        nNodes = clustering.getNNodes();
+        clustering.orderClustersByNNodes();
+        int nClusters = clustering.getNClusters();
+        LOG.info("nClusters: {}", nClusters);
+        LOG.info("nNodes: {}", nNodes);
+        BiMap<Integer, Object> biMap = this.idMap.inverse();
+
+        try (HugeOutput hugeOutput = new HugeOutput(config)) {
+            for (i = 0; i < nNodes; i++) {
+                //LOG.info("id: {}, cluster:{}", biMap.get(i),
+                //         clustering.getCluster(i));
+                hugeOutput.write(biMap.get(i),
+                        Integer.toString(clustering.getCluster(i)));
+            }
+        } catch (Exception e) {
+            LOG.error("writeOutputHg:", e);
+        }
+    }
+
+    private void writeOutputFile(String fileName, Clustering clustering)
+            throws IOException {
+        BufferedWriter bufferedWriter;
+        int i, nNodes;
+
+        nNodes = clustering.getNNodes();
+
+        clustering.orderClustersByNNodes();
+
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+
+        for (i = 0; i < nNodes; i++) {
+            bufferedWriter.write(String.valueOf(i));
+            bufferedWriter.write(this.delimiter);
+            bufferedWriter.write(String.valueOf(clustering.getCluster(i)));
+            bufferedWriter.newLine();
+        }
+
+        bufferedWriter.close();
+    }
+
     private Network readFromHdfs(int modularityFunction) {
         int i, j, nEdges;
         List<Integer> node1 = new ArrayList<>(this.initialCapacity);
@@ -626,106 +747,5 @@ public class HGModularityOptimizer {
         return network;
     }
 
-
-    public int idGenerator() {
-        return ++maxId;
-    }
-
-    public synchronized int covertId(Object hgId) {
-        return this.idMap.computeIfAbsent(hgId, k -> this.idGenerator());
-    }
-
-
-    private void writeOutput(Clustering clustering, ComputerOutput output) {
-        int i, nNodes;
-        nNodes = clustering.getNNodes();
-        clustering.orderClustersByNNodes();
-        int nClusters = clustering.getNClusters();
-        LOG.info("nClusters: {}", nClusters);
-        LOG.info("nNodes: {}", nNodes);
-        //BiMap<Integer, Object> biMap = this.idMap.inverse();
-        try {
-            List<String> idList = new ArrayList<>(this.initialCapacity);
-            readIdFile(this.idFileName, nNodes, idList);
-
-            for (i = 0; i < nNodes; i++) {
-                //LOG.info("id: {}, cluster:{}", biMap.get(i),
-                //         clustering.getCluster(i));
-                this.vertex.id(this.context.graphFactory().
-                        createId(idList.get(i)));
-                this.vertex.value(new StringValue(
-                        Integer.toString(clustering.getCluster(i))));
-                output.write(this.vertex);
-            }
-        } catch (Exception e) {
-            LOG.error("writeOutput:", e);
-        }
-    }
-
-    private void writeIdFile(String fileName, int nNodes) throws IOException {
-        BufferedWriter bufferedWriter;
-        int i;
-        BiMap<Integer, Object> biMap = this.idMap.inverse();
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        for (i = 0; i < nNodes; i++) {
-            bufferedWriter.write(biMap.get(i).toString());
-            bufferedWriter.newLine();
-        }
-        bufferedWriter.close();
-    }
-
-    private void readIdFile(String fileName, int nNodes, List<String> idList)
-            throws IOException {
-        BufferedReader bufferedReader;
-        int i;
-        bufferedReader = new BufferedReader(new FileReader(fileName));
-        for (i = 0; i < nNodes; i++) {
-            String id = bufferedReader.readLine();
-            idList.add(id);
-        }
-        bufferedReader.close();
-    }
-
-    /*
-    private void writeOutputHg(Clustering clustering) {
-        int i, nNodes;
-        nNodes = clustering.getNNodes();
-        clustering.orderClustersByNNodes();
-        int nClusters = clustering.getNClusters();
-        LOG.info("nClusters: {}", nClusters);
-        LOG.info("nNodes: {}", nNodes);
-        BiMap<Integer, Object> biMap = this.idMap.inverse();
-
-        try (HugeOutput hugeOutput = new HugeOutput(config)) {
-            for (i = 0; i < nNodes; i++) {
-                //LOG.info("id: {}, cluster:{}", biMap.get(i),
-                //         clustering.getCluster(i));
-                hugeOutput.write(biMap.get(i),
-                        Integer.toString(clustering.getCluster(i)));
-            }
-        } catch (Exception e) {
-            LOG.error("writeOutputHg:", e);
-        }
-    }
-
-    private void writeOutputFile(String fileName, Clustering clustering)
-            throws IOException {
-        BufferedWriter bufferedWriter;
-        int i, nNodes;
-
-        nNodes = clustering.getNNodes();
-
-        clustering.orderClustersByNNodes();
-
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-
-        for (i = 0; i < nNodes; i++) {
-            bufferedWriter.write(String.valueOf(i));
-            bufferedWriter.write(this.delimiter);
-            bufferedWriter.write(String.valueOf(clustering.getCluster(i)));
-            bufferedWriter.newLine();
-        }
-
-        bufferedWriter.close();
-    }*/
+    */
 }

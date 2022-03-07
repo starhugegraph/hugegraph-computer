@@ -19,68 +19,32 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.louvain.input;
 
-import com.baidu.hugegraph.computer.core.config.Config;
+//import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
-import com.baidu.hugegraph.computer.core.input.MasterInputHandler;
-//import com.baidu.hugegraph.computer.core.input.GraphFetcher;
+import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
-import com.baidu.hugegraph.computer.core.input.loader.FileVertxFetcher;
-import com.baidu.hugegraph.computer.core.input.loader.FileEdgeFetcher;
-//import com.baidu.hugegraph.structure.graph.Edge;
-//import com.baidu.hugegraph.structure.graph.Vertex;
 import com.baidu.hugegraph.util.Log;
 import org.slf4j.Logger;
 
-//import java.util.Iterator;
-//import java.util.NoSuchElementException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-public class LoaderFileGraphFetcherLocal extends GraphFetcherLocal {
-    private static final Logger LOG = Log.logger("hugefile");
+public abstract class GraphFetcherLocal implements GraphFetcher {
+    private static final Logger LOG = Log.logger("GraphFetcherLocal");
 
-    private MasterInputHandler handler;
-    private final VertexFetcher vertexFetcher;
-    private final EdgeFetcher edgeFetcher;
-
-    public LoaderFileGraphFetcherLocal(Config config,
-                                       MasterInputHandler handler) {
+    /*public GraphFetcherLocal(Config config, MasterInputHandler handler) {
         this.vertexFetcher = new FileVertxFetcher(config);
         this.edgeFetcher = new FileEdgeFetcher(config);
 
         this.handler = handler;
-    }
+    }*/
 
-    @Override
-    public InputSplit nextVertexInputSplit() {
-        return this.handler.nextVertexInputSplit();
-    }
-
-    @Override
-    public InputSplit nextEdgeInputSplit() {
-        return this.handler.nextEdgeInputSplit();
-    }
-
-    @Override
-    public VertexFetcher vertexFetcher() {
-        return this.vertexFetcher;
-    }
-
-    @Override
-    public EdgeFetcher edgeFetcher() {
-        return this.edgeFetcher;
-    }
-
-    @Override
-    public void close() {
-        // pass
-    }
-
-    /*
-    public Iterator<Edge> createIteratorFromEdge() {
+    public Iterator<Object> createIteratorFromEdge() {
         return new IteratorFromEdge();
     }
 
-    private class IteratorFromEdge implements Iterator<Edge> {
+    private class IteratorFromEdge implements Iterator<Object> {
 
         private InputSplit currentSplit;
 
@@ -90,13 +54,14 @@ public class LoaderFileGraphFetcherLocal extends GraphFetcherLocal {
 
         @Override
         public boolean hasNext() {
-            EdgeFetcher edgeFetcher = LoaderFileGraphFetcherLocal.
-                    this.edgeFetcher;
+            EdgeFetcher edgeFetcher = edgeFetcher();
             try {
                 while (this.currentSplit == null || !edgeFetcher.hasNext()) {
-
-                    this.currentSplit = LoaderFileGraphFetcherLocal.
-                            this.nextEdgeInputSplit();
+                    /*
+                     * The first time or the current split is complete,
+                     * need to fetch next input split meta
+                     */
+                    this.currentSplit = nextEdgeInputSplit();
                     if (this.currentSplit.equals(InputSplit.END_SPLIT)) {
                         return false;
                     }
@@ -108,19 +73,21 @@ public class LoaderFileGraphFetcherLocal extends GraphFetcherLocal {
         }
 
         @Override
-        public Edge next() {
+        public Object next() {
             if (!this.hasNext()) {
                 throw new NoSuchElementException();
             }
-            return (Edge)LoaderFileGraphFetcherLocal.this.edgeFetcher.next();
+            return edgeFetcher().next();
         }
     }
 
-    public Iterator<Vertex> createIteratorFromVertex() {
+
+
+    public Iterator<Object> createIteratorFromVertex() {
         return new IteratorFromVertex();
     }
 
-    private class IteratorFromVertex implements Iterator<Vertex> {
+    private class IteratorFromVertex implements Iterator<Object> {
 
         private InputSplit currentSplit;
 
@@ -130,13 +97,14 @@ public class LoaderFileGraphFetcherLocal extends GraphFetcherLocal {
 
         @Override
         public boolean hasNext() {
-            VertexFetcher vertexFetcher =
-                    LoaderFileGraphFetcherLocal.this.vertexFetcher;
+            VertexFetcher vertexFetcher = vertexFetcher();
             try {
                 while (this.currentSplit == null || !vertexFetcher.hasNext()) {
-
-                    this.currentSplit = LoaderFileGraphFetcherLocal.
-                            this.nextVertexInputSplit();
+                    /*
+                     * The first time or the current split is complete,
+                     * need to fetch next input split meta
+                     */
+                    this.currentSplit = nextVertexInputSplit();
                     if (this.currentSplit.equals(InputSplit.END_SPLIT)) {
                         return false;
                     }
@@ -148,12 +116,11 @@ public class LoaderFileGraphFetcherLocal extends GraphFetcherLocal {
         }
 
         @Override
-        public Vertex next() {
+        public Object next() {
             if (!this.hasNext()) {
                 throw new NoSuchElementException();
             }
-            return (Vertex)LoaderFileGraphFetcherLocal.this.vertexFetcher
-                    .next();
+            return vertexFetcher().next();
         }
-    }*/
+    }
 }
