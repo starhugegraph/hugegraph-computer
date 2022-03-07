@@ -149,10 +149,6 @@ public class HGModularityOptimizer {
                         "not support inputType: " + inputType);
         }
 
-        writeIdFile(this.idFileName, network.getNNodes());
-        this.idMap = null;
-        System.gc();
-
         watcher.stop();
         LOG.info("Number of nodes: {}", network.getNNodes());
         LOG.info("Number of edges: {}", network.getNEdges());
@@ -394,12 +390,14 @@ public class HGModularityOptimizer {
             futures.clear();
             handler = null;
 
+            writeIdFile(this.idFileName, this.maxId + 1);
+            this.idMap = null;
+            System.gc();
+
         } catch (Exception e) {
             LOG.error("readFromHG:", e);
         }
         watcher.stop();
-
-        System.gc();
 
         int nums = edgenums.get();
         LOG.info("Load data complete, cost: {}, nums: {}",
