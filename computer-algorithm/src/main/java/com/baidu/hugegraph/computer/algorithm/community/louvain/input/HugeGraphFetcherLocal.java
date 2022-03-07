@@ -20,26 +20,26 @@
 package com.baidu.hugegraph.computer.algorithm.community.louvain.input;
 
 import java.util.HashMap;
-import java.util.Iterator;
+//import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
+//import java.util.NoSuchElementException;
 
 import com.baidu.hugegraph.backend.query.Query;
 import com.baidu.hugegraph.backend.store.BackendProviderFactory;
-import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
+//import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
 import com.baidu.hugegraph.computer.core.input.MasterInputHandler;
-import com.baidu.hugegraph.computer.core.input.GraphFetcher;
+//import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
-import com.baidu.hugegraph.computer.core.input.hg.HugeInputSplitFetcher;
+//import com.baidu.hugegraph.computer.core.input.hg.HugeInputSplitFetcher;
 import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 //import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
-import com.baidu.hugegraph.structure.HugeEdge;
-import com.baidu.hugegraph.structure.HugeVertex;
+//import com.baidu.hugegraph.structure.HugeEdge;
+//import com.baidu.hugegraph.structure.HugeVertex;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeGraph;
@@ -51,7 +51,7 @@ import com.baidu.hugegraph.config.CoreOptions;
 import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.util.Log;
 
-public class HugeGraphFetcherLocal implements GraphFetcher {
+public class HugeGraphFetcherLocal extends GraphFetcherLocal {
 
     private static final Logger LOG = Log.logger("huge fetcher");
 
@@ -71,7 +71,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
     private final EdgeFetcher edgeFetcher;
     private MasterInputHandler handler;
 
-    public HugeGraphFetcherLocal(Config config) {
+    public HugeGraphFetcherLocal(Config config, MasterInputHandler handler) {
         Map<String, Object> configs = new HashMap<>();
         String pdPeers = config.get(ComputerOptions.INPUT_PD_PEERS);
 
@@ -103,12 +103,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
         this.vertexFetcher = new HugeVertexFetcher(config, this.hugeGraph);
         this.edgeFetcher = new HugeEdgeFetcher(config, this.hugeGraph);
 
-        InputSplitFetcher fetcher = new HugeInputSplitFetcher(config);
-        this.handler = new MasterInputHandler(fetcher);
-        int vertexSplitSize = this.handler.createVertexInputSplits();
-        int edgeSplitSize = this.handler.createEdgeInputSplits();
-        LOG.info("Master create {} vertex splits, {} edge splits",
-                vertexSplitSize, edgeSplitSize);
+        this.handler = handler;
     }
 
     @Override
@@ -142,6 +137,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
     }
 
 
+    /*
     public Iterator<HugeEdge> createIteratorFromEdge() {
         return new IteratorFromEdge();
     }
@@ -159,10 +155,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
             EdgeFetcher edgeFetcher = HugeGraphFetcherLocal.this.edgeFetcher;
             try {
                 while (this.currentSplit == null || !edgeFetcher.hasNext()) {
-                    /*
-                     * The first time or the current split is complete,
-                     * need to fetch next input split meta
-                     */
+
                     this.currentSplit =
                             HugeGraphFetcherLocal.this.nextEdgeInputSplit();
                     if (this.currentSplit.equals(InputSplit.END_SPLIT)) {
@@ -202,10 +195,7 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
                     HugeGraphFetcherLocal.this.vertexFetcher;
             try {
                 while (this.currentSplit == null || !vertexFetcher.hasNext()) {
-                    /*
-                     * The first time or the current split is complete,
-                     * need to fetch next input split meta
-                     */
+
                     this.currentSplit =
                             HugeGraphFetcherLocal.this.nextVertexInputSplit();
                     if (this.currentSplit.equals(InputSplit.END_SPLIT)) {
@@ -225,5 +215,5 @@ public class HugeGraphFetcherLocal implements GraphFetcher {
             }
             return (HugeVertex)HugeGraphFetcherLocal.this.vertexFetcher.next();
         }
-    }
+    }*/
 }
