@@ -101,7 +101,8 @@ public class HGModularityOptimizer {
         this.maxId = -1;
         this.initialCapacity = config.getInt(OPTION_CAPACITY,50000000);
         System.out.println("initialCapacity:" + this.initialCapacity);
-        this.idMap = HashBiMap.create(this.initialCapacity);
+        this.idMap = com.google.common.collect.Maps.synchronizedBiMap
+                (HashBiMap.create(this.initialCapacity));
         this.weightKey = config.getString(OPTION_WEIGHTKEY,"");
         this.delimiter = config.getString(OPTION_DELIMITER," ");
         this.idFileName = "idfile.dat";
@@ -326,13 +327,13 @@ public class HGModularityOptimizer {
                                 com.baidu.hugegraph.structure.HugeEdge edge =
                                         (com.baidu.hugegraph.structure.HugeEdge)
                                                 edgeobj;
-                                 HugeConverter.  //sourceId = this.covertId(
+                                sourceId = this.covertId(HugeConverter.
                                         convertId(edge.sourceVertex().id().
-                                                asObject()).asObject();
+                                                asObject()).asObject());
 
-                                HugeConverter.  //targetId = this.covertId(
+                                targetId = this.covertId(HugeConverter.
                                         convertId(edge.targetVertex().id().
-                                                asObject()).asObject();
+                                                asObject()).asObject());
 
                                 if (StringUtils.isNotBlank(this.weightKey)) {
                                     Float weight_ = (Float)
@@ -358,10 +359,9 @@ public class HGModularityOptimizer {
                                 }
                             }
 
-                            /*
                             bufferedWriterEdge.writeInt(sourceId);
                             bufferedWriterEdge.writeInt(targetId);
-                            bufferedWriterEdge.writeFloat(weight); */
+                            bufferedWriterEdge.writeFloat(weight);
 
                             edgenums.incrementAndGet();
                         }
@@ -529,7 +529,7 @@ public class HGModularityOptimizer {
         return ++maxId;
     }
 
-    public synchronized int covertId(Object hgId) {
+    public int covertId(Object hgId) {
         return this.idMap.computeIfAbsent(hgId, k -> this.idGenerator());
     }
 
