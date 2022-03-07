@@ -1,713 +1,363 @@
-/*
- * Copyright 2017 HugeGraph Authors
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Random;
 
-public class Network implements Serializable {
+public class Network implements Cloneable, Serializable {
     private static final long serialVersionUID = 1;
-
-    protected int nNodes;
-    protected int nEdges;
-    protected double[] nodeWeight;
-    protected int[] firstNeighborIndex;
-    protected int[] neighbor;
-    protected double[] edgeWeight;
-    protected double totalEdgeWeightSelfLinks;
-
-    public static Network load(String fileName) throws ClassNotFoundException,
-            IOException {
-        Network network;
-        ObjectInputStream objectInputStream;
-
-        objectInputStream = new ObjectInputStream(
-                new FileInputStream(fileName));
-
-        network = (Network)objectInputStream.readObject();
-
-        objectInputStream.close();
-
-        return network;
+    private int nNodes;
+    private int[] firstNeighborIndex;
+    private int[] neighbor;
+    private double[] edgeWeight;
+    private double[] nodeWeight;
+    private int nClusters;
+    private int[] cluster;
+    private double[] clusterWeight;
+    private int[] nNodesPerCluster;
+    private int[][] nodePerCluster;
+    private boolean clusteringStatsAvailable;
+    public Network(int nNodes, int[] firstNeighborIndex, int[] neighbor,
+                   double[] edgeWeight, double[] nodeWeight) {
+        this(nNodes, firstNeighborIndex, neighbor, edgeWeight,
+                nodeWeight, null);
     }
 
-    public Network(int nNodes, int[][] edge) {
-        this(nNodes, null, edge, null);
-    }
-
-    public Network(int nNodes, double[] nodeWeight, int[][] edge) {
-        this(nNodes, nodeWeight, edge, null);
-    }
-
-    public Network(int nNodes, int[][] edge, double[] edgeWeight) {
-        this(nNodes, null, edge, edgeWeight);
-    }
-
-    public Network(int nNodes, double[] nodeWeight,
-                   int[][] edge, double[] edgeWeight) {
-        double[] edgeWeight2;
-        int i, j;
-        int[] neighbor;
-
+    public Network(int nNodes, int[] firstNeighborIndex, int[] neighbor,
+                   double[] edgeWeight, double[] nodeWeight, int[] cluster) {
+        int i, nEdges;
         this.nNodes = nNodes;
+        this.firstNeighborIndex = firstNeighborIndex;
+        this.neighbor = neighbor;
 
-        nEdges = 0;
-        firstNeighborIndex = new int[nNodes + 1];
-        neighbor = new int[edge[0].length];
-        edgeWeight2 = new double[edge[0].length];
-        totalEdgeWeightSelfLinks = 0;
-        i = 1;
-        for (j = 0; j < edge[0].length; j++)
-            if (edge[0][j] != edge[1][j]) {
-                if (edge[0][j] >= i)
-                    for (; i <= edge[0][j]; i++)
-                        firstNeighborIndex[i] = nEdges;
-                neighbor[nEdges] = edge[1][j];
-                edgeWeight2[nEdges] = (edgeWeight != null) ? edgeWeight[j] : 1;
-                nEdges++;
-            }
-            else
-                totalEdgeWeightSelfLinks +=
-                        (edgeWeight != null) ? edgeWeight[j] : 1;
-        for (; i <= nNodes; i++)
-            firstNeighborIndex[i] = nEdges;
-        this.neighbor = Arrays.copyOfRange(neighbor, 0, nEdges);
-        this.edgeWeight = Arrays.copyOfRange(edgeWeight2, 0, nEdges);
-
-        this.nodeWeight = (nodeWeight != null) ?
-                (double[])nodeWeight.clone() : getTotalEdgeWeightPerNode();
-    }
-
-    public Network(int nNodes, int[] firstNeighborIndex, int[] neighbor) {
-        this(nNodes, null, firstNeighborIndex, neighbor, null);
-    }
-
-    public Network(int nNodes, double[] nodeWeight,
-                   int[] firstNeighborIndex, int[] neighbor) {
-        this(nNodes, nodeWeight, firstNeighborIndex, neighbor, null);
-    }
-
-    public Network(int nNodes, int[] firstNeighborIndex,
-                   int[] neighbor, double[] edgeWeight) {
-        this(nNodes, null, firstNeighborIndex, neighbor, edgeWeight);
-    }
-
-    public Network(int nNodes, double[] nodeWeight, int[] firstNeighborIndex,
-                   int[] neighbor, double[] edgeWeight) {
-        this.nNodes = nNodes;
-
-        nEdges = neighbor.length;
-        this.firstNeighborIndex = (int[])firstNeighborIndex.clone();
-        this.neighbor = (int[])neighbor.clone();
-        if (edgeWeight != null)
-            this.edgeWeight = (double[])edgeWeight.clone();
-        else {
+        if (edgeWeight == null) {
+            nEdges = neighbor.length;
             this.edgeWeight = new double[nEdges];
-            Arrays.fill(this.edgeWeight, 1);
-        }
-        totalEdgeWeightSelfLinks = 0;
+            for (i = 0; i < nEdges; i++)
+                this.edgeWeight[i] = 1;
+        } else
+            this.edgeWeight = edgeWeight;
 
-        this.nodeWeight = (nodeWeight != null) ?
-                (double[])nodeWeight.clone() : getTotalEdgeWeightPerNode();
-    }
-
-    public void save(String fileName) throws IOException {
-        ObjectOutputStream objectOutputStream;
-
-        objectOutputStream = new ObjectOutputStream(
-                new FileOutputStream(fileName));
-
-        objectOutputStream.writeObject(this);
-
-        objectOutputStream.close();
+        if (nodeWeight == null) {
+            this.nodeWeight = new double[nNodes];
+            for (i = 0; i < nNodes; i++)
+                this.nodeWeight[i] = 1;
+        } else
+            this.nodeWeight = nodeWeight;
     }
 
     public int getNNodes() {
         return nNodes;
     }
 
-    public double getTotalNodeWeight() {
-        return Arrays2.calcSum(nodeWeight);
-    }
-
-    public double[] getNodeWeights() {
-        return (double[])nodeWeight.clone();
-    }
-
-    public double getNodeWeight(int node) {
-        return nodeWeight[node];
-    }
-
     public int getNEdges() {
-        return nEdges / 2;
-    }
-
-    public int getNEdges(int node) {
-        return firstNeighborIndex[node + 1] - firstNeighborIndex[node];
-    }
-
-    public int[] getNEdgesPerNode() {
-        int i;
-        int[] nEdgesPerNode;
-
-        nEdgesPerNode = new int[nNodes];
-        for (i = 0; i < nNodes; i++)
-            nEdgesPerNode[i] = firstNeighborIndex[i + 1] -
-                    firstNeighborIndex[i];
-        return nEdgesPerNode;
-    }
-
-    public int[][] getEdges() {
-        int i;
-        int[][] edge;
-
-        edge = new int[2][];
-        edge[0] = new int[nEdges];
-        for (i = 0; i < nNodes; i++)
-            Arrays.fill(edge[0], firstNeighborIndex[i],
-                    firstNeighborIndex[i + 1], i);
-        edge[1] = (int[])neighbor.clone();
-        return edge;
-    }
-
-    public int[] getEdges(int node) {
-        return Arrays.copyOfRange(neighbor,
-                firstNeighborIndex[node], firstNeighborIndex[node + 1]);
-    }
-
-    public int[][] getEdgesPerNode() {
-        int i;
-        int[][] edgePerNode;
-
-        edgePerNode = new int[nNodes][];
-        for (i = 0; i < nNodes; i++)
-            edgePerNode[i] = Arrays.copyOfRange(neighbor,
-                    firstNeighborIndex[i], firstNeighborIndex[i + 1]);
-        return edgePerNode;
+        return neighbor.length;
     }
 
     public double getTotalEdgeWeight() {
-        return Arrays2.calcSum(edgeWeight) / 2;
-    }
-
-    public double getTotalEdgeWeight(int node) {
-        return Arrays2.calcSum(edgeWeight, firstNeighborIndex[node],
-                firstNeighborIndex[node + 1]);
-    }
-
-    public double[] getTotalEdgeWeightPerNode() {
-        double[] totalEdgeWeightPerNode;
+        double totalEdgeWeight;
         int i;
-
-        totalEdgeWeightPerNode = new double[nNodes];
-        for (i = 0; i < nNodes; i++)
-            totalEdgeWeightPerNode[i] = Arrays2.calcSum(edgeWeight,
-                    firstNeighborIndex[i], firstNeighborIndex[i + 1]);
-        return totalEdgeWeightPerNode;
+        totalEdgeWeight = 0;
+        for (i = 0; i < neighbor.length; i++)
+            totalEdgeWeight += edgeWeight[i];
+        return totalEdgeWeight;
     }
 
     public double[] getEdgeWeights() {
-        return (double[])edgeWeight.clone();
+        return edgeWeight;
     }
 
-    public double[] getEdgeWeights(int node) {
-        return Arrays.copyOfRange(edgeWeight, firstNeighborIndex[node],
-                firstNeighborIndex[node + 1]);
+    public double[] getNodeWeights() {
+        return nodeWeight;
     }
 
-    public double[][] getEdgeWeightsPerNode() {
-        double[][] edgeWeightPerNode;
+    public int getNClusters() {
+        return nClusters;
+    }
+
+    public int[] getClusters() {
+        return cluster;
+    }
+
+    public void initSingletonClusters() {
         int i;
-
-        edgeWeightPerNode = new double[nNodes][];
+        nClusters = nNodes;
+        cluster = new int[nNodes];
         for (i = 0; i < nNodes; i++)
-            edgeWeightPerNode[i] = Arrays.copyOfRange(edgeWeight,
-                    firstNeighborIndex[i], firstNeighborIndex[i + 1]);
-        return edgeWeightPerNode;
+            cluster[i] = i;
+        deleteClusteringStats();
     }
 
-    public double getTotalEdgeWeightSelfLinks() {
-        return totalEdgeWeightSelfLinks;
-    }
+    public void mergeClusters(int[] newCluster) {
+        int i, j, k;
+        if (cluster == null)
+            return;
 
-    public Network createNetworkWithoutNodeWeights() {
-        Network networkWithoutNodeWeights;
-
-        networkWithoutNodeWeights = new Network();
-        networkWithoutNodeWeights.nNodes = nNodes;
-        networkWithoutNodeWeights.nEdges = nEdges;
-        networkWithoutNodeWeights.nodeWeight = new double[nNodes];
-        Arrays.fill(networkWithoutNodeWeights.nodeWeight, 1);
-        networkWithoutNodeWeights.firstNeighborIndex = firstNeighborIndex;
-        networkWithoutNodeWeights.neighbor = neighbor;
-        networkWithoutNodeWeights.edgeWeight = edgeWeight;
-        networkWithoutNodeWeights.totalEdgeWeightSelfLinks =
-                totalEdgeWeightSelfLinks;
-        return networkWithoutNodeWeights;
-    }
-
-    public Network createNetworkWithoutEdgeWeights() {
-        Network networkWithoutEdgeWeights;
-
-        networkWithoutEdgeWeights = new Network();
-        networkWithoutEdgeWeights.nNodes = nNodes;
-        networkWithoutEdgeWeights.nEdges = nEdges;
-        networkWithoutEdgeWeights.nodeWeight = nodeWeight;
-        networkWithoutEdgeWeights.firstNeighborIndex = firstNeighborIndex;
-        networkWithoutEdgeWeights.neighbor = neighbor;
-        networkWithoutEdgeWeights.edgeWeight = new double[nEdges];
-        Arrays.fill(networkWithoutEdgeWeights.edgeWeight, 1);
-        networkWithoutEdgeWeights.totalEdgeWeightSelfLinks = 0;
-        return networkWithoutEdgeWeights;
-    }
-
-    public Network createNetworkWithoutNodeAndEdgeWeights() {
-        Network networkWithoutNodeAndEdgeWeights;
-
-        networkWithoutNodeAndEdgeWeights = new Network();
-        networkWithoutNodeAndEdgeWeights.nNodes = nNodes;
-        networkWithoutNodeAndEdgeWeights.nEdges = nEdges;
-        networkWithoutNodeAndEdgeWeights.nodeWeight = new double[nNodes];
-        Arrays.fill(networkWithoutNodeAndEdgeWeights.nodeWeight, 1);
-        networkWithoutNodeAndEdgeWeights.firstNeighborIndex =
-                firstNeighborIndex;
-        networkWithoutNodeAndEdgeWeights.neighbor = neighbor;
-        networkWithoutNodeAndEdgeWeights.edgeWeight = new double[nEdges];
-        Arrays.fill(networkWithoutNodeAndEdgeWeights.edgeWeight, 1);
-        networkWithoutNodeAndEdgeWeights.totalEdgeWeightSelfLinks = 0;
-        return networkWithoutNodeAndEdgeWeights;
-    }
-
-    public Network createNormalizedNetwork1() {
-        double totalNodeWeight;
-        int i, j;
-        Network normalizedNetwork;
-
-        normalizedNetwork = new Network();
-
-        normalizedNetwork.nNodes = nNodes;
-        normalizedNetwork.nEdges = nEdges;
-        normalizedNetwork.nodeWeight = new double[nNodes];
-        Arrays.fill(normalizedNetwork.nodeWeight, 1);
-        normalizedNetwork.firstNeighborIndex = firstNeighborIndex;
-        normalizedNetwork.neighbor = neighbor;
-
-        normalizedNetwork.edgeWeight = new double[nEdges];
-        totalNodeWeight = getTotalNodeWeight();
-        for (i = 0; i < nNodes; i++)
-            for (j = firstNeighborIndex[i]; j < firstNeighborIndex[i + 1]; j++)
-                normalizedNetwork.edgeWeight[j] =
-                        edgeWeight[j] / ((nodeWeight[i] *
-                        nodeWeight[neighbor[j]]) / totalNodeWeight);
-
-        normalizedNetwork.totalEdgeWeightSelfLinks = 0;
-
-        return normalizedNetwork;
-    }
-
-    public Network createNormalizedNetwork2() {
-        int i, j;
-        Network normalizedNetwork;
-
-        normalizedNetwork = new Network();
-
-        normalizedNetwork.nNodes = nNodes;
-        normalizedNetwork.nEdges = nEdges;
-        normalizedNetwork.nodeWeight = new double[nNodes];
-        Arrays.fill(normalizedNetwork.nodeWeight, 1);
-        normalizedNetwork.firstNeighborIndex = firstNeighborIndex;
-        normalizedNetwork.neighbor = neighbor;
-
-        normalizedNetwork.edgeWeight = new double[nEdges];
-        for (i = 0; i < nNodes; i++)
-            for (j = firstNeighborIndex[i]; j < firstNeighborIndex[i + 1]; j++)
-                normalizedNetwork.edgeWeight[j] = edgeWeight[j] / (2 / (nNodes /
-                        nodeWeight[i] + nNodes / nodeWeight[neighbor[j]]));
-
-        normalizedNetwork.totalEdgeWeightSelfLinks = 0;
-
-        return normalizedNetwork;
-    }
-
-    public Network createPrunedNetwork(int nEdges) {
-        return createPrunedNetwork(nEdges, new Random());
-    }
-
-    public Network createPrunedNetwork(int nEdges, Random random) {
-        double edgeWeightThreshold, randomNumberThreshold;
-        double[] edgeWeight, randomNumber;
-        int i, j, k, nEdgesAboveThreshold, nEdgesAtThreshold;
-        int[] nodePermutation;
-        Network prunedNetwork;
-
-        nEdges *= 2;
-
-        if (nEdges >= this.nEdges)
-            return this;
-
-        edgeWeight = new double[this.nEdges / 2];
-        i = 0;
-        for (j = 0; j < nNodes; j++)
-            for (k = firstNeighborIndex[j]; k < firstNeighborIndex[j + 1]; k++)
-                if (neighbor[k] < j) {
-                    edgeWeight[i] = this.edgeWeight[k];
-                    i++;
-                }
-        Arrays.sort(edgeWeight);
-        edgeWeightThreshold = edgeWeight[(this.nEdges - nEdges) / 2];
-
-        nEdgesAboveThreshold = 0;
-        while (edgeWeight[this.nEdges / 2 - nEdgesAboveThreshold - 1] >
-                edgeWeightThreshold)
-            nEdgesAboveThreshold++;
-        nEdgesAtThreshold = 0;
-        while ((nEdgesAboveThreshold + nEdgesAtThreshold < this.nEdges / 2) &&
-                (edgeWeight[this.nEdges / 2 - nEdgesAboveThreshold -
-                        nEdgesAtThreshold - 1] == edgeWeightThreshold))
-            nEdgesAtThreshold++;
-
-        nodePermutation = Arrays2.generateRandomPermutation(nNodes, random);
-
-        randomNumber = new double[nEdgesAtThreshold];
-        i = 0;
-        for (j = 0; j < nNodes; j++)
-            for (k = firstNeighborIndex[j]; k < firstNeighborIndex[j + 1]; k++)
-                if ((neighbor[k] < j) && (this.edgeWeight[k] ==
-                        edgeWeightThreshold)) {
-                    randomNumber[i] = generateRandomNumber(j,
-                            neighbor[k], nodePermutation);
-                    i++;
-                }
-        Arrays.sort(randomNumber);
-        randomNumberThreshold = randomNumber[nEdgesAboveThreshold +
-                nEdgesAtThreshold - nEdges / 2];
-
-        prunedNetwork = new Network();
-
-        prunedNetwork.nNodes = nNodes;
-        prunedNetwork.nEdges = nEdges;
-        prunedNetwork.nodeWeight = nodeWeight;
-
-        prunedNetwork.firstNeighborIndex = new int[nNodes + 1];
-        prunedNetwork.neighbor = new int[nEdges];
-        prunedNetwork.edgeWeight = new double[nEdges];
         i = 0;
         for (j = 0; j < nNodes; j++) {
-            for (k = firstNeighborIndex[j]; k < firstNeighborIndex[j + 1]; k++)
-                if ((this.edgeWeight[k] > edgeWeightThreshold) ||
-                        ((this.edgeWeight[k] == edgeWeightThreshold) &&
-                                (generateRandomNumber(j, neighbor[k],
-                                nodePermutation) >= randomNumberThreshold))) {
-                    prunedNetwork.neighbor[i] = neighbor[k];
-                    prunedNetwork.edgeWeight[i] = this.edgeWeight[k];
-                    i++;
-                }
-            prunedNetwork.firstNeighborIndex[j + 1] = i;
+            k = newCluster[cluster[j]];
+            if (k > i)
+                i = k;
+            cluster[j] = k;
         }
-
-        prunedNetwork.totalEdgeWeightSelfLinks = totalEdgeWeightSelfLinks;
-
-        return prunedNetwork;
+        nClusters = i + 1;
+        deleteClusteringStats();
     }
 
-    public Network createSubnetwork(int[] node) {
-        double[] subnetworkEdgeWeight;
-        int i, j, k;
-        int[] subnetworkNode, subnetworkNeighbor;
-        Network subnetwork;
-
-        subnetwork = new Network();
-
-        subnetwork.nNodes = node.length;
-
-        if (subnetwork.nNodes == 1) {
-            subnetwork.nEdges = 0;
-            subnetwork.nodeWeight = new double[] {nodeWeight[node[0]]};
-            subnetwork.firstNeighborIndex = new int[2];
-            subnetwork.neighbor = new int[0];
-            subnetwork.edgeWeight = new double[0];
-        }
-        else {
-            subnetworkNode = new int[nNodes];
-            Arrays.fill(subnetworkNode, -1);
-            for (i = 0; i < node.length; i++)
-                subnetworkNode[node[i]] = i;
-
-            subnetwork.nEdges = 0;
-            subnetwork.nodeWeight = new double[subnetwork.nNodes];
-            subnetwork.firstNeighborIndex = new int[subnetwork.nNodes + 1];
-            subnetworkNeighbor = new int[nEdges];
-            subnetworkEdgeWeight = new double[nEdges];
-            for (i = 0; i < subnetwork.nNodes; i++) {
-                j = node[i];
-                subnetwork.nodeWeight[i] = nodeWeight[j];
-                for (k = firstNeighborIndex[j];
-                     k < firstNeighborIndex[j + 1]; k++)
-                    if (subnetworkNode[neighbor[k]] >= 0) {
-                        subnetworkNeighbor[subnetwork.nEdges] =
-                                subnetworkNode[neighbor[k]];
-                        subnetworkEdgeWeight[subnetwork.nEdges] = edgeWeight[k];
-                        subnetwork.nEdges++;
-                    }
-                subnetwork.firstNeighborIndex[i + 1] = subnetwork.nEdges;
-            }
-            subnetwork.neighbor = Arrays.copyOfRange(subnetworkNeighbor,
-                    0, subnetwork.nEdges);
-            subnetwork.edgeWeight = Arrays.copyOfRange(subnetworkEdgeWeight,
-                    0, subnetwork.nEdges);
-        }
-
-        subnetwork.totalEdgeWeightSelfLinks = 0;
-
-        return subnetwork;
-    }
-
-    public Network createSubnetwork(boolean[] nodeInSubnetwork) {
-        int i, j;
-        int[] node;
-
-        i = 0;
-        for (j = 0; j < nNodes; j++)
-            if (nodeInSubnetwork[j])
-                i++;
-        node = new int[i];
-        i = 0;
-        for (j = 0; j < nNodes; j++)
-            if (nodeInSubnetwork[j]) {
-                node[i] = j;
-                i++;
-            }
-        return createSubnetwork(node);
-    }
-
-    public Network createSubnetwork(Clustering clustering, int cluster) {
-        double[] subnetworkEdgeWeight;
-        int[] subnetworkNeighbor, subnetworkNode;
-        int[][] nodePerCluster;
-        Network subnetwork;
-
-        nodePerCluster = clustering.getNodesPerCluster();
-        subnetworkNode = new int[nNodes];
-        subnetworkNeighbor = new int[nEdges];
-        subnetworkEdgeWeight = new double[nEdges];
-        subnetwork = createSubnetwork(
-                clustering, cluster, nodePerCluster[cluster],
-                subnetworkNode, subnetworkNeighbor, subnetworkEdgeWeight);
-        return subnetwork;
-    }
-
-    public Network[] createSubnetworks(Clustering clustering) {
-        double[] subnetworkEdgeWeight;
-        int i;
-        int[] subnetworkNeighbor, subnetworkNode;
-        int[][] nodePerCluster;
-        Network[] subnetwork;
-
-        subnetwork = new Network[clustering.nClusters];
-        nodePerCluster = clustering.getNodesPerCluster();
-        subnetworkNode = new int[nNodes];
-        subnetworkNeighbor = new int[nEdges];
-        subnetworkEdgeWeight = new double[nEdges];
-        for (i = 0; i < clustering.nClusters; i++)
-            subnetwork[i] = createSubnetwork(clustering, i, nodePerCluster[i],
-                    subnetworkNode, subnetworkNeighbor, subnetworkEdgeWeight);
-        return subnetwork;
-    }
-
-    public Network createSubnetworkLargestComponent() {
-        return createSubnetwork(identifyComponents(), 0);
-    }
-
-    public Network createReducedNetwork(Clustering clustering) {
+    public Network getReducedNetwork() {
         double[] reducedNetworkEdgeWeight1, reducedNetworkEdgeWeight2;
-        int i, j, k, l, m, n;
+        int i, j, k, l, m, reducedNetworkNEdges1, reducedNetworkNEdges2;
         int[] reducedNetworkNeighbor1, reducedNetworkNeighbor2;
-        int[][] nodePerCluster;
         Network reducedNetwork;
+        if (cluster == null)
+            return null;
+
+        if (!clusteringStatsAvailable)
+            calcClusteringStats();
 
         reducedNetwork = new Network();
+        reducedNetwork.nNodes = nClusters;
+        reducedNetwork.firstNeighborIndex = new int[nClusters + 1];
+        reducedNetwork.nodeWeight = new double[nClusters];
+        reducedNetworkNeighbor1 = new int[neighbor.length];
+        reducedNetworkEdgeWeight1 = new double[edgeWeight.length];
+        reducedNetworkNeighbor2 = new int[nClusters - 1];
+        reducedNetworkEdgeWeight2 = new double[nClusters];
+        reducedNetworkNEdges1 = 0;
 
-        reducedNetwork.nNodes = clustering.nClusters;
-
-        reducedNetwork.nEdges = 0;
-        reducedNetwork.nodeWeight = new double[clustering.nClusters];
-        reducedNetwork.firstNeighborIndex = new int[clustering.nClusters + 1];
-        reducedNetwork.totalEdgeWeightSelfLinks = totalEdgeWeightSelfLinks;
-        reducedNetworkNeighbor1 = new int[nEdges];
-        reducedNetworkEdgeWeight1 = new double[nEdges];
-        reducedNetworkNeighbor2 = new int[clustering.nClusters - 1];
-        reducedNetworkEdgeWeight2 = new double[clustering.nClusters];
-        nodePerCluster = clustering.getNodesPerCluster();
-        for (i = 0; i < clustering.nClusters; i++) {
-            j = 0;
-            for (k = 0; k < nodePerCluster[i].length; k++) {
-                l = nodePerCluster[i][k];
-
-                reducedNetwork.nodeWeight[i] += nodeWeight[l];
-
-                for (m = firstNeighborIndex[l];
-                     m < firstNeighborIndex[l + 1]; m++) {
-                    n = clustering.cluster[neighbor[m]];
-                    if (n != i) {
-                        if (reducedNetworkEdgeWeight2[n] == 0) {
-                            reducedNetworkNeighbor2[j] = n;
-                            j++;
+        for (i = 0; i < nClusters; i++) {
+            reducedNetworkNEdges2 = 0;
+            for (j = 0; j < nodePerCluster[i].length; j++) {
+                k = nodePerCluster[i][j]; // k是簇i中第j个节点的id
+                for (l = firstNeighborIndex[k]; l < firstNeighborIndex[k + 1];
+                     l++) {
+                    m = cluster[neighbor[l]]; // m是k的在l位置的邻居节点所属的簇id
+                    if (m != i) {
+                        if (reducedNetworkEdgeWeight2[m] == 0) {
+                            reducedNetworkNeighbor2[reducedNetworkNEdges2] = m;
+                            reducedNetworkNEdges2++;
                         }
-                        reducedNetworkEdgeWeight2[n] += edgeWeight[m];
+                        reducedNetworkEdgeWeight2[m] += edgeWeight[l];
                     }
-                    else
-                        reducedNetwork.totalEdgeWeightSelfLinks +=
-                                edgeWeight[m];
                 }
+                reducedNetwork.nodeWeight[i] += nodeWeight[k];
             }
 
-            for (k = 0; k < j; k++) {
-                reducedNetworkNeighbor1[reducedNetwork.nEdges + k] =
-                        reducedNetworkNeighbor2[k];
-                reducedNetworkEdgeWeight1[reducedNetwork.nEdges + k] =
-                        reducedNetworkEdgeWeight2[reducedNetworkNeighbor2[k]];
-                reducedNetworkEdgeWeight2[reducedNetworkNeighbor2[k]] = 0;
+            for (j = 0; j < reducedNetworkNEdges2; j++) {
+                reducedNetworkNeighbor1[reducedNetworkNEdges1 + j] =
+                        reducedNetworkNeighbor2[j];
+                reducedNetworkEdgeWeight1[reducedNetworkNEdges1 + j] =
+                        reducedNetworkEdgeWeight2[reducedNetworkNeighbor2[j]];
+                reducedNetworkEdgeWeight2[reducedNetworkNeighbor2[j]] = 0;
             }
-            reducedNetwork.nEdges += j;
-            reducedNetwork.firstNeighborIndex[i + 1] = reducedNetwork.nEdges;
+            reducedNetworkNEdges1 += reducedNetworkNEdges2;
+            reducedNetwork.firstNeighborIndex[i + 1] = reducedNetworkNEdges1;
         }
-        reducedNetwork.neighbor = Arrays.copyOfRange(reducedNetworkNeighbor1,
-                0, reducedNetwork.nEdges);
-        reducedNetwork.edgeWeight = Arrays.copyOfRange(
-                reducedNetworkEdgeWeight1, 0, reducedNetwork.nEdges);
-
+        reducedNetwork.neighbor = new int[reducedNetworkNEdges1];
+        reducedNetwork.edgeWeight = new double[reducedNetworkNEdges1];
+        System.arraycopy(reducedNetworkNeighbor1, 0,
+                reducedNetwork.neighbor, 0, reducedNetworkNEdges1);
+        System.arraycopy(reducedNetworkEdgeWeight1, 0,
+                reducedNetwork.edgeWeight, 0, reducedNetworkNEdges1);
         return reducedNetwork;
     }
 
-    public Clustering identifyComponents() {
-        boolean[] nodeVisited;
-        Clustering clustering;
-        int i, j, k, l;
-        int[] node;
+    public double calcQualityFunction(double resolution) {
+        double qualityFunction, totalEdgeWeight;
+        int i, j, k;
+        if (cluster == null)
+            return Double.NaN;
+        if (!clusteringStatsAvailable)
+            calcClusteringStats();
+        qualityFunction = 0;
+        totalEdgeWeight = 0;
+        for (i = 0; i < nNodes; i++) {
+            j = cluster[i];
+            for (k = firstNeighborIndex[i];k < firstNeighborIndex[i + 1];k++) {
+                if (cluster[neighbor[k]] == j)
+                    qualityFunction += edgeWeight[k];
+                totalEdgeWeight += edgeWeight[k];
+            }
+        }
 
-        clustering = new Clustering(nNodes);
+        for (i = 0; i < nClusters; i++)
+            qualityFunction -= clusterWeight[i] * clusterWeight[i] * resolution;
 
-        clustering.nClusters = 0;
-        nodeVisited = new boolean[nNodes];
-        node = new int[nNodes];
+        qualityFunction /= totalEdgeWeight;
+        return qualityFunction;
+
+    }
+
+    public boolean runLocalMovingAlgorithm(double resolution) {
+        return runLocalMovingAlgorithm(resolution, new Random());
+    }
+
+    public boolean runLocalMovingAlgorithm(double resolution, Random random) {
+        boolean update;
+        double maxQualityFunction, qualityFunction;
+        double[] clusterWeight, edgeWeightPerCluster;
+        int bestCluster, i, j, k, l, nNeighboringClusters,
+                nStableNodes, nUnusedClusters;
+        int[] neighboringCluster, newCluster, nNodesPerCluster,
+                nodeOrder, unusedCluster;
+        if ((cluster == null) || (nNodes == 1))
+            return false;
+
+        update = false;
+        clusterWeight = new double[nNodes];
+        nNodesPerCluster = new int[nNodes];
+
+        for (i = 0; i < nNodes; i++) {
+            clusterWeight[cluster[i]] += nodeWeight[i];
+            nNodesPerCluster[cluster[i]]++;
+        }
+
+        nUnusedClusters = 0;
+        unusedCluster = new int[nNodes];
         for (i = 0; i < nNodes; i++)
-            if (!nodeVisited[i]) {
-                clustering.cluster[i] = clustering.nClusters;
-                nodeVisited[i] = true;
-                node[0] = i;
-                j = 1;
-                k = 0;
-                do {
-                    for (l = firstNeighborIndex[node[k]];
-                         l < firstNeighborIndex[node[k] + 1]; l++)
-                        if (!nodeVisited[neighbor[l]]) {
-                            clustering.cluster[neighbor[l]] =
-                                    clustering.nClusters;
-                            nodeVisited[neighbor[l]] = true;
-                            node[j] = neighbor[l];
-                            j++;
-                        }
-                    k++;
-                }
-                while (k < j);
-
-                clustering.nClusters++;
+            if (nNodesPerCluster[i] == 0) {
+                unusedCluster[nUnusedClusters] = i;
+                nUnusedClusters++;
             }
 
-        clustering.orderClustersByNNodes();
+        nodeOrder = new int[nNodes];
+        for (i = 0; i < nNodes; i++)
+            nodeOrder[i] = i;
 
-        return clustering;
+        for (i = 0; i < nNodes; i++) {
+            j = random.nextInt(nNodes);
+            k = nodeOrder[i];
+            nodeOrder[i] = nodeOrder[j];
+            nodeOrder[j] = k;
+        }
+
+        edgeWeightPerCluster = new double[nNodes];
+        neighboringCluster = new int[nNodes - 1];
+        nStableNodes = 0;
+        i = 0;
+
+        do {
+            j = nodeOrder[i];
+            nNeighboringClusters = 0;
+            for (k = firstNeighborIndex[j];k < firstNeighborIndex[j + 1];k++) {
+                l = cluster[neighbor[k]];
+                if (edgeWeightPerCluster[l] == 0) {
+                    neighboringCluster[nNeighboringClusters] = l;
+                    nNeighboringClusters++;
+                }
+                edgeWeightPerCluster[l] += edgeWeight[k];
+            }
+
+            clusterWeight[cluster[j]] -= nodeWeight[j];
+            nNodesPerCluster[cluster[j]]--;
+            if (nNodesPerCluster[cluster[j]] == 0) {
+                unusedCluster[nUnusedClusters] = cluster[j];
+                nUnusedClusters++;
+            }
+
+            bestCluster = -1;
+            maxQualityFunction = 0;
+            for (k = 0; k < nNeighboringClusters; k++) {
+                l = neighboringCluster[k];
+                qualityFunction = edgeWeightPerCluster[l] -
+                        nodeWeight[j] * clusterWeight[l] * resolution;
+                if ((qualityFunction > maxQualityFunction) ||
+                        ((qualityFunction == maxQualityFunction) &&
+                                (l < bestCluster))) {
+                    bestCluster = l;
+                    maxQualityFunction = qualityFunction;
+                }
+                edgeWeightPerCluster[l] = 0;
+            }
+
+            if (maxQualityFunction == 0) {
+                bestCluster = unusedCluster[nUnusedClusters - 1];
+                nUnusedClusters--;
+            }
+
+            clusterWeight[bestCluster] += nodeWeight[j];
+            nNodesPerCluster[bestCluster]++;
+            if (bestCluster == cluster[j])
+                nStableNodes++;
+            else {
+                cluster[j] = bestCluster;
+                nStableNodes = 1;
+                update = true;
+            }
+            i = (i < nNodes - 1) ? (i + 1) : 0;
+
+        } while (nStableNodes < nNodes); // 优化步骤是直到所有的点都稳定下来才结束
+
+        newCluster = new int[nNodes];
+        nClusters = 0;
+        for (i = 0; i < nNodes; i++)
+            if (nNodesPerCluster[i] > 0) {
+                newCluster[i] = nClusters;
+                nClusters++;
+            }
+
+        for (i = 0; i < nNodes; i++)
+            cluster[i] = newCluster[cluster[i]];
+
+        deleteClusteringStats();
+        return update;
+    }
+
+    public boolean runLouvainAlgorithm(double resolution) {
+        return runLouvainAlgorithm(resolution, new Random());
+    }
+
+    public boolean runLouvainAlgorithm(double resolution, Random random) {
+        boolean update, update2;
+        Network reducedNetwork;
+        if ((cluster == null) || (nNodes == 1))
+            return false;
+
+        update = runLocalMovingAlgorithm(resolution, random);
+
+        if (nClusters < nNodes) {
+            reducedNetwork = getReducedNetwork();
+            reducedNetwork.initSingletonClusters();
+            update2 = reducedNetwork.runLouvainAlgorithm(resolution, random);
+            if (update2) {
+                update = true;
+                mergeClusters(reducedNetwork.getClusters());
+            }
+        }
+        deleteClusteringStats();
+        return update;
     }
 
     private Network() {
     }
 
-    private double generateRandomNumber(int node1, int node2,
-                                        int[] nodePermutation) {
+    private void calcClusteringStats() {
         int i, j;
-        Random random;
+        clusterWeight = new double[nClusters];
+        nNodesPerCluster = new int[nClusters];
+        nodePerCluster = new int[nClusters][];
+        for (i = 0; i < nNodes; i++) {
+            clusterWeight[cluster[i]] += nodeWeight[i];
+            nNodesPerCluster[cluster[i]]++;
+        }
 
-        if (node1 < node2) {
-            i = node1;
-            j = node2;
+        for (i = 0; i < nClusters; i++) {
+            nodePerCluster[i] = new int[nNodesPerCluster[i]];
+            nNodesPerCluster[i] = 0;
         }
-        else {
-            i = node2;
-            j = node1;
+
+        for (i = 0; i < nNodes; i++) {
+            j = cluster[i];
+            nodePerCluster[j][nNodesPerCluster[j]] = i;
+            nNodesPerCluster[j]++;
         }
-        random = new Random(nodePermutation[i] * nNodes + nodePermutation[j]);
-        return random.nextDouble();
+
+        clusteringStatsAvailable = true;
     }
 
-    private Network createSubnetwork(Clustering clustering, int cluster,
-                                     int[] node, int[] subnetworkNode,
-                                     int[] subnetworkNeighbor,
-                                     double[] subnetworkEdgeWeight) {
-        int i, j, k;
-        Network subnetwork;
-
-        subnetwork = new Network();
-
-        subnetwork.nNodes = node.length;
-
-        if (subnetwork.nNodes == 1) {
-            subnetwork.nEdges = 0;
-            subnetwork.nodeWeight = new double[] {nodeWeight[node[0]]};
-            subnetwork.firstNeighborIndex = new int[2];
-            subnetwork.neighbor = new int[0];
-            subnetwork.edgeWeight = new double[0];
-        }
-        else {
-            for (i = 0; i < node.length; i++)
-                subnetworkNode[node[i]] = i;
-
-            subnetwork.nEdges = 0;
-            subnetwork.nodeWeight = new double[subnetwork.nNodes];
-            subnetwork.firstNeighborIndex = new int[subnetwork.nNodes + 1];
-            for (i = 0; i < subnetwork.nNodes; i++) {
-                j = node[i];
-                subnetwork.nodeWeight[i] = nodeWeight[j];
-                for (k = firstNeighborIndex[j];
-                     k < firstNeighborIndex[j + 1]; k++)
-                    if (clustering.cluster[neighbor[k]] == cluster) {
-                        subnetworkNeighbor[subnetwork.nEdges] =
-                                subnetworkNode[neighbor[k]];
-                        subnetworkEdgeWeight[subnetwork.nEdges] = edgeWeight[k];
-                        subnetwork.nEdges++;
-                    }
-                subnetwork.firstNeighborIndex[i + 1] = subnetwork.nEdges;
-            }
-            subnetwork.neighbor = Arrays.copyOfRange(subnetworkNeighbor,
-                    0, subnetwork.nEdges);
-            subnetwork.edgeWeight = Arrays.copyOfRange(subnetworkEdgeWeight,
-                    0, subnetwork.nEdges);
-        }
-
-        subnetwork.totalEdgeWeightSelfLinks = 0;
-
-        return subnetwork;
+    private void deleteClusteringStats() {
+        clusterWeight = null;
+        nNodesPerCluster = null;
+        nodePerCluster = null;
+        clusteringStatsAvailable = false;
     }
 }

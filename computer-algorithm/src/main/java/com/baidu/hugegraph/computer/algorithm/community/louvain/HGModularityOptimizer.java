@@ -115,8 +115,11 @@ public class HGModularityOptimizer {
         int nIterations = config.getInt(OPTION_ITERATIONS,1);
         long randomSeed = config.getLong(OPTION_RANDOMSEED,100);
 
-        VOSClusteringTechnique vOSClusteringTechnique;
         double modularity, maxModularity, resolution2;
+        int[] cluster;
+        int nClusters;
+        cluster = null;
+        nClusters = -1;
         int i, j;
 
         LOG.info("Modularity Optimizer version 1.3.0 by Ludo Waltman and " +
@@ -160,19 +163,16 @@ public class HGModularityOptimizer {
         }
 
         resolution2 = ((modularityFunction == 1) ?
-                       (resolution / (2 * network.getTotalEdgeWeight() +
-                                      network.totalEdgeWeightSelfLinks)) :
+                       (resolution / network.getTotalEdgeWeight()) :
                        resolution);
 
-        Clustering clustering = null;
         maxModularity = Double.NEGATIVE_INFINITY;
         Random random = new Random(randomSeed);
         for (i = 0; i < nRandomStarts; i++) {
             if (nRandomStarts > 1) {
                 LOG.info("Random start: {}", i + 1);
             }
-            vOSClusteringTechnique = new VOSClusteringTechnique(network,
-                                                                resolution2);
+            network.initSingletonClusters(); //网络初始化，每个节点一个簇
 
             j = 0;
             boolean update = true;
@@ -181,23 +181,18 @@ public class HGModularityOptimizer {
                     LOG.info("Iteration: {}", j + 1);
                 }
                 if (algorithm == 1) {
-                    update = vOSClusteringTechnique.runLouvainAlgorithm(random);
-                } else if (algorithm == 2) {
-                    update = vOSClusteringTechnique
-                            .runLouvainAlgorithmWithMultilevelRefinement(
-                                    random);
-                } else if (algorithm == 3) {
-                    vOSClusteringTechnique.runSmartLocalMovingAlgorithm(random);
+                    network.runLouvainAlgorithm(resolution2, random);
                 }
                 j++;
-                modularity = vOSClusteringTechnique.calcQualityFunction();
+                modularity = network.calcQualityFunction(resolution2);
                 if (nIterations > 1) {
                     LOG.info("Modularity: {}", modularity);
                 }
             } while ((j < nIterations) && update);
 
             if (modularity > maxModularity) {
-                clustering = vOSClusteringTechnique.getClustering();
+                cluster = network.getClusters();
+                nClusters = network.getNClusters();
                 maxModularity = modularity;
             }
 
@@ -225,7 +220,7 @@ public class HGModularityOptimizer {
         ComputerOutput output = this.config.createObject(
                 ComputerOptions.OUTPUT_CLASS);
         output.init(this.config, 1);
-        this.writeOutput(clustering,output);
+        this.writeOutput(cluster, nClusters, output);
         output.close();
 
         /*
@@ -511,7 +506,9 @@ public class HGModularityOptimizer {
         }
 
         Network network;
-        if (modularityFunction == 1) {
+        network = new Network(nNodes, firstNeighborIndex, neighbor,
+                edgeWeight2, nodeWeight);
+        /*if (modularityFunction == 1) {
             network = new Network(nNodes, firstNeighborIndex, neighbor,
                                   edgeWeight2);
         } else {
@@ -519,7 +516,7 @@ public class HGModularityOptimizer {
             Arrays.fill(nodeWeight, 1);
             network = new Network(nNodes, nodeWeight, firstNeighborIndex,
                                   neighbor, edgeWeight2);
-        }
+        }*/
 
         return network;
     }
@@ -533,11 +530,10 @@ public class HGModularityOptimizer {
     }
 
 
-    private void writeOutput(Clustering clustering, ComputerOutput output) {
+    private void writeOutput(int[] cluster, int nClusters,
+                             ComputerOutput output) {
         int i, nNodes;
-        nNodes = clustering.getNNodes();
-        clustering.orderClustersByNNodes();
-        int nClusters = clustering.getNClusters();
+        nNodes = cluster.length;
         LOG.info("nClusters: {}", nClusters);
         LOG.info("nNodes: {}", nNodes);
         //BiMap<Integer, Object> biMap = this.idMap.inverse();
@@ -551,7 +547,7 @@ public class HGModularityOptimizer {
                 this.vertex.id(this.context.graphFactory().
                         createId(idList.get(i)));
                 this.vertex.value(new StringValue(
-                        Integer.toString(clustering.getCluster(i))));
+                        Integer.toString(cluster[i])));
                 output.write(this.vertex);
             }
         } catch (Exception e) {
