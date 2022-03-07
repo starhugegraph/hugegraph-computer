@@ -54,7 +54,7 @@ import com.baidu.hugegraph.computer.core.io.BufferedFileInput;
 import com.baidu.hugegraph.computer.core.io.BufferedFileOutput;
 import com.baidu.hugegraph.computer.core.output.ComputerOutput;
 import com.baidu.hugegraph.util.ExecutorUtil;
-import org.apache.commons.lang3.StringUtils;
+//import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
@@ -322,7 +322,7 @@ public class HGModularityOptimizer {
                                 lasthgTime = System.currentTimeMillis();
                             }
 
-                            if (inputType == 0) {
+                            /*if (inputType == 0) {
                                 com.baidu.hugegraph.structure.HugeEdge edge =
                                         (com.baidu.hugegraph.structure.HugeEdge)
                                                 edgeobj;
@@ -360,7 +360,7 @@ public class HGModularityOptimizer {
 
                             bufferedWriterEdge.writeInt(sourceId);
                             bufferedWriterEdge.writeInt(targetId);
-                            bufferedWriterEdge.writeFloat(weight);
+                            bufferedWriterEdge.writeFloat(weight); */
 
                             edgenums.incrementAndGet();
                         }
