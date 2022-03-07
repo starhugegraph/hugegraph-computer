@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Comparator;
+//import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -268,7 +268,7 @@ public class HGModularityOptimizer {
 
     private Network readFromHG(int modularityFunction) {
         int i, j, nEdges;
-        Entry[] edgeList = new Entry[1];
+        //Entry[] edgeList = new Entry[1];
         //List<Entry> edgeList = new ArrayList<>(1470000000);
         //List<Integer> node1 = new ArrayList<>(1470000000);
         //(this.initialCapacity);
@@ -307,9 +307,12 @@ public class HGModularityOptimizer {
                             hgFetcher.createIteratorFromEdge();
 
                     try {
+                        File file = new File("edgelist.dat" + tArray[0]);
+                        if (file.exists()) {
+                            file.delete();
+                        }
                         BufferedFileOutput bufferedWriterEdge =
-                                new BufferedFileOutput(
-                                    new File("edgelist.dat" + tArray[0]));
+                                new BufferedFileOutput(file);
                         long lasthgTime = 0;
                         while (iterator.hasNext()) {
                             com.baidu.hugegraph.structure.HugeEdge edge =
@@ -404,49 +407,36 @@ public class HGModularityOptimizer {
                 TimeUtil.readableTime(watcher.getTime()),
                 nums);
 
+        int nNodes = this.maxId + 1;
+        int[] nNeighbors = new int[nNodes];
         try {
             LOG.info("start load edge id and weight from file");
-            edgeList = new Entry[nums];
 
-            i = 0;
+            int count = 0;
             for (int t = 0; t < parallelNum; t++) {
                 BufferedFileInput bufferedReaderEdge = new BufferedFileInput(
                         new File("edgelist.dat" + t));
                 while (bufferedReaderEdge.available() > 0) {
                     if (System.currentTimeMillis() - lastTime >=
                             TimeUnit.SECONDS.toMillis(30L)) {
-                        LOG.info("Loading nums:{}", i + 1);
+                        LOG.info("Loading nums:{}", count + 1);
                         lastTime = System.currentTimeMillis();
                     }
                     int sourceid = bufferedReaderEdge.readInt();
                     int targetid = bufferedReaderEdge.readInt();
                     float weight = bufferedReaderEdge.readFloat();
-                    edgeList[i++] = new Entry(sourceid, targetid, weight);
+                    if (sourceid < targetid) {
+                        nNeighbors[sourceid]++;
+                        nNeighbors[targetid]++;
+                    }
+                    count++;
                 }
                 bufferedReaderEdge.close();
             }
-            LOG.info("read from tempfile, edge num=" + i);
+            LOG.info("end read from tempfile, edge num=" + count);
 
-            LOG.info("sort edgelist");
-            Arrays.sort(edgeList, new Comparator<Entry>() {
-                @Override
-                public int compare(Entry data1, Entry data2) {
-                    // TODO Auto-generated method stub
-                    return data1.srcid - data2.srcid;
-                }
-            });
-            LOG.info("end sort edgelist");
         } catch (Exception e) {
-                LOG.error("bufferedReaderEdge:", e);
-        }
-
-        int nNodes = this.maxId + 1;
-        int[] nNeighbors = new int[nNodes];
-        for (i = 0; i < nums; i++) {
-            if (edgeList[i].srcid < edgeList[i].targetid) {
-                nNeighbors[edgeList[i].srcid]++;
-                nNeighbors[edgeList[i].targetid]++;
-            }
+            LOG.error("bufferedReaderEdge:", e);
         }
 
         int[] firstNeighborIndex = new int[nNodes + 1];
@@ -460,23 +450,41 @@ public class HGModularityOptimizer {
         int[] neighbor = new int[nEdges];
         double[] edgeWeight2 = new double[nEdges];
         Arrays.fill(nNeighbors, 0);
-        for (i = 0; i < nums; i++) {
-            int sourceid = edgeList[i].srcid;
-            int targetid = edgeList[i].targetid;
-            if (sourceid < targetid) {
-                j = firstNeighborIndex[sourceid] + nNeighbors[sourceid];
-                neighbor[j] = targetid;
-                edgeWeight2[j] = edgeList[i].weight;
-                nNeighbors[sourceid]++;
-                j = firstNeighborIndex[targetid] + nNeighbors[targetid];
-                neighbor[j] = sourceid;
-                edgeWeight2[j] = edgeList[i].weight;
-                nNeighbors[targetid]++;
-            }
-        }
+        try {
+            LOG.info("start load edge id and weight from file");
 
-        edgeList = null;
-        System.gc();
+            int count = 0;
+            for (int t = 0; t < parallelNum; t++) {
+                BufferedFileInput bufferedReaderEdge = new BufferedFileInput(
+                        new File("edgelist.dat" + t));
+                while (bufferedReaderEdge.available() > 0) {
+                    if (System.currentTimeMillis() - lastTime >=
+                            TimeUnit.SECONDS.toMillis(30L)) {
+                        LOG.info("Loading nums:{}", count + 1);
+                        lastTime = System.currentTimeMillis();
+                    }
+                    int sourceid = bufferedReaderEdge.readInt();
+                    int targetid = bufferedReaderEdge.readInt();
+                    float weight = bufferedReaderEdge.readFloat();
+                    if (sourceid < targetid) {
+                        j = firstNeighborIndex[sourceid] + nNeighbors[sourceid];
+                        neighbor[j] = targetid;
+                        edgeWeight2[j] = weight;
+                        nNeighbors[sourceid]++;
+                        j = firstNeighborIndex[targetid] + nNeighbors[targetid];
+                        neighbor[j] = sourceid;
+                        edgeWeight2[j] = weight;
+                        nNeighbors[targetid]++;
+                    }
+                    count++;
+                }
+                bufferedReaderEdge.close();
+            }
+            LOG.info("end read from tempfile, edge num=" + count);
+
+        } catch (Exception e) {
+            LOG.error("bufferedReaderEdge:", e);
+        }
 
         double[] nodeWeight = new double[nNodes];
         for (i = 0; i < nEdges; i++) {
