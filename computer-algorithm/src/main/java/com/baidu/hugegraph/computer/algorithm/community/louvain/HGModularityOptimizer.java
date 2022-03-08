@@ -290,6 +290,35 @@ public class HGModularityOptimizer {
             }
 
             List<Future<?>> futures = new ArrayList<>(parallelNum);
+            LOG.info("start load vertex from hugegraph");
+            for (GraphFetcherLocal hgFetcher : hgFetchers) {
+                Future<?> future = loadExecutor.submit(() -> {
+                    Iterator<Object>
+                            iteratorV = hgFetcher.createIteratorFromVertex();
+                    while (iteratorV.hasNext()) {
+                        if (inputType == 0) {
+                            com.baidu.hugegraph.structure.HugeVertex vertex =
+                                    (com.baidu.hugegraph.structure.HugeVertex)
+                                            iteratorV.next();
+                            this.covertId(HugeConverter.convertId(
+                                    vertex.id().asObject()).asObject());
+                        }
+                        else {
+                            com.baidu.hugegraph.structure.graph.Vertex vertex =
+                                    (com.baidu.hugegraph.structure.graph.Vertex)
+                                            iteratorV.next();
+                            this.covertId(vertex.id());
+                        }
+                    }
+                });
+                futures.add(future);
+            }
+            for (Future<?> future : futures) {
+                future.get();
+            }
+
+            LOG.info("start load edge from hugegraph");
+            futures.clear();
             for (int t = 0; t < parallelNum; t++) {
                 final int[] tArray = new int[]{t};
                 GraphFetcherLocal hgFetcher = hgFetchers.get(t);
@@ -321,13 +350,16 @@ public class HGModularityOptimizer {
                                 com.baidu.hugegraph.structure.HugeEdge edge =
                                         (com.baidu.hugegraph.structure.HugeEdge)
                                                 edgeobj;
-                                sourceId = this.covertId(HugeConverter.
+                                sourceId = this.idMap.get(HugeConverter.
                                         convertId(edge.sourceVertex().id().
                                                 asObject()).asObject());
 
-                                targetId = this.covertId(HugeConverter.
+                                targetId = this.idMap.get(HugeConverter.
                                         convertId(edge.targetVertex().id().
                                                 asObject()).asObject());
+
+                                if (sourceId == null || targetId == null)
+                                    continue;
 
                                 if (StringUtils.isNotBlank(this.weightKey)) {
                                     Float weight_ = (Float)
@@ -341,8 +373,11 @@ public class HGModularityOptimizer {
                                 com.baidu.hugegraph.structure.graph.Edge edge =
                                     (com.baidu.hugegraph.structure.graph.Edge)
                                             edgeobj;
-                                sourceId = this.covertId(edge.sourceId());
-                                targetId = this.covertId(edge.targetId());
+                                sourceId = this.idMap.get(edge.sourceId());
+                                targetId = this.idMap.get(edge.targetId());
+
+                                if (sourceId == null || targetId == null)
+                                    continue;
 
                                 if (StringUtils.isNotBlank(this.weightKey)) {
                                     Float weight_ = (Float)
@@ -370,34 +405,6 @@ public class HGModularityOptimizer {
                 future.get();
             }
 
-
-            LOG.info("start load vertex from hugegraph");
-            futures.clear();
-            for (GraphFetcherLocal hgFetcher : hgFetchers) {
-                Future<?> future = loadExecutor.submit(() -> {
-                    Iterator<Object>
-                            iteratorV = hgFetcher.createIteratorFromVertex();
-                    while (iteratorV.hasNext()) {
-                        if (inputType == 0) {
-                            com.baidu.hugegraph.structure.HugeVertex vertex =
-                                    (com.baidu.hugegraph.structure.HugeVertex)
-                                            iteratorV.next();
-                            this.covertId(HugeConverter.convertId(
-                                    vertex.id().asObject()).asObject());
-                        }
-                        else {
-                            com.baidu.hugegraph.structure.graph.Vertex vertex =
-                                    (com.baidu.hugegraph.structure.graph.Vertex)
-                                            iteratorV.next();
-                                this.covertId(vertex.id());
-                        }
-                    }
-                });
-                futures.add(future);
-            }
-            for (Future<?> future : futures) {
-                future.get();
-            }
             loadExecutor.shutdown();
 
             for (GraphFetcherLocal hgFetcher : hgFetchers) {
