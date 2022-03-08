@@ -180,9 +180,9 @@ public class HGModularityOptimizer {
                 if (nIterations > 1) {
                     LOG.info("Iteration: {}", j + 1);
                 }
-                if (algorithm == 1) {
-                    network.runLouvainAlgorithm(resolution2, random);
-                }
+                //if (algorithm == 1) { todo
+                //    network.runLouvainAlgorithm(resolution2, random);
+                //}
                 j++;
                 modularity = network.calcQualityFunction(resolution2);
                 if (nIterations > 1) {
@@ -195,6 +195,9 @@ public class HGModularityOptimizer {
                 nClusters = network.getNClusters();
                 maxModularity = modularity;
             }
+
+            cluster = network.getClusters();//todo
+            nClusters = network.getNClusters();//todo
 
             if (nRandomStarts > 1) {
                 if (nIterations == 1) {
@@ -545,18 +548,22 @@ public class HGModularityOptimizer {
         LOG.info("nNodes: {}", nNodes);
         //BiMap<Integer, Object> biMap = this.idMap.inverse();
         try {
-            List<String> idList = new ArrayList<>(this.initialCapacity);
-            readIdFile(this.idFileName, nNodes, idList);
+            //List<String> idList = new ArrayList<>(this.initialCapacity);
+            //readIdFile(this.idFileName, nNodes, idList);
+            BufferedReader bufferedReader =
+                    new BufferedReader(new FileReader(this.idFileName));
 
             for (i = 0; i < nNodes; i++) {
                 //LOG.info("id: {}, cluster:{}", biMap.get(i),
                 //         clustering.getCluster(i));
+                String id = bufferedReader.readLine();
                 this.vertex.id(this.context.graphFactory().
-                        createId(idList.get(i)));
+                        createId(id)); //idList.get(i)
                 this.vertex.value(new StringValue(
                         Integer.toString(cluster[i])));
                 output.write(this.vertex);
             }
+            bufferedReader.close();
         } catch (Exception e) {
             LOG.error("writeOutput:", e);
         }
