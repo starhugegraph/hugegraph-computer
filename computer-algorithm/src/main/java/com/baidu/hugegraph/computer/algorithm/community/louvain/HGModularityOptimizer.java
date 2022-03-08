@@ -180,9 +180,9 @@ public class HGModularityOptimizer {
                 if (nIterations > 1) {
                     LOG.info("Iteration: {}", j + 1);
                 }
-                //if (algorithm == 1) { todo
-                //    network.runLouvainAlgorithm(resolution2, random);
-                //}
+                if (algorithm == 1) {
+                    network.runLouvainAlgorithm(resolution2, random);
+                }
                 j++;
                 modularity = network.calcQualityFunction(resolution2);
                 if (nIterations > 1) {
@@ -195,9 +195,6 @@ public class HGModularityOptimizer {
                 nClusters = network.getNClusters();
                 maxModularity = modularity;
             }
-
-            cluster = network.getClusters();//todo
-            nClusters = network.getNClusters();//todo
 
             if (nRandomStarts > 1) {
                 if (nIterations == 1) {
@@ -553,9 +550,15 @@ public class HGModularityOptimizer {
             BufferedReader bufferedReader =
                     new BufferedReader(new FileReader(this.idFileName));
 
+            long lastTime = 0;
             for (i = 0; i < nNodes; i++) {
                 //LOG.info("id: {}, cluster:{}", biMap.get(i),
                 //         clustering.getCluster(i));
+                if (System.currentTimeMillis() - lastTime >=
+                        TimeUnit.SECONDS.toMillis(30L)) {
+                    LOG.info("writeOutput nums:{}", i);
+                    lastTime = System.currentTimeMillis();
+                }
                 String id = bufferedReader.readLine();
                 this.vertex.id(this.context.graphFactory().
                         createId(id)); //idList.get(i)
