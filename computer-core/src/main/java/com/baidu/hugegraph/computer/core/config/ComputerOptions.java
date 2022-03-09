@@ -728,7 +728,7 @@ public class ComputerOptions extends OptionHolder {
                     "transport.zero_copy_mode",
                     "Whether enable zero-copy mode.",
                     allowValues(true, false),
-                    true
+                    false
             );
 
     public static final ConfigOption<Boolean> TRANSPORT_TCP_KEEP_ALIVE =
