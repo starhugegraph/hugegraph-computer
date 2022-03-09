@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.io.RandomAccessInput;
 import com.baidu.hugegraph.computer.core.sort.flusher.InnerSortFlusher;
@@ -36,6 +37,9 @@ import com.baidu.hugegraph.computer.core.sort.sorter.InputSorter;
 import com.baidu.hugegraph.computer.core.sort.sorter.InputsSorter;
 import com.baidu.hugegraph.computer.core.sort.sorter.InputsSorterImpl;
 import com.baidu.hugegraph.computer.core.sort.sorter.JavaInputSorter;
+import com.baidu.hugegraph.computer.core.store.IterableEntryFile;
+import com.baidu.hugegraph.computer.core.store.bufferfile.BufferFileEntryReader;
+import com.baidu.hugegraph.computer.core.store.bufferfile.BufferFileSubEntryReader;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.EntryIterator;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesInput;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.buffer.KvEntriesWithFirstSubKvInput;
@@ -44,7 +48,6 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.entry.KvEntry;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.builder.HgkvDirBuilder;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.builder.HgkvDirBuilderImpl;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDir4SubKvReaderImpl;
-import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDirReader;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.reader.HgkvDirReaderImpl;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.DisperseEvenlySelector;
 import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.InputFilesSelector;
@@ -53,9 +56,11 @@ import com.baidu.hugegraph.computer.core.store.hgkvfile.file.select.SelectedFile
 public class SorterImpl implements Sorter {
 
     private final Config config;
+    private final boolean useZeroCopy;
 
     public SorterImpl(Config config) {
         this.config = config;
+        this.useZeroCopy = config.get(ComputerOptions.TRANSPORT_ZERO_COPY_MODE);
     }
 
     @Override
@@ -103,9 +108,19 @@ public class SorterImpl implements Sorter {
                             throws Exception {
         InputToEntries inputToEntries;
         if (withSubKv) {
-            inputToEntries = o -> new HgkvDir4SubKvReaderImpl(o).iterator();
+            if (this.useZeroCopy) {
+                inputToEntries = o -> new BufferFileEntryReader(o).iterator();
+            } else {
+                inputToEntries = o -> new HgkvDir4SubKvReaderImpl(o).iterator();
+            }
         } else {
-            inputToEntries = o -> new HgkvDirReaderImpl(o).iterator();
+            if (this.useZeroCopy) {
+                inputToEntries = o -> {
+                    return new BufferFileSubEntryReader(o).iterator();
+                };
+            } else {
+                inputToEntries = o -> new HgkvDirReaderImpl(o).iterator();
+            }
         }
         this.mergeInputs(inputs, inputToEntries, flusher, outputs);
     }
@@ -117,8 +132,8 @@ public class SorterImpl implements Sorter {
         InputsSorterImpl sorter = new InputsSorterImpl();
         List<EntryIterator> entries = new ArrayList<>();
         for (String input : inputs) {
-            HgkvDirReader reader = new HgkvDirReaderImpl(input, false,
-                                                         withSubKv);
+            IterableEntryFile reader = new HgkvDirReaderImpl(input, false,
+                                                             withSubKv);
             entries.add(reader.iterator());
         }
         return PeekableIteratorAdaptor.of(sorter.sort(entries));

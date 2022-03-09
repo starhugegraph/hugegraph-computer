@@ -42,7 +42,7 @@ import com.baidu.hugegraph.computer.core.graph.value.LongValue;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.io.BytesOutput;
 import com.baidu.hugegraph.computer.core.io.IOFactory;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.ReceiverUtil;
 import com.baidu.hugegraph.computer.core.sort.flusher.PeekableIterator;
@@ -74,7 +74,8 @@ public class EdgeMessageRecvPartitionTest extends UnitTestBase {
             ComputerOptions.JOB_PARTITIONS_COUNT, "1",
             ComputerOptions.WORKER_DATA_DIRS, "[data_dir1, data_dir2]",
             ComputerOptions.WORKER_RECEIVED_BUFFERS_BYTES_LIMIT, "100",
-            ComputerOptions.HGKV_MERGE_FILES_NUM, "2"
+            ComputerOptions.HGKV_MERGE_FILES_NUM, "2",
+            ComputerOptions.TRANSPORT_ZERO_COPY_MODE, "false"
         );
         FileUtils.deleteQuietly(new File("data_dir1"));
         FileUtils.deleteQuietly(new File("data_dir2"));
@@ -99,7 +100,7 @@ public class EdgeMessageRecvPartitionTest extends UnitTestBase {
     public void testEdgeMessageRecvPartition() throws IOException {
         Assert.assertEquals(MessageType.EDGE.name(), this.partition.type());
 
-        addTenEdgeBuffer((ManagedBuffer buffer) -> {
+        addTenEdgeBuffer((NetworkBuffer buffer) -> {
             this.partition.addBuffer(buffer);
         });
 
@@ -148,7 +149,7 @@ public class EdgeMessageRecvPartitionTest extends UnitTestBase {
         checkTenEdgesWithCombinedProperties(this.partition.iterator());
     }
 
-    public static void addTenEdgeBuffer(Consumer<ManagedBuffer> consumer)
+    public static void addTenEdgeBuffer(Consumer<NetworkBuffer> consumer)
                                         throws IOException {
         for (long i = 0L; i < 10L; i++) {
             Vertex vertex = graphFactory().createVertex();
@@ -168,7 +169,7 @@ public class EdgeMessageRecvPartitionTest extends UnitTestBase {
     }
 
     private static void addTenDuplicateEdgeBuffer(
-                        Consumer<ManagedBuffer> consumer)
+                        Consumer<NetworkBuffer> consumer)
                         throws IOException {
         for (long i = 0L; i < 10L; i++) {
             Vertex vertex = graphFactory().createVertex();

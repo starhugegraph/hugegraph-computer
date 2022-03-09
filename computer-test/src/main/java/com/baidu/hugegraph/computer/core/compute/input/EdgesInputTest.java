@@ -53,7 +53,7 @@ import com.baidu.hugegraph.computer.core.io.IOFactory;
 import com.baidu.hugegraph.computer.core.io.StreamGraphOutput;
 import com.baidu.hugegraph.computer.core.manager.Managers;
 import com.baidu.hugegraph.computer.core.network.ConnectionId;
-import com.baidu.hugegraph.computer.core.network.buffer.ManagedBuffer;
+import com.baidu.hugegraph.computer.core.network.buffer.NetworkBuffer;
 import com.baidu.hugegraph.computer.core.network.message.MessageType;
 import com.baidu.hugegraph.computer.core.receiver.MessageRecvManager;
 import com.baidu.hugegraph.computer.core.receiver.ReceiverUtil;
@@ -125,7 +125,8 @@ public class EdgesInputTest extends UnitTestBase {
             ComputerOptions.WORKER_RECEIVED_BUFFERS_BYTES_LIMIT, "10000",
             ComputerOptions.WORKER_WAIT_FINISH_MESSAGES_TIMEOUT, "1000",
             ComputerOptions.INPUT_MAX_EDGES_IN_ONE_VERTEX, "10",
-            ComputerOptions.INPUT_EDGE_FREQ, freq.name()
+            ComputerOptions.INPUT_EDGE_FREQ, freq.name(),
+            ComputerOptions.TRANSPORT_ZERO_COPY_MODE, "false"
         );
         ExecutorService executor = Executors.newFixedThreadPool(1);
         this.managers = new Managers();
@@ -150,12 +151,12 @@ public class EdgesInputTest extends UnitTestBase {
                                           context(), this.managers, 0, "all");
 
         receiveManager.onStarted(connectionId);
-        add200VertexBuffer((ManagedBuffer buffer) -> {
+        add200VertexBuffer((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.VERTEX, 0, buffer);
         });
         receiveManager.onFinished(connectionId);
         receiveManager.onStarted(connectionId);
-        addEdgeBuffer((ManagedBuffer buffer) -> {
+        addEdgeBuffer((NetworkBuffer buffer) -> {
             receiveManager.handle(MessageType.EDGE, 0, buffer);
         }, freq);
 
@@ -173,7 +174,7 @@ public class EdgesInputTest extends UnitTestBase {
         executor.shutdown();
     }
 
-    private static void add200VertexBuffer(Consumer<ManagedBuffer> consumer)
+    private static void add200VertexBuffer(Consumer<NetworkBuffer> consumer)
                                            throws IOException {
         for (long i = 0L; i < 200L; i += 2) {
             Vertex vertex = graphFactory().createVertex();
@@ -193,7 +194,7 @@ public class EdgesInputTest extends UnitTestBase {
         return bytesOutput.toByteArray();
     }
 
-    private static void addEdgeBuffer(Consumer<ManagedBuffer> consumer,
+    private static void addEdgeBuffer(Consumer<NetworkBuffer> consumer,
                                       EdgeFrequency freq) throws IOException {
         for (long i = 0L; i < 200L; i++) {
             Vertex vertex = graphFactory().createVertex();
