@@ -480,9 +480,18 @@ public class FileGraphPartition {
             throw new ComputerException("Error occurred when beforeOutput", e);
         }
 
+        long lastTime = 0;
+        int count = 0;
         Value<?> result = this.context.config().createObject(
                           ComputerOptions.ALGORITHM_RESULT_CLASS);
         while (this.vertexInput.hasNext()) {
+            count++;
+            if (System.currentTimeMillis() - lastTime >=
+                    TimeUnit.SECONDS.toMillis(30L)) {
+                LOG.info("writeOutput nums:{}", count);
+                lastTime = System.currentTimeMillis();
+            }
+
             Vertex vertex = this.vertexInput.next();
             this.readVertexStatusAndValue(vertex, result);
 
