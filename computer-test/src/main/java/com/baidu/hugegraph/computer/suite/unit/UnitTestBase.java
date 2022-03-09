@@ -79,7 +79,7 @@ public class UnitTestBase {
                       .build();
 
     protected static void clearAll() {
-        CLIENT.graphs().clear(GRAPH, "I'm sure to delete all data");
+        CLIENT.graphs().clear(GRAPH, true);//"I'm sure to delete all data"
     }
 
     public static void assertIdEqualAfterWriteAndRead(Id oldId)
