@@ -21,6 +21,8 @@ package com.baidu.hugegraph.computer.core.util;
 
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 
+import java.io.IOException;
+
 public class CoderUtil {
 
     /**
@@ -28,7 +30,7 @@ public class CoderUtil {
      */
     public static byte[] encode(String s) {
         // Note that this code is mostly copied from DataOutputStream
-        int strLen = s.length();
+        /*int strLen = s.length();
         int utfLen = 0;
         char c;
         int count = 0;
@@ -70,7 +72,14 @@ public class CoderUtil {
                 bytes[count++] = (byte) (0x80 | (c & 0x3F));
             }
         }
-        return bytes;
+        return bytes;*/
+
+        try {
+            return s.getBytes("UTF-8");
+        } catch (IOException e) {
+            throw new ComputerException(
+                    "Malformed input string");
+        }
     }
 
     /**
@@ -83,14 +92,14 @@ public class CoderUtil {
 
     public static String decode(byte[] bytes, int start, int length) {
         // Note that this code is mostly copied from DataInputStream
-        char[] chars = new char[length];
+        /*char[] chars = new char[length];
         int c;
         int char2;
         int char3;
         int count = start;
         int charIndex = 0;
 
-        while (count < start + length) {
+        while (count < length) {
             c = (int) bytes[count] & 0xff;
             if (c > 127) {
                 break;
@@ -99,7 +108,7 @@ public class CoderUtil {
             chars[charIndex++] = (char) c;
         }
 
-        while (count < start + length) {
+        while (count < length) {
             c = (int) bytes[count] & 0xff;
             switch (c >> 4) {
                 case 0:
@@ -154,6 +163,13 @@ public class CoderUtil {
             }
         }
         // The number of chars produced may be less than len
-        return new String(chars, 0, charIndex);
+        return new String(chars, 0, charIndex);*/
+
+        try {
+            return new String(bytes,start,length,"UTF-8");
+        } catch (IOException e) {
+            throw new ComputerException(
+                    "Malformed input around byte");
+        }
     }
 }
