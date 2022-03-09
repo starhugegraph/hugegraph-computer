@@ -1,9 +1,14 @@
 package com.baidu.hugegraph.computer.algorithm.community.louvain;
 
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
 import java.io.Serializable;
 import java.util.Random;
 
 public class Network implements Cloneable, Serializable {
+    private static final Logger LOG = Log.logger(Network.class);
+
     private static final long serialVersionUID = 1;
     private int nNodes;
     private int[] firstNeighborIndex;
@@ -314,6 +319,7 @@ public class Network implements Cloneable, Serializable {
 
         update = runLocalMovingAlgorithm(resolution, random);
 
+        LOG.info("nClusters:{},nNodes:{}",nClusters,nNodes);
         if (nClusters < nNodes) {
             reducedNetwork = getReducedNetwork();
             reducedNetwork.initSingletonClusters();
