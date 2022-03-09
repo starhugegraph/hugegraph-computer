@@ -627,7 +627,7 @@ public class ComputerOptions extends OptionHolder {
                     "trigger sorting, the write buffer is used to store " +
                     "vertex or message.",
                     positiveInt(),
-                    (int) (100 * Bytes.MB)
+                    (int) (50 * Bytes.KB)
             );
 
     public static final ConfigOption<Integer>
@@ -636,7 +636,7 @@ public class ComputerOptions extends OptionHolder {
                     "The initial size of write buffer that used to store " +
                     "vertex or message.",
                     positiveInt(),
-                    (int) (100 * Bytes.MB)
+                    (int) (50 * Bytes.KB)
             );
 
     public static final ConfigOption<Class<?>> MASTER_COMPUTATION_CLASS =
