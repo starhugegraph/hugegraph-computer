@@ -134,7 +134,7 @@ public abstract class HugeOutput extends AbstractComputerOutput {
 
     private void commit() {
         this.taskManager.submitBatch(this.vertexBatch);
-        LOG.info("Write back {} vertices", this.vertexBatch.size());
+        LOG.debug("Write back {} vertices", this.vertexBatch.size());
 
         this.vertexBatch = new ArrayList<>();
     }
