@@ -22,6 +22,8 @@ package com.baidu.hugegraph.computer.algorithm.path.rings;
 import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.id.IdGenerator;
 import com.baidu.hugegraph.backend.tx.GraphTransaction;
+import com.baidu.hugegraph.computer.core.config.Config;
+import com.baidu.hugegraph.computer.core.graph.value.IdList;
 import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.computer.core.output.hg.HugeOutput;
 import com.baidu.hugegraph.schema.VertexLabel;
@@ -33,6 +35,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RingsDetectionOutput extends HugeOutput {
+
+    public static final String MIN_RING_LENGTH = "rings.min_ring_length";
+    public static final String MAX_RING_LENGTH = "rings.max_ring_length";
+
+    private int minRingLength;
+    private int maxRingLength;
+
+    @Override
+    public void init(Config config, int partition) {
+        super.init(config, partition);
+
+        this.minRingLength = config.getInt(RingsDetectionOutput.MIN_RING_LENGTH,
+                                           0);
+        this.maxRingLength = config.getInt(RingsDetectionOutput.MAX_RING_LENGTH,
+                                           Integer.MAX_VALUE);
+    }
 
     @Override
     public void prepareSchema(HugeGraph graph) {
@@ -59,7 +77,11 @@ public class RingsDetectionOutput extends HugeOutput {
         IdListList value = vertex.value();
         List<String> propValue = new ArrayList<>();
         for (int i = 0; i < value.size(); i++) {
-            propValue.add(value.get(i).toString());
+            IdList rings = value.get(i);
+            if (rings.size() >= this.minRingLength &&
+                rings.size() <= this.maxRingLength) {
+                propValue.add(rings.toString());
+            }
         }
 
         hugeVertex.property(this.name(), propValue);
