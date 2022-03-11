@@ -39,7 +39,7 @@ public class RingsDetectionWithFilter implements
 
     @Override
     public String name() {
-        return "rings_with_filter";
+        return "olap_rings_with_filter";
     }
 
     @Override
