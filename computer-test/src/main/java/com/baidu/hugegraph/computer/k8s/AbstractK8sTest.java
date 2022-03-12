@@ -130,8 +130,6 @@ public abstract class AbstractK8sTest {
                     "1000");
         options.put(ComputerOptions.BSP_ETCD_ENDPOINTS.name(),
                     "http://abc:8098");
-        options.put(ComputerOptions.HUGEGRAPH_URL.name(),
-                    "http://127.0.0.1:8080");
         options.put(KubeDriverOptions.NAMESPACE.name(),
                     this.namespace);
         options.put(KubeDriverOptions.LOG4J_XML_PATH.name(),
