@@ -105,6 +105,10 @@
                         <groupId>org.mockito</groupId>
                         <artifactId>mockito-core</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.baidu.hugegraph</groupId>
+                        <artifactId>computer-k8s</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>

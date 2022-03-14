@@ -378,13 +378,6 @@ public class ComputerOptions extends OptionHolder {
                     String.class
             );
 
-    public static final DriverConfigOption<String> HUGEGRAPH_URL =
-            new DriverConfigOption<>(
-                    "hugegraph.url",
-                    disallowEmpty(),
-                    String.class
-            );
-
     public static final DriverConfigOption<String>
             HUGEGRAPH_GRAPH_NAME = new DriverConfigOption<>(
                     "hugegraph.name",
@@ -702,12 +695,10 @@ public class ComputerOptions extends OptionHolder {
             );
 
     public static final Set<String> REQUIRED_INIT_OPTIONS = ImmutableSet.of(
-            HUGEGRAPH_URL.name()
     );
 
     public static final Set<String> K8S_PROHIBIT_USER_SETTINGS =
             ImmutableSet.of(
-                    HUGEGRAPH_URL.name(),
                     BSP_ETCD_ENDPOINTS.name(),
                     RPC_SERVER_HOST.name(),
                     TRANSPORT_SERVER_HOST.name(),
@@ -717,7 +708,6 @@ public class ComputerOptions extends OptionHolder {
             );
 
     public static final Set<String> K8S_REQUIRED_USER_OPTIONS = ImmutableSet.of(
-            HUGEGRAPH_URL.name(),
             ALGORITHM_PARAMS_CLASS.name()
     );
 }
