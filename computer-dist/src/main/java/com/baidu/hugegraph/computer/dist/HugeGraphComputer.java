@@ -18,6 +18,8 @@
 
 package com.baidu.hugegraph.computer.dist;
 
+import com.baidu.hugegraph.backend.query.Query;
+import com.baidu.hugegraph.backend.store.BackendProviderFactory;
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
@@ -48,6 +50,18 @@ public class HugeGraphComputer {
     private static final String ROLE_MASTER = "master";
     private static final String ROLE_WORKER = "worker";
     private static final String ROLE_WORKERS = "workers";
+
+    static {
+        // Register config
+        OptionSpace.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
+        // Register backend
+        BackendProviderFactory.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
+
+        Query.defaultCapacity(Integer.MAX_VALUE);
+    }
+
     /**
      *  Some class must be load first, in order to invoke static method to init;
      */
