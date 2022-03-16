@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import com.baidu.hugegraph.backend.store.BackendProviderFactory;
+import com.baidu.hugegraph.computer.core.worker.load.LoadService;
+import com.baidu.hugegraph.config.OptionSpace;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,14 +48,30 @@ import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.config.RpcOptions;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.testutil.Whitebox;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 public class SenderIntegrateTest {
+    private static final Logger LOG = Log.logger(LoadService.class);
 
     private static final Class<?> COMPUTATION = MockComputation.class;
 
     @BeforeClass
     public static void init() {
         // pass
+        // Don't forget to register options
+        OptionSpace.register("computer",
+                "com.baidu.hugegraph.computer.core.config." +
+                        "ComputerOptions");
+        OptionSpace.register("computer-rpc",
+                "com.baidu.hugegraph.config.RpcOptions");
+
+        // Register config
+        OptionSpace.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
+        // Register backend
+        BackendProviderFactory.register("hstore",
+                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
     }
 
     @AfterClass
@@ -62,6 +81,7 @@ public class SenderIntegrateTest {
 
     @Test
     public void testOneWorker() throws InterruptedException {
+        System.out.printf("\n\n\n hello world\n\n\n");
         Thread masterThread = new Thread(() -> {
             String[] args = OptionsBuilder.newInstance()
                                           .withJobId("local_002")

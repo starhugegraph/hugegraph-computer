@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 //import java.util.NoSuchElementException;
 
-import com.baidu.hugegraph.backend.query.Query;
-import com.baidu.hugegraph.backend.store.BackendProviderFactory;
 //import com.baidu.hugegraph.computer.core.input.InputSplitFetcher;
 import com.baidu.hugegraph.computer.core.input.VertexFetcher;
 import com.baidu.hugegraph.computer.core.input.EdgeFetcher;
@@ -33,7 +31,6 @@ import com.baidu.hugegraph.computer.core.input.MasterInputHandler;
 //import com.baidu.hugegraph.computer.core.input.GraphFetcher;
 import com.baidu.hugegraph.computer.core.input.InputSplit;
 //import com.baidu.hugegraph.computer.core.input.hg.HugeInputSplitFetcher;
-import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 //import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -54,17 +51,6 @@ import com.baidu.hugegraph.util.Log;
 public class HugeGraphFetcherLocal extends GraphFetcherLocal {
 
     private static final Logger LOG = Log.logger("huge fetcher");
-
-    static {
-        // Register config
-        OptionSpace.register("hstore",
-                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
-        // Register backend
-        BackendProviderFactory.register("hstore",
-                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
-
-        Query.defaultCapacity(Integer.MAX_VALUE);
-    }
 
     private final HugeGraph hugeGraph;
     private final VertexFetcher vertexFetcher;

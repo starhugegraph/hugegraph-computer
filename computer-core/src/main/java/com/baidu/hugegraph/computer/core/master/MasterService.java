@@ -23,8 +23,6 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import com.baidu.hugegraph.backend.store.BackendProviderFactory;
-import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 
@@ -76,14 +74,14 @@ public class MasterService implements Closeable {
     private final ShutdownHook shutdownHook;
     private volatile Thread serviceThread;
 
-    static {
+    /*static {
         // Register config
         OptionSpace.register("hstore",
                 "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
         // Register backend
         BackendProviderFactory.register("hstore",
                 "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
-    }
+    }*/
 
     public MasterService() {
         this.context = ComputerContext.instance();

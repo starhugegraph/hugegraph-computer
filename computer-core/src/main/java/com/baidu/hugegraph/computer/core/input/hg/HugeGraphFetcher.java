@@ -22,9 +22,6 @@ package com.baidu.hugegraph.computer.core.input.hg;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.baidu.hugegraph.backend.query.Query;
-import com.baidu.hugegraph.backend.store.BackendProviderFactory;
-import com.baidu.hugegraph.config.OptionSpace;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
@@ -45,17 +42,6 @@ import com.baidu.hugegraph.util.Log;
 public class HugeGraphFetcher implements GraphFetcher {
 
     private static final Logger LOG = Log.logger("huge fetcher");
-
-    static {
-        // Register config
-        OptionSpace.register("hstore",
-                "com.baidu.hugegraph.backend.store.hstore.HstoreOptions");
-        // Register backend
-        BackendProviderFactory.register("hstore",
-                "com.baidu.hugegraph.backend.store.hstore.HstoreProvider");
-
-        Query.defaultCapacity(Integer.MAX_VALUE);
-    }
 
     private final HugeGraph hugeGraph;
     private final VertexFetcher vertexFetcher;
