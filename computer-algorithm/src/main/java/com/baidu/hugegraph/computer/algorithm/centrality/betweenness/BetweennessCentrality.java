@@ -107,8 +107,7 @@ public class BetweennessCentrality implements Computation<BetweennessMessage> {
         IdList sequence = new IdList();
         sequence.add(vertex.id());
         context.sendMessageToAllEdges(vertex, new BetweennessMessage(sequence));
-        LOG.info("Finished compute-0 step {} {}",
-                 vertex.id(), vertex.numEdges());
+        // LOG.info("Finished compute-0 step {} {}", vertex.id(), vertex.numEdges());
     }
 
     @Override
