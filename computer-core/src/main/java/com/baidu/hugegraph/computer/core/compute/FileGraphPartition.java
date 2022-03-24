@@ -450,18 +450,18 @@ public class FileGraphPartition {
         }
         computeConsumer.normoreVertex();
         activeVertexCount = computeConsumer.getActiveVertexCount();
-        
-        try {
-            this.afterCompute(superstep);
-        } catch (Exception e) {
-            throw new ComputerException(
-                      "Error occurred when afterCompute at superstep %s",
-                      e, superstep);
-        }
 
         messageProducer.stop();
         unSerializeConsumerProducer.stop();
         computeConsumer.stop();
+
+        try {
+            this.afterCompute(superstep);
+        } catch (Exception e) {
+            throw new ComputerException(
+                    "Error occurred when afterCompute at superstep %s",
+                    e, superstep);
+        }
       
 
         this.computation.afterSuperstep(context);

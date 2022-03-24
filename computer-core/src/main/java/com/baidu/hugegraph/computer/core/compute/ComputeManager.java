@@ -288,7 +288,17 @@ public class ComputeManager {
 
     public void output() {
         // TODO: Write results back parallel
-        Consumer<FileGraphPartition> consumer = partition -> {
+       for (FileGraphPartition partition : this.partitions.values()) {
+           try {
+               PartitionStat stat = partition.output();
+               LOG.info("Output partition {} complete, stat='{}'",
+                       partition.partition(), stat);
+           } catch (Throwable t) {
+               LOG.error("FileGraphPartition output {}", t);
+           }
+       }
+
+        /*Consumer<FileGraphPartition> consumer = partition -> {
             PartitionStat stat = partition.output();
             LOG.info("Output partition {} complete, stat='{}'",
                      partition.partition(), stat);
@@ -305,7 +315,7 @@ public class ComputeManager {
             consumers.await();
         } catch (Throwable t) {
             LOG.error("FileGraphPartition output {}", t);
-        }
+        }*/
     }
 
     public void close() {
