@@ -61,6 +61,8 @@ jobs:
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-client-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-term-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-term-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-client-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-hdfs-client -Dversion=2.7.2 -Dpackaging=jar
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-hdfs -Dversion=2.7.2 -Dpackaging=jar
 
       - name: Build images
         env:
