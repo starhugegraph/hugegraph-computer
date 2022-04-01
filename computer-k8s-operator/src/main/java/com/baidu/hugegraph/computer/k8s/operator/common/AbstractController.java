@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -204,6 +205,19 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
         }
     }
 
+    private boolean inNamespace(ObjectMeta meta) {
+        String namespace = this.kubeClient.getNamespace();
+        if (namespace != null && namespace.length() > 0) {
+            boolean result = namespace.equals(meta.getNamespace());
+            if (!result) {
+                LOG.warn("namespace does not match: watching {}, but got {}",
+                        namespace, meta.getNamespace());
+            }
+            return result;
+        }
+        return true;
+    }
+
     protected void registerCREvent(SharedInformerFactory informerFactory,
                                    long resyncPeriod) {
         SharedIndexInformer<T> crInformer =
@@ -213,6 +227,9 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
             @Override
             public void onAdd(T cr) {
                 LOG.info("received a CR add request: {}", cr.getMetadata());
+                if (!inNamespace(cr.getMetadata())) {
+                    return;
+                }
                 OperatorRequest request = OperatorRequest.parseRequestByCR(cr);
                 AbstractController.this.enqueueRequest(request);
             }
@@ -220,6 +237,9 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
             @Override
             public void onUpdate(T oldCR, T cr) {
                 LOG.info("received a CR update request: {}", cr.getMetadata());
+                if (!inNamespace(cr.getMetadata())) {
+                    return;
+                }
                 OperatorRequest request = OperatorRequest.parseRequestByCR(cr);
                 AbstractController.this.enqueueRequest(request);
             }
@@ -227,6 +247,9 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
             @Override
             public void onDelete(T cr, boolean deletedStateUnknown) {
                 LOG.info("received a CR delete request: {}", cr.getMetadata());
+                if (!inNamespace(cr.getMetadata())) {
+                    return;
+                }
                 OperatorRequest request = OperatorRequest.parseRequestByCR(cr);
                 AbstractController.this.enqueueRequest(request);
             }
@@ -245,12 +268,20 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
             informer.addEventHandler(new ResourceEventHandler<HasMetadata>() {
                 @Override
                 public void onAdd(HasMetadata resource) {
+                    if (!inNamespace(resource.getMetadata())) {
+                        return;
+                    }
                     AbstractController.this.handleOwnsResource(resource);
                 }
 
                 @Override
                 public void onUpdate(HasMetadata oldResource,
                                      HasMetadata newResource) {
+
+                    if (!inNamespace(newResource.getMetadata())) {
+                        return;
+                    }
+
                     String oldVersion = oldResource.getMetadata()
                                                    .getResourceVersion();
                     String newVersion = newResource.getMetadata()
@@ -263,6 +294,9 @@ public abstract class AbstractController<T extends CustomResource<?, ?>> {
 
                 @Override
                 public void onDelete(HasMetadata resource, boolean b) {
+                    if (!inNamespace(resource.getMetadata())) {
+                        return;
+                    }
                     AbstractController.this.handleOwnsResource(resource);
                 }
             });
