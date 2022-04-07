@@ -92,13 +92,17 @@ public class Lpa implements Computation<Id> {
             if (label.compareTo(lastLabel) != 0) {
                 if (labelCount > maxCount) {
                     maxCount = labelCount;
-                    minLabel = label;
+                    minLabel = lastLabel;
                 }
                 labelCount = 0;
                 lastLabel = label;
             }
             labelCount += 1;
         }
+        if (labelCount > maxCount) {
+            maxCount = labelCount;
+            minLabel = lastLabel;
+        } 
         return minLabel;
 
         // Calculate the labels with maximum frequency and select min label
