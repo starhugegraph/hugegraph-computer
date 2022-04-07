@@ -20,14 +20,14 @@
 package com.baidu.hugegraph.computer.algorithm.community.lpa;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+//import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+//import java.util.Map;
 import java.util.Comparator;
 
-import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-import org.apache.commons.lang3.mutable.MutableInt;
+// import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
+// import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
