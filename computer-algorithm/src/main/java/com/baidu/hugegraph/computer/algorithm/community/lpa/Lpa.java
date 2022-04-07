@@ -65,38 +65,60 @@ public class Lpa implements Computation<Id> {
 
     private Id voteLabel(Iterator<Id> messages) {
         // Calculate label frequency
-        Map<Id, MutableInt> labels = new HashMap<>();
-        assert messages.hasNext();
+        // Map<Id, MutableInt> labels = new HashMap<>();
+        // assert messages.hasNext();
+        // while (messages.hasNext()) {
+        //     Id label = messages.next();
+        //     MutableInt labelCount = labels.get(label);
+        //     if (labelCount != null) {
+        //         labelCount.increment();
+        //     } else {
+        //         labels.put(label, new MutableInt(1));
+        //     }
+        // }
+
+        // use array sort instead of hashmap
+        List<Id> lableArray = new ArrayList<>();
         while (messages.hasNext()) {
-            Id label = messages.next();
-            MutableInt labelCount = labels.get(label);
-            if (labelCount != null) {
-                labelCount.increment();
-            } else {
-                labels.put(label, new MutableInt(1));
-            }
+            lableArray.add(messages.next());
         }
+        lableArray.sort(Comparator.comparing(Id -> Id));
 
-        // Calculate the labels with maximum frequency
-        List<Id> maxLabels = new ArrayList<>();
-        int maxFreq = 1;
-        for (Map.Entry<Id, MutableInt> e : labels.entrySet()) {
-            int value = e.getValue().intValue();
-            if (value > maxFreq) {
-                maxFreq = value;
-                maxLabels.clear();
+        int maxCount = 0;
+        int labelCount = 0;
+        Id lastLabel = null;
+        Id minLabel = null;
+        for (Id label : lableArray) {
+            if (label.compareTo(lastLabel) != 0) {
+                if (labelCount > maxCount) {
+                    maxCount = labelCount;
+                    minLabel = lastLabel;
+                }
+                labelCount = 0;
+                lastLabel = label;
             }
-            if (value == maxFreq) {
-                maxLabels.add(e.getKey());
-            }
+            labelCount += 1;
         }
+        if (labelCount > maxCount) {
+            maxCount = labelCount;
+            minLabel = lastLabel;
+        } 
+        return minLabel;
 
-        // Choose min label
-        return maxLabels.stream()
-                        .min((Comparator.naturalOrder()))
-                        .orElseThrow(() -> {
-                            return new ComputerException(
-                                       "Can't find min label in maxLabels");
-                        });
+        // Calculate the labels with maximum frequency and select min label
+        // int maxFreq = 0;
+        // Id resultLable = null;
+        // for (Map.Entry<Id, MutableInt> e : labels.entrySet()) {
+        //     int value = e.getValue().intValue();
+        //     if (value > maxFreq) {
+        //         maxFreq = value;
+        //         resultLable = e.getKey();
+        //     }
+        //     if (value == maxFreq && e.getKey().compareTo(resultLable)<0) {
+        //         resultLable = e.getKey();
+        //     }
+        // }
+
+        // return resultLable;
     }
 }
