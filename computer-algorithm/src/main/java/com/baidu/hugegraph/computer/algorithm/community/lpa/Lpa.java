@@ -89,7 +89,7 @@ public class Lpa implements Computation<Id> {
         Id lastLabel = null;
         Id minLabel = null;
         for (Id label : lableArray) {
-            if (label.compareTo(lastLabel) != 0) {
+            if (lastLabel != null && label.compareTo(lastLabel) != 0) {
                 if (labelCount > maxCount) {
                     maxCount = labelCount;
                     minLabel = lastLabel;
