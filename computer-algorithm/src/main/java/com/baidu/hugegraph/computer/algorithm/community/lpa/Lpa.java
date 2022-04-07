@@ -84,6 +84,7 @@ public class Lpa implements Computation<Id> {
         }
         lableArray.sort(Comparator.comparing(Id -> Id));
 
+        assert lableArray.size()!=0;
         int maxCount = 0;
         int labelCount = 0;
         Id lastLabel = lableArray.get(0);
