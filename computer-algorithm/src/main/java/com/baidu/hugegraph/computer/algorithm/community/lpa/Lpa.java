@@ -19,15 +19,15 @@
 
 package com.baidu.hugegraph.computer.algorithm.community.lpa;
 
-import java.util.ArrayList;
-//import java.util.HashMap;
+//import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-//import java.util.Map;
-import java.util.Comparator;
+//import java.util.List;
+import java.util.Map;
+//import java.util.Comparator;
 
-// import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
-// import org.apache.commons.lang3.mutable.MutableInt;
+//import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.baidu.hugegraph.computer.core.graph.id.Id;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
@@ -65,61 +65,61 @@ public class Lpa implements Computation<Id> {
 
     private Id voteLabel(Iterator<Id> messages) {
         // Calculate label frequency
-        // Map<Id, MutableInt> labels = new HashMap<>();
-        // assert messages.hasNext();
-        // while (messages.hasNext()) {
-        //     Id label = messages.next();
-        //     MutableInt labelCount = labels.get(label);
-        //     if (labelCount != null) {
-        //         labelCount.increment();
-        //     } else {
-        //         labels.put(label, new MutableInt(1));
-        //     }
-        // }
+        Map<Id, MutableInt> labels = new HashMap<>(4096);
+        assert messages.hasNext();
+        while (messages.hasNext()) {
+            Id label = messages.next();
+            MutableInt labelCount = labels.get(label);
+            if (labelCount != null) {
+                labelCount.increment();
+            } else {
+                labels.put(label, new MutableInt(1));
+            }
+        }
 
         // use array sort instead of hashmap
-        List<Id> lableArray = new ArrayList<>();
-        while (messages.hasNext()) {
-            lableArray.add(messages.next());
-        }
-        lableArray.sort(Comparator.comparing(Id -> Id));
+        // List<Id> lableArray = new ArrayList<>();
+        // while (messages.hasNext()) {
+        //     lableArray.add(messages.next());
+        // }
+        // lableArray.sort(Comparator.comparing(Id -> Id));
 
-        assert lableArray.size() != 0;
-        int maxCount = 0;
-        int labelCount = 0;
-        Id lastLabel = lableArray.get(0);
-        Id minLabel = lableArray.get(0);
-        for (Id label : lableArray) {
-            if (label.compareTo(lastLabel) != 0) {
-                if (labelCount > maxCount) {
-                    maxCount = labelCount;
-                    minLabel = lastLabel;
-                }
-                labelCount = 0;
-                lastLabel = label;
-            }
-            labelCount += 1;
-        }
-        if (labelCount > maxCount) {
-            maxCount = labelCount;
-            minLabel = lastLabel;
-        } 
-        return minLabel;
+        // assert lableArray.size() != 0;
+        // int maxCount = 0;
+        // int labelCount = 0;
+        // Id lastLabel = lableArray.get(0);
+        // Id minLabel = lableArray.get(0);
+        // for (Id label : lableArray) {
+        //     if (label.compareTo(lastLabel) != 0) {
+        //         if (labelCount > maxCount) {
+        //             maxCount = labelCount;
+        //             minLabel = lastLabel;
+        //         }
+        //         labelCount = 0;
+        //         lastLabel = label;
+        //     }
+        //     labelCount += 1;
+        // }
+        // if (labelCount > maxCount) {
+        //     maxCount = labelCount;
+        //     minLabel = lastLabel;
+        // } 
+        // return minLabel;
 
         // Calculate the labels with maximum frequency and select min label
-        // int maxFreq = 0;
-        // Id resultLable = null;
-        // for (Map.Entry<Id, MutableInt> e : labels.entrySet()) {
-        //     int value = e.getValue().intValue();
-        //     if (value > maxFreq) {
-        //         maxFreq = value;
-        //         resultLable = e.getKey();
-        //     }
-        //     if (value == maxFreq && e.getKey().compareTo(resultLable)<0) {
-        //         resultLable = e.getKey();
-        //     }
-        // }
+        int maxFreq = 0;
+        Id resultLable = null;
+        for (Map.Entry<Id, MutableInt> e : labels.entrySet()) {
+            int value = e.getValue().intValue();
+            if (value > maxFreq) {
+                maxFreq = value;
+                resultLable = e.getKey();
+            }
+            if (value == maxFreq && e.getKey().compareTo(resultLable)<0) {
+                resultLable = e.getKey();
+            }
+        }
 
-        // return resultLable;
+         return resultLable;
     }
 }
