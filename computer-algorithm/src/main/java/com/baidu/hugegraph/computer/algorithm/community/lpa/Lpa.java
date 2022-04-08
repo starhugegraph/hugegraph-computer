@@ -115,7 +115,7 @@ public class Lpa implements Computation<Id> {
                 maxFreq = value;
                 resultLable = e.getKey();
             }
-            if (value == maxFreq && e.getKey().compareTo(resultLable)<0) {
+            if (value == maxFreq && e.getKey().compareTo(resultLable) < 0) {
                 resultLable = e.getKey();
             }
         }
