@@ -89,7 +89,7 @@ public class PageRank implements Computation<DoubleValue> {
         }
         double rank = (this.danglingRank + rankFromNeighbors) *
                       (1.0 - this.alpha) + this.initialRankInSuperstep;
-        rank /= this.cumulativeRank;
+        //rank /= this.cumulativeRank;
         DoubleValue oldRank = vertex.value();
         vertex.value(new DoubleValue(rank));
         this.l1DiffAggr.aggregateValue(Math.abs(oldRank.value() - rank));
@@ -97,9 +97,10 @@ public class PageRank implements Computation<DoubleValue> {
         int edgeCount = vertex.numEdges();
         if (edgeCount == 0) {
             this.danglingVertexNumAggr.aggregateValue(1L);
-            this.danglingCumulativeAggr.aggregateValue(rank);
+            this.danglingCumulativeAggr.aggregateValue(this.initialValue);
         } else {
-            DoubleValue contribValue = new DoubleValue(rank / edgeCount);
+            DoubleValue contribValue = new DoubleValue(rank);
+            //DoubleValue contribValue = new DoubleValue(rank / edgeCount);
             context.sendMessageToAllEdges(vertex, contribValue);
         }
     }
