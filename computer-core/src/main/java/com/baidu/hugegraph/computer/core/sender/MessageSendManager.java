@@ -233,7 +233,7 @@ public class MessageSendManager implements Manager {
         if (buffer.reachThreshold()) {
             buffer.switchForSorting(partitionId);
             if (type == MessageType.MSG) {
-                this.sortThenSendFast(partitionId, type, buffer);
+                this.sortThenSend(partitionId, type, buffer);
             }
             else {
                 this.sortThenSend(partitionId, type, buffer);
