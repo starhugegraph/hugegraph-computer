@@ -24,12 +24,12 @@ import java.util.List;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import com.baidu.hugegraph.HugeGraph;
-import com.baidu.hugegraph.backend.tx.GraphTransaction;
+//import com.baidu.hugegraph.backend.tx.GraphTransaction;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadMetrics;
 import com.baidu.hugegraph.computer.core.output.hg.metrics.LoadSummary;
-import com.baidu.hugegraph.structure.HugeVertex;
-import com.baidu.hugegraph.testutil.Whitebox;
+//import com.baidu.hugegraph.structure.HugeVertex;
+//import com.baidu.hugegraph.testutil.Whitebox;
 
 public abstract class InsertTask implements Runnable {
 
@@ -74,10 +74,13 @@ public abstract class InsertTask implements Runnable {
 
     protected void insertBatch(List<Vertex> vertices) {
 
-        GraphTransaction gtx = Whitebox.invoke(this.graph.getClass(),
+        /*GraphTransaction gtx = Whitebox.invoke(this.graph.getClass(),
                                                "graphTransaction", this.graph);
         for (Vertex vertex : vertices) {
             gtx.addVertex((HugeVertex) vertex);
+        }*/
+        for (Vertex vertex : vertices) {
+            this.graph.addVertex(vertex);
         }
         this.graph.tx().commit();
     }

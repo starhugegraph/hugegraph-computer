@@ -101,7 +101,7 @@ public class ComputerOptions extends OptionHolder {
                     "pd.peers",
                     "The addresses of pd nodes, separated with commas.",
                     disallowEmpty(),
-                    "localhost"
+                    "10.14.139.26:8686"
             );
 
     public static final ConfigOption<Integer> INPUT_PARALLEL_NUM =
@@ -472,7 +472,7 @@ public class ComputerOptions extends OptionHolder {
                     "The partitions count for computing one graph " +
                     "algorithm job.",
                     positiveInt(),
-                    1
+                    10
             );
 
     public static final ConfigOption<Integer> PARTITIONS_COMPUTE_THREAD_NUMS =
@@ -671,7 +671,7 @@ public class ComputerOptions extends OptionHolder {
                     "hugegraph.name",
                     "The graph name to load data and write results back.",
                     disallowEmpty(),
-                    "DEFAULT/hugegraph"
+                    "DEFAULT/icbc"
             );
 
     public static final ConfigOption<String> TRANSPORT_SERVER_HOST =

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
@@ -319,6 +320,20 @@ public class ComputeManager {
     }
 
     public void close() {
-        this.partitionExecutor.shutdown();
+
+        long timeout = this.context.config().get(
+                ComputerOptions.OUTPUT_THREAD_POOL_SHUTDOWN_TIMEOUT);
+        try {
+            this.partitionExecutor.shutdown();
+            this.partitionExecutor.awaitTermination(timeout, TimeUnit.SECONDS);
+            LOG.info("The computer manager executor shutdown");
+        } catch (InterruptedException e) {
+            LOG.error("The computer manager are interrupted");
+        } finally {
+            if (!this.partitionExecutor.isTerminated()) {
+                LOG.error("The computer manager tasks will be cancelled");
+            }
+            this.partitionExecutor.shutdownNow();
+        }
     }
 }

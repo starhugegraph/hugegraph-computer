@@ -96,7 +96,7 @@ public class HugeGraphFetcherLocal extends GraphFetcherLocal {
     public void close() {
         // pass
         try {
-            this.hugeGraph.close();
+            this.hugeGraph.closeTx();
         } catch (Throwable e) {
             LOG.error("Exception occur when close graph", e);
         }

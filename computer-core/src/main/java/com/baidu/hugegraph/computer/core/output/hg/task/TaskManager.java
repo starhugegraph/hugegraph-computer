@@ -182,7 +182,7 @@ public final class TaskManager {
         Printer.printSummary(this.loadSummary);
 
         try {
-            this.graph.close();
+            this.graph.closeTx();
         } catch (Exception e) {
             e.printStackTrace();
         }

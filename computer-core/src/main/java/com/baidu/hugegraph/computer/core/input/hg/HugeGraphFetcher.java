@@ -87,7 +87,7 @@ public class HugeGraphFetcher implements GraphFetcher {
     public void close() {
         // pass
         try {
-            this.hugeGraph.close();
+            this.hugeGraph.closeTx();
         } catch (Throwable e) {
             LOG.error("Exception occur when close graph", e);
         }
