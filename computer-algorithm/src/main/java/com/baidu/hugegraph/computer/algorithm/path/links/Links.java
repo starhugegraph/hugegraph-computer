@@ -21,11 +21,13 @@ package com.baidu.hugegraph.computer.algorithm.path.links;
 
 import java.util.Iterator;
 
+import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.edge.Edge;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 
 public class Links implements Computation<LinksMessage> {
 
@@ -46,7 +48,11 @@ public class Links implements Computation<LinksMessage> {
     @Override
     public void init(Config config) {
         String describe = config.getString(OPTION_ANALYZE_CONFIG, "{}");
-        this.filter = new LinksSpreadFilter(describe);
+        try {
+            this.filter = new LinksSpreadFilter(describe);
+        } catch (ComputerException e) {
+            WorkerService.setThrowable(e);
+        }
     }
 
     @Override
