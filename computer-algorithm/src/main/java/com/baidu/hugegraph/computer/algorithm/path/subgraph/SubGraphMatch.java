@@ -77,6 +77,8 @@ public class SubGraphMatch implements Computation<SubGraphMatchMessage> {
             throw new ComputerException("Config %s must not be null",
                                         SUBGRAPH_OPTION);
         }
+        LOG.info("Config of [subgraph.query_graph_config] is {}",
+                 subgraphConfig);
         this.subgraphTree = MinHeightTree.build(new QueryGraph(subgraphConfig));
         this.leaves = this.subgraphTree.leaves();
     }
