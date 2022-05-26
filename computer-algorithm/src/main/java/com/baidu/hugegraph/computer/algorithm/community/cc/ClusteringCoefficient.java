@@ -199,7 +199,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
                 IdList message = messages.next();
                 IdList twoDegreeNeighbors = 
                        this.cacheOrHit(vertex.id(), message);
-                if(twoDegreeNeighbors != null){
+                if (twoDegreeNeighbors != null) {
                     for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
                         if (allNeighbors.contains(twoDegreeNeighbor)) {
                             count++;
