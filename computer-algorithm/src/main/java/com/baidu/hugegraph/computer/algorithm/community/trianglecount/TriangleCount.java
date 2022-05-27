@@ -182,9 +182,11 @@ public class TriangleCount implements Computation<IdList> {
                 IdList message = messages.next();
                 IdList twoDegreeNeighbors = 
                        this.cacheOrHit(vertex.id(), message);
-                for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
-                    if (allNeighbors.contains(twoDegreeNeighbor)) {
-                        count++;
+                if (twoDegreeNeighbors != null) {
+                    for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
+                        if (allNeighbors.contains(twoDegreeNeighbor)) {
+                            count++;
+                        }
                     }
                 }
             }
