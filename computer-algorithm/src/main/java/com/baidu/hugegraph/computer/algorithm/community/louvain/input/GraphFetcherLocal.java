@@ -69,7 +69,7 @@ public abstract class GraphFetcherLocal implements GraphFetcher {
                 }
             } catch (Exception e) {
                 LOG.error("IteratorFromEdge:", e);
-                return false;
+                //return false;
             }
             return true;
         }
@@ -114,7 +114,7 @@ public abstract class GraphFetcherLocal implements GraphFetcher {
                 }
             } catch (Exception e) {
                 LOG.error("IteratorFromVertex:", e);
-                return false;
+                //return false;
             }
             return true;
         }
