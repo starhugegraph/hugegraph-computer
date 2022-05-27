@@ -68,6 +68,8 @@ public abstract class GraphFetcherLocal implements GraphFetcher {
                     edgeFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                LOG.error("IteratorFromEdge:", e);
+                return false;
             }
             return true;
         }
@@ -111,6 +113,8 @@ public abstract class GraphFetcherLocal implements GraphFetcher {
                     vertexFetcher.prepareLoadInputSplit(this.currentSplit);
                 }
             } catch (Exception e) {
+                LOG.error("IteratorFromVertex:", e);
+                return false;
             }
             return true;
         }
