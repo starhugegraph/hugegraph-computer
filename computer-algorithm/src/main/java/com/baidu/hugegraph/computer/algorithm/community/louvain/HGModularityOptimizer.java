@@ -181,7 +181,7 @@ public class HGModularityOptimizer {
                     LOG.info("Iteration: {}", j + 1);
                 }
                 if (algorithm == 1) {
-                    network.runLouvainAlgorithm(resolution2, random);
+                    network.runLouvainAlgorithm(resolution2, random, 0);
                 }
                 j++;
                 modularity = network.calcQualityFunction(resolution2);

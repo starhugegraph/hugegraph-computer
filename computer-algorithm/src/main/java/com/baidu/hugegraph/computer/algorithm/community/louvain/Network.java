@@ -308,13 +308,13 @@ public class Network implements Cloneable, Serializable {
     }
 
     public boolean runLouvainAlgorithm(double resolution) {
-        return runLouvainAlgorithm(resolution, new Random());
+        return runLouvainAlgorithm(resolution, new Random(), 0);
     }
 
-    public boolean runLouvainAlgorithm(double resolution, Random random) {
+    public boolean runLouvainAlgorithm(double resolution, Random random, int level) {
         boolean update, update2;
         Network reducedNetwork;
-        if ((cluster == null) || (nNodes == 1))
+        if ((cluster == null) || (nNodes == 1) || level >= 3)
             return false;
 
         update = runLocalMovingAlgorithm(resolution, random);
@@ -323,7 +323,7 @@ public class Network implements Cloneable, Serializable {
         if (nClusters < nNodes) {
             reducedNetwork = getReducedNetwork();
             reducedNetwork.initSingletonClusters();
-            update2 = reducedNetwork.runLouvainAlgorithm(resolution, random);
+            update2 = reducedNetwork.runLouvainAlgorithm(resolution, random, level++);
             if (update2) {
                 update = true;
                 mergeClusters(reducedNetwork.getClusters());
