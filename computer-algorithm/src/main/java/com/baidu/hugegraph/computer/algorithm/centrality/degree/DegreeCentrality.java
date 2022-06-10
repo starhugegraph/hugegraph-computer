@@ -119,9 +119,11 @@ public class DegreeCentrality implements Computation<NullValue> {
         this.calculateByWeightProperty = StringUtils.isNotEmpty(
                                          this.weightProperty);
         this.direction = 0;
-        if (config.getString(OPTION_DIRECTION, "out") == "in") {
+        String dir = config.getString(OPTION_DIRECTION, "");
+        LOG.info("degree direction: {}", dir);
+        if (dir.equalsIgnoreCase("in")) {
             this.direction = 1;
-        } else if (config.getString(OPTION_DIRECTION, "out") == "both") {
+        } else if (dir.equalsIgnoreCase("both")) {
             this.direction = 2;
         }
     }
