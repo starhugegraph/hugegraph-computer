@@ -30,6 +30,7 @@ import com.baidu.hugegraph.computer.core.graph.SuperstepStat;
 import com.baidu.hugegraph.computer.core.graph.value.IntValue;
 import com.baidu.hugegraph.computer.core.util.SerializeUtil;
 import com.baidu.hugegraph.computer.core.worker.WorkerStat;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.Log;
 
 public class Bsp4Worker extends BspBase {
@@ -51,8 +52,11 @@ public class Bsp4Worker extends BspBase {
         LOG.info("Worker({}) is waiting for master init-done",
                  this.workerInfo.uniqueName());
         String path = this.constructPath(BspEvent.BSP_MASTER_INIT_DONE);
-        byte[] bytes = this.bspClient().get(path, this.registerTimeout(),
-                                            this.logInterval());
+        try {
+            byte[] bytes = this.bspClient().get(path, this.registerTimeout(), this.logInterval());
+        } catch (Exception e) {
+            WorkerService.setThrowable(e);
+        }
         ContainerInfo masterInfo = new ContainerInfo();
         SerializeUtil.fromBytes(bytes, masterInfo);
         LOG.info("Worker({}) waited master init-done: {}",
