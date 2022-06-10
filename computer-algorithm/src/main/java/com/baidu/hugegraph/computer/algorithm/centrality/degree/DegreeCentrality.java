@@ -43,9 +43,12 @@ public class DegreeCentrality implements Computation<NullValue> {
 
     public static final String OPTION_WEIGHT_PROPERTY =
                                "degree_centrality.weight_property";
+    public static final String OPTION_DIRECTION =
+                               "degree_centrality.direction";
 
     private boolean calculateByWeightProperty;
     private String weightProperty;
+    private int direction;
 
     @Override
     public String name() {
@@ -59,31 +62,28 @@ public class DegreeCentrality implements Computation<NullValue> {
 
     @Override
     public void compute0(ComputationContext context, Vertex vertex) {
-        if (!this.calculateByWeightProperty) {
-            vertex.value(new DoubleValue(vertex.numEdges()));
-        } else {
-            /*
-             *  TODO: Here we use doubleValue type now, we will use BigDecimal
-             *  and output "BigDecimalValue" to resolve double type overflow
-             *  int the future;
-             */
-            double totalWeight = 0.0;
-            Iterator<Edge> edges = vertex.edges().iterator();
-            while (edges.hasNext()) {
-                Edge edge = edges.next();
-                double weight = weightValue(edge.property(this.weightProperty));
-
-
-                totalWeight += weight;
-                if (Double.isInfinite(totalWeight)) {
-                    throw new ComputerException("Calculate weight overflow, " +
-                                                "current is %s, edge '%s' " +
-                                                "is %s",
-                                                totalWeight, edge, weight);
-                }
+        double totalWeight = 0.0;
+        Iterator<Edge> edges = vertex.edges().iterator();
+        while (edges.hasNext()) {
+            Edge edge = edges.next();
+            if (this.direction == 0 && edge.isInverse() || 
+            this.direction == 1 && !edge.isInverse()) {
+                continue;
             }
-            vertex.value(new DoubleValue(totalWeight));
+            double weight = 1;
+            if (this.calculateByWeightProperty) {
+                weight = weightValue(edge.property(this.weightProperty));
+            }
+
+            totalWeight += weight;
+            if (Double.isInfinite(totalWeight)) {
+                throw new ComputerException("Calculate weight overflow, " +
+                                            "current is %s, edge '%s' " +
+                                            "is %s",
+                                            totalWeight, edge, weight);
+            }
         }
+        vertex.value(new DoubleValue(totalWeight));
         vertex.inactivate();
     }
 
@@ -118,6 +118,12 @@ public class DegreeCentrality implements Computation<NullValue> {
                               OPTION_WEIGHT_PROPERTY, "");
         this.calculateByWeightProperty = StringUtils.isNotEmpty(
                                          this.weightProperty);
+        this.direction = 0;
+        if (config.getString(OPTION_DIRECTION, "out") == "in") {
+            this.direction = 1;
+        } else if (config.getString(OPTION_DIRECTION, "out") == "both") {
+            this.direction = 2;
+        }
     }
 
     @Override
