@@ -487,7 +487,7 @@ public class FileGraphPartition {
                         "closeness.ClosenessCentralityOutputHdfs").newInstance();
                 }
             }
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             LOG.error("create hdfs output exp: {}", e.getMessage());
         }
         output.init(this.context.config(), this.partition);
