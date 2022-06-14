@@ -314,16 +314,17 @@ public class Network implements Cloneable, Serializable {
     public boolean runLouvainAlgorithm(double resolution, Random random, int level) {
         boolean update, update2;
         Network reducedNetwork;
-        if ((cluster == null) || (nNodes == 1) || level >= 3)
+        if ((cluster == null) || (nNodes == 1) || (level >= 3))
             return false;
 
         update = runLocalMovingAlgorithm(resolution, random);
 
-        LOG.info("nClusters:{},nNodes:{}",nClusters,nNodes);
+        LOG.info("nClusters:{},nNodes:{},level:{}",nClusters,nNodes,level);
         if (nClusters < nNodes) {
             reducedNetwork = getReducedNetwork();
             reducedNetwork.initSingletonClusters();
-            update2 = reducedNetwork.runLouvainAlgorithm(resolution, random, level++);
+            level++;
+            update2 = reducedNetwork.runLouvainAlgorithm(resolution, random, level);
             if (update2) {
                 update = true;
                 mergeClusters(reducedNetwork.getClusters());
