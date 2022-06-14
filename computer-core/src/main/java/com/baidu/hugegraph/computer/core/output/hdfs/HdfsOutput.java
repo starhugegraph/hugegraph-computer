@@ -36,6 +36,7 @@ import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.output.AbstractComputerOutput;
 import com.baidu.hugegraph.computer.core.util.StringEncoding;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 import com.baidu.hugegraph.util.Log;
 
 public class HdfsOutput extends AbstractComputerOutput {
@@ -64,8 +65,9 @@ public class HdfsOutput extends AbstractComputerOutput {
             Path hdfsPath = buildPath(dir, jobId, partition);
             this.fileOutputStream = this.fs.create(hdfsPath, true);
         } catch (IOException | InterruptedException e) {
-            throw new ComputerException("Failed to init hdfs output on " +
-                                        "partition [%s]", e, partition);
+            WorkerService.setThrowable(e);
+            LOG.error("Failed to init hdfs output on " +
+            "partition [%s]", e, partition);
         }
     }
 

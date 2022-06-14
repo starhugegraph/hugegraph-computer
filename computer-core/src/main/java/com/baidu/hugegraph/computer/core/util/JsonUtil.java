@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 
 public class JsonUtil {
 
@@ -32,6 +33,7 @@ public class JsonUtil {
 
     static {
         OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.registerModule(new GuavaModule());
         OBJECT_MAPPER.setVisibility(PropertyAccessor.FIELD,
                                     JsonAutoDetect.Visibility.ANY);
     }

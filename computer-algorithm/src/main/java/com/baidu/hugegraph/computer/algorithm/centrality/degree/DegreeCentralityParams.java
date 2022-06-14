@@ -43,5 +43,8 @@ public class DegreeCentralityParams implements AlgorithmParams {
                          DoubleValueSumCombiner.class.getName());
         this.setIfAbsent(params, ComputerOptions.OUTPUT_CLASS,
                          DegreeCentralityOutput.class.getName());
+        this.setIfAbsent(params,
+                         ComputerOptions.VERTEX_WITH_EDGES_BOTHDIRECTION.name(),
+                         Boolean.TRUE.toString());
     }
 }
