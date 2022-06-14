@@ -475,6 +475,7 @@ public class FileGraphPartition {
         String algName = ComputerOptions.ALGORITHM_PARAMS_CLASS.name();
         ComputerOutput output = this.context.config().createObject(
                                 ComputerOptions.OUTPUT_CLASS);
+        LOG.info("output init outclass:{}, algname: {}", outClass, algName);
         try {
             if (outClass.contains("HdfsOutput")) {
                 if (algName.contains("ClusteringCoefficient")) {
