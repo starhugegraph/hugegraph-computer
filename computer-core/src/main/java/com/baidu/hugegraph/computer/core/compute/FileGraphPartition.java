@@ -475,16 +475,20 @@ public class FileGraphPartition {
         String algName = ComputerOptions.ALGORITHM_PARAMS_CLASS.name();
         ComputerOutput output = this.context.config().createObject(
                                 ComputerOptions.OUTPUT_CLASS);
-        if (outClass.contains("HdfsOutput")) {
-            if (algName.contains("ClusteringCoefficient")) {
-                output = (ComputerOutput) Class.forName(
-                    "com.baidu.hugegraph.computer.algorithm.community.cc" +
-                    ".ClusteringCoefficientOutputHdfs").newInstance();
-            } else if (algName.contains("ClosenessCentrality")) {
-                output = (ComputerOutput) Class.forName(
-                    "com.baidu.hugegraph.computer.algorithm.centrality." +
-                    "closeness.ClosenessCentralityOutputHdfs").newInstance();
+        try {
+            if (outClass.contains("HdfsOutput")) {
+                if (algName.contains("ClusteringCoefficient")) {
+                    output = (ComputerOutput) Class.forName(
+                        "com.baidu.hugegraph.computer.algorithm.community.cc" +
+                        ".ClusteringCoefficientOutputHdfs").newInstance();
+                } else if (algName.contains("ClosenessCentrality")) {
+                    output = (ComputerOutput) Class.forName(
+                        "com.baidu.hugegraph.computer.algorithm.centrality." +
+                        "closeness.ClosenessCentralityOutputHdfs").newInstance();
+                }
             }
+        } catch (ClassNotFoundException e) {
+            LOG.error("create hdfs output exp: {}", e.getMessage());
         }
         output.init(this.context.config(), this.partition);
         try {
