@@ -471,15 +471,15 @@ public class FileGraphPartition {
     }
 
     protected PartitionStat output() {
-        String outClass = this.context.config().get(ComputerOptions.OUTPUT_CLASS);
-        String algName = this.context.config().get(ComputerOptions.ALGORITHM_PARAMS_CLASS);
+        String outClass = ComputerOptions.OUTPUT_CLASS.name();
+        String algName = ComputerOptions.ALGORITHM_PARAMS_CLASS.name();
         ComputerOutput output = this.context.config().createObject(
                                 ComputerOptions.OUTPUT_CLASS);
         if (outClass.contains("HdfsOutput")) {
             if (algName.contains("ClusteringCoefficient")) {
                 output = (ComputerOutput) Class.forName(
-                    "com.baidu.hugegraph.computer.algorithm.centrality." +
-                    "betweenness.ClusteringCoefficientOutputHdfs").newInstance();
+                    "com.baidu.hugegraph.computer.algorithm.community.cc" +
+                    ".ClusteringCoefficientOutputHdfs").newInstance();
             } else if (algName.contains("ClosenessCentrality")) {
                 output = (ComputerOutput) Class.forName(
                     "com.baidu.hugegraph.computer.algorithm.centrality." +
