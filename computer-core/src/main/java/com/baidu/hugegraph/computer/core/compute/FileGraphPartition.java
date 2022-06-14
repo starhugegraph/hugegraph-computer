@@ -471,8 +471,10 @@ public class FileGraphPartition {
     }
 
     protected PartitionStat output() {
-        String outClass = ComputerOptions.OUTPUT_CLASS.name();
-        String algName = ComputerOptions.ALGORITHM_PARAMS_CLASS.name();
+        String outClass = this.context.config().getString(
+            ComputerOptions.OUTPUT_CLASS.name(), "");
+        String algName = this.context.config().getString(
+            ComputerOptions.ALGORITHM_PARAMS_CLASS.name(), "");
         ComputerOutput output = this.context.config().createObject(
                                 ComputerOptions.OUTPUT_CLASS);
         LOG.info("output init outclass:{}, algname: {}", outClass, algName);
