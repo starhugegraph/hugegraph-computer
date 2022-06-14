@@ -471,8 +471,27 @@ public class FileGraphPartition {
     }
 
     protected PartitionStat output() {
+        String outClass = ComputerOptions.OUTPUT_CLASS.name();
+        String algName = ComputerOptions.ALGORITHM_PARAMS_CLASS.name();
         ComputerOutput output = this.context.config().createObject(
                                 ComputerOptions.OUTPUT_CLASS);
+        try {
+            if (outClass.contains("HdfsOutput")) {
+                if (algName.contains("ClusteringCoefficient")) {
+                    output = (ComputerOutput) Class.forName(
+                        "com.baidu.hugegraph.computer.algorithm.community.cc" +
+                        ".ClusteringCoefficientOutputHdfs").newInstance();
+                    LOG.info("create hdfs output ClusteringCoefficientOutputHdfs");
+                } else if (algName.contains("ClosenessCentrality")) {
+                    output = (ComputerOutput) Class.forName(
+                        "com.baidu.hugegraph.computer.algorithm.centrality." +
+                        "closeness.ClosenessCentralityOutputHdfs").newInstance();
+                    LOG.info("create hdfs output ClosenessCentralityOutputHdfs");
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("create hdfs output exp: {}", e.getMessage());
+        }
         output.init(this.context.config(), this.partition);
         try {
             this.beforeOutput();
