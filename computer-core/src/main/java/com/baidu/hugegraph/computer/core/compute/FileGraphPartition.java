@@ -480,12 +480,7 @@ public class FileGraphPartition {
         LOG.info("output init outclass:{}, algname: {}", outClass, algName);
         try {
             if (outClass.contains("HdfsOutput")) {
-                if (algName.contains("ClusteringCoefficient")) {
-                    output = (ComputerOutput) Class.forName(
-                        "com.baidu.hugegraph.computer.algorithm.community.cc" +
-                        ".ClusteringCoefficientOutputHdfs").newInstance();
-                    LOG.info("create hdfs output ClusteringCoefficientOutputHdfs");
-                } else if (algName.contains("ClosenessCentrality")) {
+                if (algName.contains("ClosenessCentrality")) {
                     output = (ComputerOutput) Class.forName(
                         "com.baidu.hugegraph.computer.algorithm.centrality." +
                         "closeness.ClosenessCentralityOutputHdfs").newInstance();
