@@ -48,7 +48,7 @@ public class Links implements Computation<LinksMessage> {
 
     @Override
     public void init(Config config) {
-        this.lastStep = config.getInt(ComputerOptions.BSP_MAX_SUPER_STEP.name(), 1)-1;
+        this.lastStep = config.getInt(ComputerOptions.BSP_MAX_SUPER_STEP.name(), 1) - 1;
         String describe = config.getString(OPTION_ANALYZE_CONFIG, "{}");
         try {
             this.filter = new LinksSpreadFilter(describe);
