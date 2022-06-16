@@ -28,6 +28,7 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerService;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 
 public class Links implements Computation<LinksMessage> {
 
@@ -49,6 +50,7 @@ public class Links implements Computation<LinksMessage> {
     @Override
     public void init(Config config) {
         this.lastStep = config.getInt(ComputerOptions.BSP_MAX_SUPER_STEP.name(), 1) - 1;
+        LOG.info("links last step: {}", this.lastStep);
         String describe = config.getString(OPTION_ANALYZE_CONFIG, "{}");
         try {
             this.filter = new LinksSpreadFilter(describe);
@@ -118,7 +120,7 @@ public class Links implements Computation<LinksMessage> {
     private boolean isEndStepAndSaveValue(Vertex vertex,
                                           LinksMessage message,
                                           ComputationContext context) {
-        if (context.superstep() >= this.lastStep) {
+        if (context.superstep() >= this.lastStep || vertex.numEdges() == 0) {
             message.addVertex(vertex.id());
             LinksValue value = vertex.value();
             value.addValue(message.pathVertexes(), message.pathEdge());
