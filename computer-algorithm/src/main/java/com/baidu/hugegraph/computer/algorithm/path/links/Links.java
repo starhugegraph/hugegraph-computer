@@ -49,7 +49,7 @@ public class Links implements Computation<LinksMessage> {
 
     @Override
     public void init(Config config) {
-        this.lastStep = config.getInt(ComputerOptions.BSP_MAX_SUPER_STEP.name(), 1) - 1;
+        this.lastStep = config.get(ComputerOptions.BSP_MAX_SUPER_STEP) - 1;
         LOG.info("links last step: {}", this.lastStep);
         String describe = config.getString(OPTION_ANALYZE_CONFIG, "{}");
         try {
