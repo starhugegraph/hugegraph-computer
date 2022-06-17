@@ -28,12 +28,14 @@ import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
 import com.baidu.hugegraph.computer.core.worker.WorkerService;
+import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 
 public class Links implements Computation<LinksMessage> {
 
     public static final String OPTION_ANALYZE_CONFIG = "links.analyze_config";
 
     private LinksSpreadFilter filter;
+    private int lastStep;
 
     @Override
     public String name() {
@@ -47,6 +49,8 @@ public class Links implements Computation<LinksMessage> {
 
     @Override
     public void init(Config config) {
+        this.lastStep = config.get(ComputerOptions.BSP_MAX_SUPER_STEP) - 1;
+        LOG.info("links last step: {}", this.lastStep);
         String describe = config.getString(OPTION_ANALYZE_CONFIG, "{}");
         try {
             this.filter = new LinksSpreadFilter(describe);
@@ -88,6 +92,9 @@ public class Links implements Computation<LinksMessage> {
         while (messages.hasNext()) {
             half = false;
             LinksMessage message = messages.next();
+            if (this.isEndStepAndSaveValue(vertex, message, context)) {
+                continue;
+            }
             if (this.isEndVertexAndSaveValue(vertex, message)) {
                 continue;
             }
@@ -108,6 +115,18 @@ public class Links implements Computation<LinksMessage> {
         if (half) {
             vertex.inactivate();
         }
+    }
+
+    private boolean isEndStepAndSaveValue(Vertex vertex,
+                                          LinksMessage message,
+                                          ComputationContext context) {
+        if (context.superstep() >= this.lastStep || vertex.numEdges() == 0) {
+            message.addVertex(vertex.id());
+            LinksValue value = vertex.value();
+            value.addValue(message.pathVertexes(), message.pathEdge());
+            return true;
+        }
+        return false;
     }
 
     private boolean isEndVertexAndSaveValue(Vertex vertex,

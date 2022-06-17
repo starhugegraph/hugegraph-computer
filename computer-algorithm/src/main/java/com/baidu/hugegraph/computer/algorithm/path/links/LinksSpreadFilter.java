@@ -104,7 +104,7 @@ public class LinksSpreadFilter {
         Map<String, Map<String, Value<?>>> param =
                     ImmutableMap.of(ELEMENT, vertex.properties().get());
         return ExpressionUtil.expressionExecute(
-                              param, this.endEdgeCondition.getValue());
+                              param, this.endVertexCondition.getValue());
     }
 
     public boolean isEndEdge(Edge edge) {

@@ -29,6 +29,7 @@ import com.baidu.hugegraph.computer.core.graph.value.IdListList;
 import com.baidu.hugegraph.computer.core.graph.vertex.Vertex;
 import com.baidu.hugegraph.computer.core.worker.Computation;
 import com.baidu.hugegraph.computer.core.worker.ComputationContext;
+import com.baidu.hugegraph.computer.core.worker.WorkerService;
 
 public class RingsDetectionWithFilter implements
                                       Computation<RingsDetectionMessage> {
@@ -49,8 +50,12 @@ public class RingsDetectionWithFilter implements
 
     @Override
     public void init(Config config) {
-        this.filter = new RingsDetectionSpreadFilter(
-                          config.getString(OPTION_FILTER, "{}"));
+        try {
+            this.filter = new RingsDetectionSpreadFilter(
+                config.getString(OPTION_FILTER, "{}"));
+        } catch (Exception e) {
+            WorkerService.setThrowable(e);
+        }
     }
 
     @Override
@@ -82,20 +87,23 @@ public class RingsDetectionWithFilter implements
                 RingsDetectionMessage message = messages.next();
                 IdList path = message.path();
                 if (vertexId.equals(path.get(0))) {
-                    // Use the smallest vertex record ring
-                    boolean isMin = true;
-                    for (int i = 0; i < path.size(); i++) {
-                        Id pathVertexValue = path.get(i);
-                        if (vertexId.compareTo(pathVertexValue) > 0) {
-                            isMin = false;
-                            break;
-                        }
-                    }
-                    if (isMin) {
-                        path.add(vertexId);
-                        IdListList value = vertex.value();
-                        value.add(path.copy());
-                    }
+                    // // Use the smallest vertex record ring
+                    // boolean isMin = true;
+                    // for (int i = 0; i < path.size(); i++) {
+                    //     Id pathVertexValue = path.get(i);
+                    //     if (vertexId.compareTo(pathVertexValue) > 0) {
+                    //         isMin = false;
+                    //         break;
+                    //     }
+                    // }
+                    // if (isMin) {
+                    //     path.add(vertexId);
+                    //     IdListList value = vertex.value();
+                    //     value.add(path.copy());
+                    // }
+                    path.add(vertexId);
+                    IdListList value = vertex.value();
+                    value.add(path.copy());
                 } else {
                     boolean contains = false;
                     // Drop sequence if path contains this vertex
