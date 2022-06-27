@@ -102,7 +102,8 @@ public class TriangleCount implements Computation<IdList> {
                 if (targetId.equals(minId)) {
                     byte[] flagByte = new byte[1];
                     flagByte[0] = 1;
-                    Id flagId = new BytesId(IdType.FLAG, flagByte);    
+                    Id flagId = new BytesId(IdType.FLAG, flagByte);
+                    neighbors.add(0, vertex.id());
                     neighbors.add(0, flagId);
                     context.sendMessage(targetId, neighbors);
                 } 
@@ -112,7 +113,7 @@ public class TriangleCount implements Computation<IdList> {
                     flagByte[0] = 0;
                     Id flagId = new BytesId(IdType.FLAG, flagByte);
                     mapper.add(flagId);
-                    mapper.add(minId);
+                    mapper.add(vertex.id());
                     context.sendMessage(targetId, mapper);
                 }
             }
@@ -147,7 +148,9 @@ public class TriangleCount implements Computation<IdList> {
             //save
             LOG.info("triangle store: vextex: {}, list: {}",
              vertexId.string(), list.string());
-            this.messageStorage.put(vertexId, list);
+            IdList nei = new IdList();
+            nei.addAll(list.values().subList(2, list.size()));
+            this.messageStorage.put(list.get(1), nei);
             return list;
         }
         else {
@@ -157,7 +160,7 @@ public class TriangleCount implements Computation<IdList> {
             LOG.info(
                 "triangle get: vextex: {}, list: {}, key: {}, res: {}",
                 vertexId.string(), list.string(),
-                 key.string(), listStored.string());
+                key.string(), listStored.string());
             return listStored;
         }
     }
