@@ -146,8 +146,6 @@ public class TriangleCount implements Computation<IdList> {
 
         if (id0.toString().equals("true")) {
             //save
-            LOG.info("triangle store: vextex: {}, list: {}",
-             vertexId.string(), list.string());
             IdList nei = new IdList();
             nei.addAll(list.values().subList(2, list.size()));
             this.messageStorage.put(list.get(1), nei);
@@ -157,10 +155,6 @@ public class TriangleCount implements Computation<IdList> {
             //map
             Id key = list.get(1);
             IdList listStored = this.messageStorage.get(key);
-            LOG.info(
-                "triangle get: vextex: {}, list: {}, key: {}, res: {}",
-                vertexId.string(), list.string(),
-                key.string(), listStored.string());
             return listStored;
         }
     }
@@ -196,9 +190,6 @@ public class TriangleCount implements Computation<IdList> {
                 IdList twoDegreeNeighbors = 
                        this.cacheOrHit(vertex.id(), message);
                 if (twoDegreeNeighbors != null) {
-                    LOG.info("triangle vertex: {}, nei: {}, tow: {}",
-                        allNeighbors.string(), vertex.id().string(),
-                        twoDegreeNeighbors.string());
                     for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
                         if (allNeighbors.contains(twoDegreeNeighbor)) {
                             count++;
