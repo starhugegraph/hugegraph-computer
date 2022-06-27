@@ -161,7 +161,7 @@ public class ClusteringCoefficient implements Computation<IdList> {
             IdList nei = new IdList();
             nei.addAll(list.values().subList(2, list.size()));
             this.messageStorage.put(list.get(1), nei);
-            return list;
+            return nei;
         }
         else {
             //map
