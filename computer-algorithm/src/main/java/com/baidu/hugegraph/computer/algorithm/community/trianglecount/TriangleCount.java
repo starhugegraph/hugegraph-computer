@@ -34,6 +34,8 @@ import com.baidu.hugegraph.computer.core.graph.partition.Partitioner;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class TriangleCount implements Computation<IdList> {
     private Partitioner partitioner;
     private Map<Id, IdList> messageStorage;
     private int superedgeThreshold;
+    private static final Logger LOG = Log.logger("TriangleCount");
 
     @Override
     public String name() {
@@ -99,16 +102,18 @@ public class TriangleCount implements Computation<IdList> {
                 if (targetId.equals(minId)) {
                     byte[] flagByte = new byte[1];
                     flagByte[0] = 1;
-                    Id flagId = new BytesId(IdType.FLAG, flagByte);    
+                    Id flagId = new BytesId(IdType.FLAG, flagByte);
+                    neighbors.add(0, vertex.id());
                     neighbors.add(0, flagId);
                     context.sendMessage(targetId, neighbors);
                 } 
                 else {
                     IdList mapper = new IdList();
                     byte[] flagByte = new byte[1];
+                    flagByte[0] = 0;
                     Id flagId = new BytesId(IdType.FLAG, flagByte);
                     mapper.add(flagId);
-                    mapper.add(minId);
+                    mapper.add(vertex.id());
                     context.sendMessage(targetId, mapper);
                 }
             }
@@ -141,8 +146,10 @@ public class TriangleCount implements Computation<IdList> {
 
         if (id0.toString().equals("true")) {
             //save
-            this.messageStorage.put(vertexId, list);
-            return list;
+            IdList nei = new IdList();
+            nei.addAll(list.values().subList(2, list.size()));
+            this.messageStorage.put(list.get(1), nei);
+            return nei;
         }
         else {
             //map
