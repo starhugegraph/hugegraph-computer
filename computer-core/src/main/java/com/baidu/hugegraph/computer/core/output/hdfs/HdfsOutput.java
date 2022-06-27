@@ -67,7 +67,8 @@ public class HdfsOutput extends AbstractComputerOutput {
         } catch (IOException | InterruptedException e) {
             WorkerService.setThrowable(e);
             LOG.error("Failed to init hdfs output on " +
-            "partition [%s]", e, partition);
+            "partition [{}], {}",  partition, e);
+            System.exit(1);
         }
     }
 
