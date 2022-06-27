@@ -429,7 +429,7 @@ public class WorkerService implements Closeable {
                               "exit worker now and error info is:", throwable);
                     System.exit(1);
                 }
-            }, 0, 1, TimeUnit.MINUTES);
+            }, 0, 3, TimeUnit.SECONDS);
         }
     }
 
