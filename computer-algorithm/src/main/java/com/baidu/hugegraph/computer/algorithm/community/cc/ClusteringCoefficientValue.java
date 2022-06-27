@@ -142,7 +142,11 @@ public class ClusteringCoefficientValue implements
 
     @Override
     public String string() {
-        return String.valueOf(2 * this.count.floatValue() / degree.value() /
-                              (degree.value() - 1));
+        int degree = this.idSet().size();
+        if (degree <= 1) {
+            return "0.0";
+        } else {
+            return String.valueOf(2 * this.count.floatValue() / degree / (degree - 1));
+        }
     }
 }

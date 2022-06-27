@@ -34,6 +34,8 @@ import com.baidu.hugegraph.computer.core.graph.partition.Partitioner;
 import com.baidu.hugegraph.computer.core.config.Config;
 import com.baidu.hugegraph.computer.core.config.ComputerOptions;
 import com.baidu.hugegraph.computer.core.graph.id.IdType;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class TriangleCount implements Computation<IdList> {
     private Partitioner partitioner;
     private Map<Id, IdList> messageStorage;
     private int superedgeThreshold;
+    private static final Logger LOG = Log.logger("TriangleCount");
 
     @Override
     public String name() {
@@ -106,6 +109,7 @@ public class TriangleCount implements Computation<IdList> {
                 else {
                     IdList mapper = new IdList();
                     byte[] flagByte = new byte[1];
+                    flagByte[0] = 0;
                     Id flagId = new BytesId(IdType.FLAG, flagByte);
                     mapper.add(flagId);
                     mapper.add(minId);
@@ -141,6 +145,8 @@ public class TriangleCount implements Computation<IdList> {
 
         if (id0.toString().equals("true")) {
             //save
+            LOG.info("triangle store: vextex: {}, list: {}",
+             vertexId.string(), list.string());
             this.messageStorage.put(vertexId, list);
             return list;
         }
@@ -148,6 +154,10 @@ public class TriangleCount implements Computation<IdList> {
             //map
             Id key = list.get(1);
             IdList listStored = this.messageStorage.get(key);
+            LOG.info(
+                "triangle get: vextex: {}, list: {}, key: {}, res: {}",
+                vertexId.string(), list.string(),
+                 key.string(), listStored.string());
             return listStored;
         }
     }
@@ -183,6 +193,9 @@ public class TriangleCount implements Computation<IdList> {
                 IdList twoDegreeNeighbors = 
                        this.cacheOrHit(vertex.id(), message);
                 if (twoDegreeNeighbors != null) {
+                    LOG.info("triangle vertex: {}, nei: {}, tow: {}",
+                        allNeighbors.string(), vertex.id().string(),
+                        twoDegreeNeighbors.string());
                     for (Id twoDegreeNeighbor : twoDegreeNeighbors.values()) {
                         if (allNeighbors.contains(twoDegreeNeighbor)) {
                             count++;
