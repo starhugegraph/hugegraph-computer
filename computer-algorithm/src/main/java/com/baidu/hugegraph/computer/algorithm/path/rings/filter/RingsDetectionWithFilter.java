@@ -55,6 +55,7 @@ public class RingsDetectionWithFilter implements
                 config.getString(OPTION_FILTER, "{}"));
         } catch (Exception e) {
             WorkerService.setThrowable(e);
+            System.exit(1);
         }
     }
 

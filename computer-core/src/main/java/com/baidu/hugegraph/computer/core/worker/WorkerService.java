@@ -183,6 +183,12 @@ public class WorkerService implements Closeable {
      */
     @Override
     public void close() {
+        Throwable throwable = WORKER_ERROR.get();
+        if (throwable != null) {
+            LOG.error("close with error {}", throwable);
+            System.exit(1);
+            return;
+        }
         this.checkInited();
         if (this.closed) {
             LOG.info("{} WorkerService had closed before", this);
