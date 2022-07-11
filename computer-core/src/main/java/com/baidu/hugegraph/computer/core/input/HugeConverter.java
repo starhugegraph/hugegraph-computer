@@ -39,9 +39,11 @@ import com.baidu.hugegraph.computer.core.graph.value.NullValue;
 import com.baidu.hugegraph.computer.core.graph.value.StringValue;
 import com.baidu.hugegraph.computer.core.graph.value.Value;
 import com.baidu.hugegraph.util.E;
+import com.baidu.hugegraph.util.Log;
 
 public final class HugeConverter {
 
+    private static final Logger LOG = Log.logger(LoadService.class);
     private static final GraphFactory GRAPH_FACTORY =
                                       ComputerContext.instance().graphFactory();
 
@@ -83,6 +85,9 @@ public final class HugeConverter {
             }
             return listValue;
         } else {
+            LOG.error("Can't convert to Value from '{}'({})",
+            rawValue, rawValue.getClass());
+            System.exit(1);
             throw new ComputerException("Can't convert to Value from '%s'(%s)",
                                         rawValue, rawValue.getClass());
         }
