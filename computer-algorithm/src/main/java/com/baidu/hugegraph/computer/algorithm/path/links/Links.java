@@ -56,6 +56,8 @@ public class Links implements Computation<LinksMessage> {
             this.filter = new LinksSpreadFilter(describe);
         } catch (ComputerException e) {
             WorkerService.setThrowable(e);
+            LOG.error("parse filter error: {}", e);
+            System.exit(1);
         }
     }
 
@@ -92,9 +94,9 @@ public class Links implements Computation<LinksMessage> {
         while (messages.hasNext()) {
             half = false;
             LinksMessage message = messages.next();
-            if (this.isEndStepAndSaveValue(vertex, message, context)) {
-                continue;
-            }
+            // if (this.isEndStepAndSaveValue(vertex, message, context)) {
+            //     continue;
+            // }
             if (this.isEndVertexAndSaveValue(vertex, message)) {
                 continue;
             }
@@ -117,17 +119,17 @@ public class Links implements Computation<LinksMessage> {
         }
     }
 
-    private boolean isEndStepAndSaveValue(Vertex vertex,
-                                          LinksMessage message,
-                                          ComputationContext context) {
-        if (context.superstep() >= this.lastStep || vertex.numEdges() == 0) {
-            message.addVertex(vertex.id());
-            LinksValue value = vertex.value();
-            value.addValue(message.pathVertexes(), message.pathEdge());
-            return true;
-        }
-        return false;
-    }
+    // private boolean isEndStepAndSaveValue(Vertex vertex,
+    //                                       LinksMessage message,
+    //                                       ComputationContext context) {
+    //     if (context.superstep() >= this.lastStep || vertex.numEdges() == 0) {
+    //         message.addVertex(vertex.id());
+    //         LinksValue value = vertex.value();
+    //         value.addValue(message.pathVertexes(), message.pathEdge());
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     private boolean isEndVertexAndSaveValue(Vertex vertex,
                                             LinksMessage message) {
