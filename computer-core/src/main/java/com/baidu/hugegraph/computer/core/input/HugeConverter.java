@@ -44,7 +44,7 @@ import com.baidu.hugegraph.util.Log;
 
 public final class HugeConverter {
 
-    private static final Logger LOG = Log.logger(LoadService.class);
+    private static final Logger LOG = Log.logger(HugeConverter.class);
     private static final GraphFactory GRAPH_FACTORY =
                                       ComputerContext.instance().graphFactory();
 
