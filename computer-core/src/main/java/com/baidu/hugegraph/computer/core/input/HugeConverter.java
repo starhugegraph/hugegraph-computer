@@ -22,6 +22,7 @@ package com.baidu.hugegraph.computer.core.input;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
 
 import com.baidu.hugegraph.computer.core.common.ComputerContext;
 import com.baidu.hugegraph.computer.core.common.exception.ComputerException;
