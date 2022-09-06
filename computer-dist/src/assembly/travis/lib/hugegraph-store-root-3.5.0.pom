@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.baidu.hugegraph</groupId>
+    <artifactId>hugegraph-store-root</artifactId>
+    <version>3.5.0</version>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.5.14</version>
+    </parent>
+
+    <modules>
+        <module>hg-store-common</module>
+        <module>hg-store-grpc</module>
+        <module>hg-store-client</module>
+        <module>hg-store-rocksdb</module>
+        <module>hg-store-core</module>
+        <module>hg-store-node</module>
+        <module>hg-store-transfer</module>
+        <module>hg-store-dist</module>
+        <module>hg-store-cli</module>
+        <module>jraft-core</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <hugegraph.server.version>3.5.0</hugegraph.server.version>
+        <log4j2.version>2.15.0</log4j2.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-grpc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-rocksdb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baidu.hugegraph</groupId>
+                <artifactId>hg-store-transfer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>2.15.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>Baidu_Local</id>
+            <url>http://maven.baidu-int.com/nexus/content/repositories/Baidu_Local</url>
+        </repository>
+        <snapshotRepository>
+            <id>Baidu_Local_Snapshots</id>
+            <url>http://maven.baidu-int.com/nexus/content/repositories/Baidu_Local_Snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>
