@@ -2,21 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.baidu.hugegraph</groupId>
-    <artifactId>hg-store-grpc</artifactId>
-    <version>3.0.0</version>
+    <parent>
+        <groupId>com.baidu.hugegraph</groupId>
+        <artifactId>hugegraph-pd-root</artifactId>
+        <version>3.5.0</version>
+    </parent>
+    <artifactId>hg-pd-grpc</artifactId>
+
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-
-        <os.plugin.version>1.6.2</os.plugin.version>
+        <os.plugin.version>1.6.0</os.plugin.version>
         <grpc.version>1.39.0</grpc.version>
         <protoc.version>3.17.2</protoc.version>
         <protobuf.plugin.version>0.6.1</protobuf.plugin.version>
-
     </properties>
 
     <dependencies>
@@ -62,10 +63,12 @@
                 <version>${protobuf.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
+                    <protocArtifact>
+                        com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
                     </protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
+                    <pluginArtifact>
+                        io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
                     </pluginArtifact>
                     <!--默认值-->
                     <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
