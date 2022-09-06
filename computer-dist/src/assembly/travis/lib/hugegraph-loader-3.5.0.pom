@@ -6,7 +6,7 @@
 
     <groupId>com.baidu.hugegraph</groupId>
     <artifactId>hugegraph-loader</artifactId>
-    <version>3.5.0-SNAPSHOT</version>
+    <version>3.5.0</version>
     <packaging>jar</packaging>
 
     <name>hugegraph-loader</name>
@@ -56,7 +56,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <compiler.source>1.8</compiler.source>
         <compiler.target>1.8</compiler.target>
-        <hugegraph.version>3.5.0-SNAPSHOT</hugegraph.version>
+        <hugegraph.version>3.5.0</hugegraph.version>
     </properties>
     <distributionManagement>
         <repository>
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.baidu.hugegraph</groupId>
             <artifactId>hugegraph-client</artifactId>
-            <version>3.5.0-SNAPSHOT</version>
+            <version>3.5.0</version>
         </dependency>
 
         <dependency>
