@@ -27,19 +27,19 @@ if [ -z $MAVEN_HOME ]; then
 fi
 
 TRAVIS_DIR=./computer-dist/src/assembly/travis
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.10.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.10 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/common-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-core-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-core -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-core-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-hstore-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-hstore -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-hstore-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pom.xml -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-loader -Dversion=0.11.3 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-plugin-1.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-plugin -Dversion=1.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-plugin-pom.xml
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-client-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.10.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.10 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-common-1.8.10.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-core-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-core -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-core-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-hstore-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-hstore -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-hstore-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pom.xml -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pom.xml
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-loader-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-loader -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-loader-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-plugin-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-plugin -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-plugin-3.5.0.pom
 mvn install:install-file -Dfile=$TRAVIS_DIR/lib/syncgateway-1.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=syncgateway -Dversion=1.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/syncgateway-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-client -Dversion=3.0.0 -Dpackaging=jar  -DpomFile=$TRAVIS_DIR/lib/hg-pd-client-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-common-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-common -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-common-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-grpc-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-grpc -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-grpc-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-client-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-pom.xml
-mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-term-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-term-pom.xml
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-client-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-client -Dversion=3.5.0 -Dpackaging=jar  -DpomFile=$TRAVIS_DIR/lib/hg-pd-client-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-common-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-common -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-common-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-grpc-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-grpc -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-grpc-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-client-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-client -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-client-3.5.0.pom
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.xml
+mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.xml
 mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-client-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-hdfs-client -Dversion=2.7.2 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-client-2.7.2-pom.xml
 mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-hdfs -Dversion=2.7.2 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hadoop/hadoop-hdfs-2.7.2-pom.xml
