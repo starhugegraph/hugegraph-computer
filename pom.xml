@@ -83,12 +83,12 @@
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-hstore</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.0</version>
             </dependency>
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-client</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.mockito</groupId>
@@ -99,7 +99,7 @@
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hugegraph-core</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.mockito</groupId>
@@ -114,7 +114,7 @@
             <dependency>
                 <groupId>com.baidu.hugegraph</groupId>
                 <artifactId>hg-pd-client</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.0</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -246,7 +246,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.0</version>
                 <configuration>
                     <filesets>
                         <fileset>
