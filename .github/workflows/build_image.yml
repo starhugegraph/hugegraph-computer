@@ -59,8 +59,8 @@ jobs:
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-common-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-common -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-common-3.5.0.pom
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-pd-grpc-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-pd-grpc -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-pd-grpc-3.5.0.pom
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-client-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-client -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-client-3.5.0.pom
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.xml
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-grpc -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-grpc-3.5.0.pom
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hg-store-term -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hg-store-common-3.5.0.pom
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-annotations-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-annotations -Dversion=2.7.2 -Dpackaging=jar
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-auth-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-auth -Dversion=2.7.2 -Dpackaging=jar
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hadoop/hadoop-client-2.7.2.jar -DgroupId=org.apache.hadoop -DartifactId=hadoop-client -Dversion=2.7.2 -Dpackaging=jar
