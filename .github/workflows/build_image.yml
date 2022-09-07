@@ -49,9 +49,9 @@ jobs:
         run: |
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-client-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-client -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/client-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-common-1.8.10.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-common -Dversion=1.8.10 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/common-pom.xml
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-core-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-core -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-core-pom.xml
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-hstore-3.0.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-hstore -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-hstore-pom.xml
-          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pom.xml -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph -Dversion=3.0.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pom.xml
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-core-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-core -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-core-3.5.0.pom
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-hstore-3.5.0.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-hstore -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-hstore-3.5.0.pom
+          mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pom.xml -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pom.xml
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-pd-root-3.5.0.pom -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-pd-root -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-pd-root-3.5.0.pom
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-store-root-3.5.0.pom -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-store-root -Dversion=3.5.0 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-store-root-3.5.0.pom
           mvn install:install-file -Dfile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3.jar -DgroupId=com.baidu.hugegraph -DartifactId=hugegraph-loader -Dversion=0.11.3 -Dpackaging=jar -DpomFile=$TRAVIS_DIR/lib/hugegraph-loader-0.11.3-pom.xml
