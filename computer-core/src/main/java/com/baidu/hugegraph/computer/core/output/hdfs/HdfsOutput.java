@@ -61,7 +61,7 @@ public class HdfsOutput extends AbstractComputerOutput {
 
             this.delimiter = config.get(ComputerOptions.OUTPUT_HDFS_DELIMITER);
             String dir = config.get(ComputerOptions.OUTPUT_HDFS_DIR);
-            // String jobId = config.get(ComputerOptions.JOB_ID);
+            //String jobId = config.get(ComputerOptions.JOB_ID);
             Path hdfsPath = buildPath(dir, partition);
             this.fileOutputStream = this.fs.create(hdfsPath, true);
         } catch (IOException | InterruptedException e) {
