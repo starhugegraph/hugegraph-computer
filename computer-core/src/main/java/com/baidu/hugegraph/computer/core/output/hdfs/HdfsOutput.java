@@ -61,8 +61,8 @@ public class HdfsOutput extends AbstractComputerOutput {
 
             this.delimiter = config.get(ComputerOptions.OUTPUT_HDFS_DELIMITER);
             String dir = config.get(ComputerOptions.OUTPUT_HDFS_DIR);
-            String jobId = config.get(ComputerOptions.JOB_ID);
-            Path hdfsPath = buildPath(dir, jobId, partition);
+            //String jobId = config.get(ComputerOptions.JOB_ID);
+            Path hdfsPath = buildPath(dir, partition);
             this.fileOutputStream = this.fs.create(hdfsPath, true);
         } catch (IOException | InterruptedException e) {
             WorkerService.setThrowable(e);
@@ -104,9 +104,9 @@ public class HdfsOutput extends AbstractComputerOutput {
         return vertex.value().string();
     }
 
-    public static Path buildPath(String dir, String jobId, int partition) {
-        Path dirPath = new Path(dir, jobId);
-        return new Path(dirPath, FILE_PREFIX + partition + FILE_SUFFIX);
+    public static Path buildPath(String dir, int partition) {
+        //Path dirPath = new Path(dir, jobId);
+        return new Path(dir, FILE_PREFIX + partition + FILE_SUFFIX);
     }
 
     @Override
